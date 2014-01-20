@@ -11,8 +11,17 @@ bool TestFloUpdater::run( MP mp ) {
     int valeur1 = mp[ "valeur1" ];
     std::cout << valeur1 << std::endl;
     mp[ "valeur1" ]=100;
+    add_message( mp, ET_Info, "Valeur 1 modifiée" );
     mp.flush();
+    sleep(5);
     
+    mp[ "_mesh.points[0].pos[0]" ] = 0.5;
+    MP mesh = mp[ "_mesh" ];
+    MP points = mesh[ "points" ];
+    MP pos = points[0][ "pos" ];
+    pos[1] = 2;
+    add_message( pos, ET_Info, "Positions modifiée" );
+    pos.flush();
     
     
   
