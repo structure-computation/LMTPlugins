@@ -1,5 +1,5 @@
 #include <Soca/Com/SodaClient.h>
-#include "GmshUpdater.h"
+#include "TestFloUpdater.h"
 
 int main( int argc, char **argv ) {
     // connection
@@ -8,10 +8,10 @@ int main( int argc, char **argv ) {
   
     //id du model à traiter
     quint64 model_id = atoi(argv[1]);   
-    sc.reg_type( "GmshItem" );
+    sc.reg_type( "TestFlo1Item" );
     MP mp = sc.load_ptr(model_id);
-    qDebug() << "###############   launch GmshItem ###############" ;
-    GmshUpdater updater;
+    qDebug() << "###############   launch TestFlo1Item ###############" ;
+    TestFloUpdater updater;
     updater.sc = &sc;
     updater.exec( mp );
     qDebug() << "###############   finish stand alone GmshItem ###############" ;

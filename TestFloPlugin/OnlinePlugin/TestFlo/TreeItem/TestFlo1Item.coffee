@@ -3,13 +3,11 @@ class TestFlo1Item extends TreeItem_Computable
     constructor: ( name = "TestFlo1" ) ->
         super()
         
-        
         @_name.set name
         @_ico.set "img/mesher.png"
         @_viewable.set false
         
         @_computation_mode.set false
-        
         
         @add_attr
             valeur1 : 10
