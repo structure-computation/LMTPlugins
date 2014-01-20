@@ -4,6 +4,8 @@ class TestRenoItem extends TreeItem_Computable
         super()
         
         @add_attr
+	    valeur1 : 1
+	    valeur2 : new Choice (0, ["pouet","toto","prout"] ) 
 
         @_name.set name
         @_ico.set "img/mesher.png"
