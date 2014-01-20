@@ -13,7 +13,7 @@ bool TestFloUpdater::run( MP mp ) {
     mp[ "valeur1" ]=100;
     add_message( mp, ET_Info, "Valeur 1 modifiée" );
     mp.flush();
-    QTest::qSleep ( 5000 );
+    
     mp[ "_mesh.points[0].pos[0]" ] = 0.5;
     MP mesh = mp[ "_mesh" ];
     MP points = mesh[ "points" ];
