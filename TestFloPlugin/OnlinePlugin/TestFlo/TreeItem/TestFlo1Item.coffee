@@ -16,10 +16,10 @@ class TestFlo1Item extends TreeItem_Computable
             valeur2 : new Choice( 0, [ "Bonjour", "coucou", "Salut Reno" ] )
             _mesh : new Mesh 
 
-	@_mesh.add_point([0, 0, 0])
-	@_mesh.add_point([0, 1, 0])
-	@_mesh.add_point([1, 1, 0])
-	@_mesh.add_point([1, 0, 0])
+        @_mesh.add_point([0, 0, 0])
+        @_mesh.add_point([0, 1, 0])
+        @_mesh.add_point([1, 1, 0])
+        @_mesh.add_point([1, 0, 0])
     
     display_suppl_context_actions: ( context_action )  ->
     
