@@ -20,6 +20,10 @@ class TestFlo1Item extends TreeItem_Computable
         @_mesh.add_point([0, 1, 0])
         @_mesh.add_point([1, 1, 0])
         @_mesh.add_point([1, 0, 0])
+        
+        @add_attr 
+            visualization : @_mesh.visualization
+            points : @_mesh.points
     
     display_suppl_context_actions: ( context_action )  ->
     
