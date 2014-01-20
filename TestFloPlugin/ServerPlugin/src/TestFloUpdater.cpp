@@ -19,8 +19,8 @@ bool TestFloUpdater::run( MP mp ) {
     MP points = mesh[ "points" ];
     MP pos = points[0][ "pos" ];
     pos[1] = 2;
-    add_message( pos, ET_Info, "Positions modifiée" );
-    pos.flush();
+    add_message( pos, ET_Info, "Positions modifiées" );
+    mp.flush();
     
     
   
