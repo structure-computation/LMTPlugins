@@ -13,6 +13,7 @@ class TestFlo1Item extends TreeItem_Computable
         
         @add_attr
             valeur1 : 10
+            valeur2 : new Choice( 0, [ "Bonjour", "coucou", "Salut Reno" ] )
 
     
     display_suppl_context_actions: ( context_action )  ->
