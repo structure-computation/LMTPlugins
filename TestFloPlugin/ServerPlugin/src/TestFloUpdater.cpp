@@ -10,6 +10,8 @@ bool TestFloUpdater::run( MP mp ) {
   
     int valeur1 = mp[ "valeur1" ];
     std::cout << valeur1 << std::endl;
+    mp[ "valeur1" ]=100;
+    mp.flush();
     
     
     

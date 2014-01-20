@@ -14,7 +14,7 @@ int main( int argc, char **argv ) {
     TestFloUpdater updater;
     updater.sc = &sc;
     updater.exec( mp );
-    qDebug() << "###############   finish stand alone GmshItem ###############" ;
+    qDebug() << "###############   finish stand alone TestFloItem ###############" ;
     
     
 //     // attente
