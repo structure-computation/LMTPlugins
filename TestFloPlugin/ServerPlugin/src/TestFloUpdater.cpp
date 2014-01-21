@@ -6,6 +6,8 @@
 #include <containers/vec.h>
 #include "TestFloUpdater.h"
 
+
+
 bool TestFloUpdater::run( MP mp ) {
   
     int valeur1 = mp[ "valeur1" ];
@@ -14,7 +16,6 @@ bool TestFloUpdater::run( MP mp ) {
     add_message( mp, ET_Info, "Valeur 1 modifiée" );
     mp.flush();
     
-    //mp[ "_mesh.points[0].pos[0]" ] = 0.5;
     MP mesh = mp[ "_mesh" ];
     MP points = mesh[ "points" ];
     MP pos = points[0][ "pos" ];
@@ -22,6 +23,6 @@ bool TestFloUpdater::run( MP mp ) {
     add_message( mp, ET_Info, "Positions modifiées" );
     mp.flush();
     
-    
+    //WriteINP (Vec<TM> &m, std::string racine_fic, std::string nom_fic_param, Vec<double> constrained_nodes, double pix2m)
   
 }
