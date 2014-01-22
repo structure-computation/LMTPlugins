@@ -4,8 +4,6 @@
 #pragma cpp_path ../../../dic
 #pragma inc_path ../../../dic
 
-
-
 #include <Soca/Com/SodaClient.h>
 #include <Soca/Model/TypedArray.h>
 #include <QtCore/QFile>
@@ -18,8 +16,6 @@
 #include "dic/correlation/mesh_carac_correlation.h"
 //#include "formulation.Ramberg_Osgood.Triangle.name_der_vars=param.h"
 //#include "lib_flo.h"
-
-
 
 //template<unsigned dim>
 bool TestFloUpdater::run( MP mp ) {
@@ -76,8 +72,5 @@ bool TestFloUpdater::run( MP mp ) {
             }
         }
     }
-    
     add_message( mp, ET_Info, "Travail terminé" );
-    
-    
 }
