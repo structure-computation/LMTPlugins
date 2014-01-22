@@ -1,14 +1,13 @@
 #ifndef	LIB_FLO_H
 #define	LIB_FLO_H
 
-#include "formulation.Ramberg_Osgood.Triangle.name_der_vars=param.h"
-#include <mesh/make_mesh_from_mask.h>
-#include <containers/eig_lapack.h>
-#include <correlation/DicCPU.h>
+//#include <mesh/make_mesh_from_mask.h>
+//#include <containers/eig_lapack.h>
+//#include <correlation/DicCPU.h>
 #include <stdlib.h>
 #include <dirent.h>
-#include "header_abq.h" // pour interfacer c++ avec abaqus
-#include <odb_API.h> // pour les fonctions odb d'abaqus
+//#include "header_abq.h" // pour interfacer c++ avec abaqus
+//#include <odb_API.h> // pour les fonctions odb d'abaqus
 #include <iostream>
 using namespace LMT;
 typedef ImgInterp<double,2> TI;
@@ -77,8 +76,7 @@ struct GetEq {
 };
 
 
-bool exists( const std::string & file )
-{
+bool exists( const std::string & file ){
     std::ifstream fichier( file.c_str() );
     return !fichier.fail();
 }
