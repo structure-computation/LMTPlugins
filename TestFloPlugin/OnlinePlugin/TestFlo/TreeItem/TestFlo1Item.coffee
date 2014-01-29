@@ -10,10 +10,12 @@ class TestFlo1Item extends TreeItem_Computable
         @_computation_mode.set false
         
         @add_attr
-            valeur1 : 10
-            valeur2 : new Choice( 0, [ "Bonjour", "coucou", "Salut Reno" ] )
-#            _mesh : new Mesh 
+            pix2m : 10
 
+        @add_child new MaterialItem
+        
+        @add_output new FieldSetItem
+        
 #        @_mesh.add_point([0, 0, 0])
 #        @_mesh.add_point([0, 1, 0])
 #        @_mesh.add_point([1, 1, 0])
@@ -27,16 +29,18 @@ class TestFlo1Item extends TreeItem_Computable
        
         
     accept_child: ( ch ) ->
-        ch instanceof MeshItem
+        ch instanceof FieldSetItem or
+        ch instanceof MeshItem or
+        ch instanceof MaterialItem
         
     sub_canvas_items: ->
+        [  ]
 #        [ @_mesh ]
 #         if @nothing_to_do()
 #             [ @_mesh ]
 #         else
 #             []
     
-    draw: ( info ) ->
     
 #     z_index: ->
 #         @_mesh.z_index()
