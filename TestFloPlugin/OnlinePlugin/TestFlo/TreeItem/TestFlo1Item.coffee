@@ -10,9 +10,9 @@ class TestFlo1Item extends TreeItem_Computable
         @_computation_mode.set false
         
         @add_attr
-            pix2m : 10
+            pix2m : 0.00002
 
-        @add_child new MaterialItem
+        @add_child new MaterialABQItem
         
         @add_output new FieldSetItem
         
@@ -29,9 +29,11 @@ class TestFlo1Item extends TreeItem_Computable
        
         
     accept_child: ( ch ) ->
+        ch instanceof FieldSetCorreliItem or
         ch instanceof FieldSetItem or
+        ch instanceof FieldItem or
         ch instanceof MeshItem or
-        ch instanceof MaterialItem
+        ch instanceof MaterialABQItem
         
     sub_canvas_items: ->
         [  ]

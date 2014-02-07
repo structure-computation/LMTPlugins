@@ -45,24 +45,15 @@ TM load_into_2DLMTpp_Mesh(MP mesh){
             if ( TypedArray<int> *indices = dynamic_cast<TypedArray<int> *>( el[ "indices" ].model() ) ) {
                 for( int nt = 0, ct = 0; nt < indices->size( 1 ); ++nt ) {
                     unsigned o[ 3 ];
-                    for( int j = 0; j < 3; ++j )
+                    for( int j = 0; j < 3; ++j ){
                         o[ j ] = qMin( indices->operator[]( ct++ ), (int)dic_mesh.node_list.size() - 1 );
+                    }
                     dic_mesh.add_element( Triangle(), DefaultBehavior(), o );
                 }
             }
         }
-        //         else if ( el.type() == "Element_TetrahedraList" and dim == 3 ) {
-        //             if ( TypedArray<int> *indices = dynamic_cast<TypedArray<int> *>( el[ "indices" ].model() ) ) {
-        //                 for( int nt = 0, ct = 0; nt < indices->size( 1 ); ++nt ) {
-        //                     unsigned o[ 4 ];
-        //                     for( int j = 0; j < 4; ++j )
-        //                         o[ j ] = qMin( indices->operator[]( ct++ ), (int)dic_mesh.node_list.size() - 1 );
-        //                     dic_mesh.add_element( Tetra(), DefaultBehavior(), o );
-        //                 }
-        //             }
-        //         }
     }
-    
+    dic_mesh.remove_unused_nodes();
     return dic_mesh;
 }
 
@@ -198,16 +189,16 @@ void Write2DINP (Vec<TM> &m, std::string racine_fic, Vec<double> constrained_nod
             inp << "" << elastic_modulus << ", " << poisson_ratio << "\n";
         }
         else if (thelaw == "Elas_ortho"){
-                         inp << "*Material, name=MATERIAL-1\n";
-                         inp << "*Elastic, TYPE=ENGINEERING CONSTANTS\n";
-                         inp << "" << elastic_modulus << ", " << elastic_modulus*rapport << ", " << elastic_modulus*rapport << ", " << poisson_ratio << ", " << poisson_ratio << ", " << poisson_ratio << ", " << elastic_modulus/(2 + 2* poisson_ratio) << ", " <<  elastic_modulus*rapport/(2 + 2* poisson_ratio) << "\n";
-                         inp << elastic_modulus*rapport/(2 + 2*poisson_ratio) << ",\n";
+            inp << "*Material, name=MATERIAL-1\n";
+            inp << "*Elastic, TYPE=ENGINEERING CONSTANTS\n";
+            inp << "" << elastic_modulus << ", " << elastic_modulus*rapport << ", " << elastic_modulus*rapport << ", " << poisson_ratio << ", " << poisson_ratio << ", " << poisson_ratio << ", " << elastic_modulus/(2 + 2* poisson_ratio) << ", " <<  elastic_modulus*rapport/(2 + 2* poisson_ratio) << "\n";
+            inp << elastic_modulus*rapport/(2 + 2*poisson_ratio) << ",\n";
         }
         else if (thelaw == "RO"){
-                         inp << "*Material, name=MATERIAL-1\n";
-                         inp << "*Deformation Plasticity\n";
-                         double ys = 0.02; // Par défaut
-                         inp << "" << elastic_modulus << ", " << poisson_ratio << ", " << sigma_0 << ", " << n << ", " << ys << "\n";
+            inp << "*Material, name=MATERIAL-1\n";
+            inp << "*Deformation Plasticity\n";
+            double ys = 0.02; // Par défaut
+            inp << "" << elastic_modulus << ", " << poisson_ratio << ", " << sigma_0 << ", " << n << ", " << ys << "\n";
         }
         else if (thelaw == "UMAT"){/*
             std::string umatname = load_param_str(nom_fic_param,"umatname");
@@ -388,11 +379,11 @@ void Write2DINP (Vec<TM> &m, std::string racine_fic, Vec<double> constrained_nod
 }
 
 Vec<TM> load_abq_res_odb(std::string nom_fic, Vec<TM> res){
-
+    
     std::cout << " " << std::endl;
     std::cout << "Reading ";
     std::cout << nom_fic.c_str() << std::endl;
-
+    
     odb_initializeAPI();  // pour initialiser l'interface c++ abaqus il faut impérativement appeler cette fonction avant de faire appel à  d'autre fonctions
     odb_Odb& odb = openOdb( nom_fic.c_str() );// appel de la fonction openOdb qui permet d'ouvrir un fichier abaqus odb
     //odb_Odb& odb = openOdb( "viewer_tutorial.odb" );// appel de la fonction openOdb qui permet d'ouvrir un fichier abaqus odb
@@ -400,12 +391,19 @@ Vec<TM> load_abq_res_odb(std::string nom_fic, Vec<TM> res){
     odb_InstanceRepositoryIT instIter( rootAssy.instances() );
     for ( instIter.first(); !instIter.isDone(); instIter.next() )
         std::cout << instIter.currentKey().CStr() << std::endl;
-
+    
     // Lecture des coordonnées des noeuds
     odb_Instance& instance1 =rootAssy.instances()[ "PART-1-1" ];
     odb_Enum::odb_DimensionEnum instanceType = instance1.embeddedSpace();
     const odb_SequenceNode& nodeList = instance1.nodes();
     int nodeListSize = nodeList.size();
+    
+    
+    
+            std::cout << nodeListSize << std::endl;
+            
+            
+            
     //res[0].node_list.resize(nodeList.size());
     if ( instanceType == odb_Enum::THREE_D ) {
         for ( int n = 0; n < nodeListSize; n++ ) {
@@ -423,8 +421,8 @@ Vec<TM> load_abq_res_odb(std::string nom_fic, Vec<TM> res){
             //res[0].node_list[n].pos = node.coordinates();
         }
     }
-
-
+    
+    
     // Lecture des steps
     odb_StepRepositoryIT stepIter( odb.steps() );
     int nstep = 0;
@@ -432,8 +430,8 @@ Vec<TM> load_abq_res_odb(std::string nom_fic, Vec<TM> res){
         nstep +=1;
         //std::cout << nstep << std::endl;
     }
-
-
+    
+    
     if (res.size() != 1){
         res.resize( nstep );
         for( int i = 1; i < res.size(); ++i ) { // INITIALISATION
@@ -445,13 +443,13 @@ Vec<TM> load_abq_res_odb(std::string nom_fic, Vec<TM> res){
         //std::cout << " " << std::endl;
         //std::cout << stepIter.currentKey().CStr()  << std::endl; // Nom du step
         //std::cout << " " << std::endl;
-
+        
         odb_Step& step = odb.steps()[stepIter.currentKey().CStr()];
         odb_SequenceFrame& allFramesInStep = step.frames();
         int numFrames = allFramesInStep.size();
         //std::cout << to_string(numFrames) << std::endl;
         odb_Frame& lastFrame = allFramesInStep[numFrames-1];
-
+        
         odb_FieldOutputRepository& fieldOutputRep = lastFrame.fieldOutputs();
         odb_FieldOutputRepositoryIT fieldIter( fieldOutputRep );
         //
@@ -468,7 +466,7 @@ Vec<TM> load_abq_res_odb(std::string nom_fic, Vec<TM> res){
             }
             //          std::cout << std::endl;
         }
-
+        
         const odb_SequenceFieldValue& displacements = lastFrame.fieldOutputs()["U"].values();
         const odb_SequenceFieldValue& reac_forces = lastFrame.fieldOutputs()["RF"].values();
         int numValues = displacements.size();
@@ -478,7 +476,7 @@ Vec<TM> load_abq_res_odb(std::string nom_fic, Vec<TM> res){
             const odb_FieldValue valRF = reac_forces[i];
             const float* const U = valU.data(numComp);
             const float* const RF = valRF.data(numComp);
-
+            
             for (int comp=0; comp < numComp; comp++) {
                 res[num_step].node_list[i].dep[comp] = U[comp];
                 //res[num_step].node_list[i].f_nodal[comp] = RF[comp];
@@ -487,13 +485,13 @@ Vec<TM> load_abq_res_odb(std::string nom_fic, Vec<TM> res){
         }
         num_step += 1;
     }
-
+    
     std::cout << " " << std::endl;
     return res;
-
+    
     //  odb.close();
     //  odb_finalizeAPI();  // terminer l'interface c++ abaqus
-
+    
     //  return res;
 }
 
@@ -504,24 +502,51 @@ Vec<TM> load_abq_res_odb(std::string nom_fic, Vec<TM> res){
 bool TestFloUpdater::run( MP mp ) {
     
     TM dic_mesh;
+    Vec<TM> Vecteur_de_maillages_input; 
     int nb_images =1;
-    Vec<double> constrained_nodes; constrained_nodes << 0; constrained_nodes << 10;
+    
+    Vec<double> constrained_nodes; 
     
     double pix2m = mp[ "pix2m" ];
     
     MP ch = mp[ "_children" ]; 
+    FieldSet fs_input_bckp;
     double Young, Poisson, loi, rapport, sigma_0, n;
     for( int ii = 0; ii < ch.size(); ++ii ) {
         MP c = ch[ ii ];
-        if ( c.type() == "MeshItem" ) {
-            MP mesh = c["_mesh" ]; 
-            dic_mesh = load_into_2DLMTpp_Mesh(mesh);
-            add_message( mp, ET_Info, "Maillage récupéré" );
-            mp.flush();
-            //write_mesh_vtk( "/media/mathieu/Data/test.vtu",dic_mesh);
+        if (( c.type() == "FieldSetItem" ) or ( c.type() == "FieldSetCorreliItem" )){
+            FieldSet fs_input(c);fs_input_bckp=fs_input;
+            Mesh_vecs maillage = fs_input.mesh;
+            MP maillage_transfert = maillage.save();
+            dic_mesh = load_into_2DLMTpp_Mesh(maillage_transfert);
+            
+            Vecteur_de_maillages_input.resize(fs_input.fields[0].values.size()); 
+            for (int num_mesh = 0; num_mesh < Vecteur_de_maillages_input.size(); num_mesh++){
+                Vecteur_de_maillages_input[num_mesh]=dic_mesh;
+                fs_input.load_current_time_step(num_mesh);
+                for (int no = 0; no < Vecteur_de_maillages_input[num_mesh].node_list.size(); no++ ) {
+                    Vecteur_de_maillages_input[num_mesh].node_list[no].dep[0] = fs_input.fields[0].values[0].data[no];
+                    Vecteur_de_maillages_input[num_mesh].node_list[no].dep[1] = fs_input.fields[1].values[0].data[no];
+                }
+                Vecteur_de_maillages_input[num_mesh].update_skin();
+                for( int i = 0; i < Vecteur_de_maillages_input[num_mesh].skin.node_list.size(); ++i )
+                    constrained_nodes << Vecteur_de_maillages_input[num_mesh].skin.node_list[ i ].number;
+                //write_mesh_vtk( "/media/mathieu/Data/test_input_" + to_string(num_mesh) + ".vtu", Vecteur_de_maillages_input[num_mesh]);
+            }
         }
-        if ( c.type() == "MaterialItem" ) {
-            loi = c[ "Comportement" ];
+        //         else if ( c.type() == "MeshItem" ) {
+        //             MP mesh = c["_mesh" ]; 
+        //             dic_mesh = load_into_2DLMTpp_Mesh(mesh);
+        //             add_message( mp, ET_Info, "Maillage récupéré" );
+        //             mp.flush();
+        //             //write_mesh_vtk( "/media/mathieu/Data/test.vtu",dic_mesh);
+        //             Vecteur_de_maillages_input.resize(1); Vecteur_de_maillages_input[0]=dic_mesh;
+        //             constrained_nodes << 0; constrained_nodes << 10;
+        //         }
+        
+        if ( c.type() == "MaterialABQItem" ) {
+            loi = c["Comportement.num"];
+            std::cout << loi << std::endl;
             Young = c["Young[0]"];
             Poisson = c["Poisson[0]"];
             if (loi == 1)
@@ -533,54 +558,50 @@ bool TestFloUpdater::run( MP mp ) {
         }
     }
     
-     Vec < Vec < std::string > > Prop_Mat ; 
-     // RESIZE : 1 (nom de la loi) + nb de paramètres
-     if (loi == 0)
+    Vec < Vec < std::string > > Prop_Mat ; 
+    if (loi == 0)
         Prop_Mat.resize(3);
-     if (loi == 1)
+    if (loi == 1)
         Prop_Mat.resize(4);
-     if (loi == 2)
+    if (loi == 2)
         Prop_Mat.resize(5);
-     
-     Prop_Mat[0] << "thelaw";
-     if (loi == 0)
+    
+    Prop_Mat[0] << "thelaw";
+    if (loi == 0)
         Prop_Mat[0] << "Elas_iso";
-     else if (loi == 1)
+    else if (loi == 1)
         Prop_Mat[0] << "Elas_ortho";
-     else if (loi == 2)
+    else if (loi == 2)
         Prop_Mat[0] << "RO";
-     std::string thelaw = Prop_Mat[0][1];
-     
-     Prop_Mat[1] << "Young";
-     Prop_Mat[1] << LMT::to_string(Young*1e9); 
-     Prop_Mat[2] << "Poisson";
-     Prop_Mat[2] << LMT::to_string(Poisson); 
-     if (loi == 1){
-         Prop_Mat[3] << "rapport";
-         Prop_Mat[3] << LMT::to_string(rapport);
-     }
-     else if (loi == 2){
-         Prop_Mat[3] << "sigma_0";
-         Prop_Mat[3] << LMT::to_string(sigma_0);
-         Prop_Mat[4] << "n";
-         Prop_Mat[4] << LMT::to_string(n);
-     }
-     
-    Vec<TM> Vecteur_de_maillages; Vecteur_de_maillages.resize(1); Vecteur_de_maillages[0]=dic_mesh; 
+    std::string thelaw = Prop_Mat[0][1];
+    
+    Prop_Mat[1] << "Young";
+    Prop_Mat[1] << LMT::to_string(Young*1e9); 
+    Prop_Mat[2] << "Poisson";
+    Prop_Mat[2] << LMT::to_string(Poisson); 
+    if (loi == 1){
+        Prop_Mat[3] << "rapport";
+        Prop_Mat[3] << LMT::to_string(rapport);
+    }
+    else if (loi == 2){
+        Prop_Mat[3] << "sigma_0";
+        Prop_Mat[3] << LMT::to_string(sigma_0*1e6);
+        Prop_Mat[4] << "n";
+        Prop_Mat[4] << LMT::to_string(n);
+    }
+    
     std::string racine_fic = ("/media/mathieu/Data/aaa_test_" + LMT::to_string( nb_images ) );
-    
-    Write2DINP (Vecteur_de_maillages, racine_fic, constrained_nodes, pix2m, Prop_Mat);
-    
-    //WriteINP (Vec<TM> &m, std::string racine_fic, std::string nom_fic_param, Vec<double> constrained_nodes, double pix2m);
-    
+    Write2DINP (Vecteur_de_maillages_input, racine_fic, constrained_nodes, pix2m, Prop_Mat);
     add_message( mp, ET_Info, "Ecriture du fichier .inp terminée" );
     mp.flush();
     
+    std::string nom_fic_lck = racine_fic + ".lck";if (exists(nom_fic_lck)) remove(nom_fic_lck.c_str());
+    std::string nom_fic_odb = racine_fic + ".odb";if (exists(nom_fic_odb)) remove(nom_fic_odb.c_str());
     
     if (thelaw == "UMAT"){
-       // std::string umatname = load_param_str(nom_fic_param,"umatname");
+        // std::string umatname = load_param_str(nom_fic_param,"umatname");
         //system(("abaqus interactive job=" + racine_fic + ".inp user=" + umatname + ".f double > res_s.txt").c_str() );
-       // system(("abaqus interactive job=" + racine_fic + ".inp user=" + umatname + ".f double").c_str() );
+        // system(("abaqus interactive job=" + racine_fic + ".inp user=" + umatname + ".f double").c_str() );
     }
     else if (thelaw == "dpc"){
         //system(("abaqus interactive job=" + racine_fic + ".inp user=elasticity_variation_epsvol.f double > res_s.txt").c_str() );
@@ -588,18 +609,42 @@ bool TestFloUpdater::run( MP mp ) {
     }
     else{
         //system(("abaqus interactive job=" + racine_fic + ".inp cpus=6 double > res_s.txt").c_str() );
-        system(("/media/mathieu/Data/Abaqus/exec/abq6112.exe interactive job=" + racine_fic + ".inp cpus=6 ").c_str() );
-        std::cout << "/media/mathieu/Data/Abaqus/exec/abq6112.exe interactive job=" << racine_fic << ".inp cpus=6 " << std::endl;
+        system(("/media/mathieu/Data/Abaqus/exec/abq6112.exe interactive job=" + racine_fic + ".inp cpus=8 ").c_str() );
+        std::cout << "/media/mathieu/Data/Abaqus/exec/abq6112.exe interactive job=" << racine_fic << ".inp cpus=8 " << std::endl;
     }
     
     add_message( mp, ET_Info, "Calcul terminé" );
     mp.flush();
     
+    
     std::string nom_fic = racine_fic + ".odb";
-    Vecteur_de_maillages = load_abq_res_odb(nom_fic, Vecteur_de_maillages);
+    Vec<TM> Vecteur_de_maillages_output = load_abq_res_odb(nom_fic, Vecteur_de_maillages_input);
+    
+    for (int num_mesh = 0; num_mesh < Vecteur_de_maillages_output.size(); num_mesh++){
+        write_mesh_vtk( "/media/mathieu/Data/test_output_" + to_string(num_mesh) + ".vtu", Vecteur_de_maillages_output[num_mesh]);
+        for (int no = 0; no < Vecteur_de_maillages_output[num_mesh].node_list.size(); no++ ) {
+            //PRINT(Vecteur_de_maillages_output[num_mesh].node_list[no].dep[0]);
+          //  PRINT(no);
+        }
+    }
     
     add_message( mp, ET_Info, "Résultat récupéré" );
     mp.flush();
+    
+    FieldSet fs_output = fs_input_bckp;
+    
+    for (int num_mesh = 0; num_mesh < Vecteur_de_maillages_output.size(); num_mesh++){
+        fs_output.load_current_time_step(num_mesh);
+        for (int no = 0; no < Vecteur_de_maillages_input[num_mesh].node_list.size(); no++ ) {
+            fs_output.fields[0].values[0].data[no] = Vecteur_de_maillages_output[num_mesh].node_list[no].dep[0]/pix2m;
+            fs_output.fields[1].values[0].data[no] = Vecteur_de_maillages_output[num_mesh].node_list[no].dep[1]/pix2m;
+        }
+    }
+    
+    fs_output.save(mp["_output[0]"]);
+    add_message( mp, ET_Info, "Résultat renvoyé" );
+    mp.flush();
+    
     
     
 }
