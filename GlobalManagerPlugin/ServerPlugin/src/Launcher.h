@@ -50,8 +50,8 @@ class Launcher : public QObject {
           std::string commande;
           int output;
           
-          if(mp.type() == "TestFlo1Item" ){
-              commande = "../TestFloPlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " + temp_str ;
+          if(mp.type() == "AbaqusComputationItem" ){
+              commande = "../AbaqusComputationPlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " + temp_str ;
               output = std::system(commande.c_str());
           }
           

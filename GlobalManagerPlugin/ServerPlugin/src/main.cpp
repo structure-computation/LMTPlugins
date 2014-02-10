@@ -10,7 +10,7 @@ int main( int argc, char **argv ) {
     if ( not sc.connected() ) return 1;
 
     // type d'item observé
-    sc.reg_type( "TestFlo1Item" ); 
+    sc.reg_type( "AbaqusComputationItem" ); 
     sc.reg_type( "TestRenoItem" );  
     sc.reg_type( "CorrelationItem" );
     sc.reg_type( "File" );
