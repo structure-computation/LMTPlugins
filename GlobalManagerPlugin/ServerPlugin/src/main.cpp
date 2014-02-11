@@ -13,8 +13,8 @@ int main( int argc, char **argv ) {
     sc.reg_type( "AbaqusComputationItem" ); 
     sc.reg_type( "TestRenoItem" );  
     sc.reg_type( "CorrelationItem" );
-    sc.reg_type( "File" );
     sc.reg_type( "FieldExportItem" );
+    sc.reg_type( "File" );
     sc.reg_type( "Img" );
     sc.reg_type( "ServerAssistedVisualization" );
     
