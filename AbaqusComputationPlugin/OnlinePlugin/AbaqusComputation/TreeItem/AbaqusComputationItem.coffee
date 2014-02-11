@@ -13,7 +13,7 @@ class AbaqusComputationItem extends TreeItem_Computable
             pix2m : 0.00002
 
         @add_child new MaterialABQItem
-        
+        @add_child new BoundariesSelectionItem
         @add_output new FieldSetItem
         
 #        @_mesh.add_point([0, 0, 0])
@@ -30,6 +30,7 @@ class AbaqusComputationItem extends TreeItem_Computable
         
     accept_child: ( ch ) ->
         ch instanceof FieldSetCorreliItem or
+        ch instanceof BoundariesSelectionItem or
         ch instanceof FieldSetItem or
         ch instanceof FieldItem or
         ch instanceof MeshItem or
