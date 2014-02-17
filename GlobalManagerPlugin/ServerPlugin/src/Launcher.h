@@ -50,20 +50,22 @@ class Launcher : public QObject {
           std::string commande;
           int output;
           
-          if(mp.type() == "TestFlo1Item" ){
-              commande = "../TestFloPlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " + temp_str ;
+          if(mp.type() == "AbaqusComputationItem" ){
+              commande = "../AbaqusComputationPlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " + temp_str ;
               output = std::system(commande.c_str());
           }
-          
           else if(mp.type() == "TestRenoItem" ){
               commande = "../TestRenoPlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " + temp_str ;
               output = std::system(commande.c_str());
           }
-          
-           else if(mp.type() == "CorrelationItem" or mp.type() == "File" or mp.type() == "Img" or mp.type() == "ServerAssistedVisualization" ){
-               commande = "../CorreliPlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " + temp_str ;
-               output = std::system(commande.c_str());
-           }   
+          else if(mp.type() == "FieldExportItem"  ){
+              commande = "../FieldExportPlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " + temp_str ;
+              output = std::system(commande.c_str());
+          }   
+          else if(mp.type() == "CorrelationItem" or mp.type() == "File" or mp.type() == "Img" or mp.type() == "ServerAssistedVisualization" ){
+              commande = "../CorreliPlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " + temp_str ;
+              output = std::system(commande.c_str());
+          }   
 
           qDebug() << "----------------- output : " << output;
           if(output){

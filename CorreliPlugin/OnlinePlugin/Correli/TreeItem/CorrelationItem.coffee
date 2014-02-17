@@ -28,7 +28,7 @@ class CorrelationItem extends TreeItem_Computable
 
                 # con: 1e-5
                 multi_res       : new ConstrainedVal( 0, { min: 0, max: 10, div: 10 } )
-                nb_iter_max     : 10
+                nb_iter_max     : 100
                 lambda_bulk     : 0
                 max_displacement: -1
                 crack_eps_threshold: -1
