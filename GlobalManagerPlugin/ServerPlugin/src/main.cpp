@@ -12,9 +12,10 @@ int main( int argc, char **argv ) {
     // type d'item observé
     sc.reg_type( "TestFlo1Item" ); 
     sc.reg_type( "TestRenoItem" );  
-    sc.reg_type( "File" );
-    sc.reg_type( "Img" );
-    sc.reg_type( "ServerAssistedVisualization" );
+    sc.reg_type( "CorrelationItem" );
+    //sc.reg_type( "File" );
+    //sc.reg_type( "Img" );
+    //sc.reg_type( "ServerAssistedVisualization" );
     
     //liste des job en cours
     JobList job_list;
