@@ -4,9 +4,9 @@
 #include <QtCore/QFile>
 #include <QtCore/QTemporaryFile>
 #include <QtCore/QDataStream>
-#include "LMT/containers/vec.h"
+#include "LMT/include/containers/vec.h"
 #include "dic/correlation/ImgInterp.h"
-#include "LMT/mesh/mesh.h"
+#include "LMT/include/mesh/mesh.h"
 #include "header_abq.h"
 #include "/media/mathieu/Data/Abaqus/include/odb_API.h" // pour les fonctions odb d'abaqus
 #include "dic/correlation/mesh_carac_correlation.h"

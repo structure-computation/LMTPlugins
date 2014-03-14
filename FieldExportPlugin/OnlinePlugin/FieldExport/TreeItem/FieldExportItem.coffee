@@ -5,7 +5,7 @@ class FieldExportItem extends TreeItem_Computable
         
         @add_attr
            Format : new Choice( 0, [ "txt", "vtk" ] ) 
-           Adresse : "/home/..."
+           Adresse : "/media/mathieu/Data/resultats_test/"
            Nom : "resultat"
            
         @_name.set name

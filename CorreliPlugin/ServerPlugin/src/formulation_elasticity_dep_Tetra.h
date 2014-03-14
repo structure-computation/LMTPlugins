@@ -3,8 +3,8 @@
 
 #ifndef Mesh_carac_elasticity_dep_HEADER
 #define Mesh_carac_elasticity_dep_HEADER
-#include "mesh/displayparaview.h"
-#include "mesh/tetra.h"
+#include "LMT/include/mesh/displayparaview.h"
+#include "LMT/include/mesh/tetra.h"
 namespace LMT {
 
 template<class TP,unsigned dim> struct Mesh_carac_elasticity_dep {};
