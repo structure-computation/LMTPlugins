@@ -9,7 +9,7 @@ class FieldExportItem extends TreeItem_Computable
            Nom : "resultat"
            
         @_name.set name
-        @_ico.set "img/mesher.png"
+        @_ico.set "img/FieldExport_bouton.png"
         @_viewable.set false
         
         @_computation_mode.set false

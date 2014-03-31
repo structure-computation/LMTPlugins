@@ -86,12 +86,21 @@ void Write2DINP (Vec<TM> &m, std::string racine_fic, Vec<double> constrained_nod
         //////////////////////////////////////////////////////////////////////////////////////////////////////////
         std::string def_mode = "CP";
         //////////////////////////////////////////////////////////////////////////////////////////////////////////
-        if (def_mode == "CP") inp << "CPS3";
-        else if (def_mode == "DP") inp << "CPE3";
-        
+        if (m[0].elem_list[0]->nb_nodes_virtual() == 3){
+            if (def_mode == "CP") inp << "CPS3";
+            else if (def_mode == "DP") inp << "CPE3";
+        }
+        else if (m[0].elem_list[0]->nb_nodes_virtual() == 4){
+            if (def_mode == "CP") inp << "CPS4";
+            else if (def_mode == "DP") inp << "CPE4";
+        }
+
         inp << "\n";
         for (int i = 0; i < m[0].elem_list.size(); ++i){//liste des noeuds avec leur position dans l'espace
-            inp << "     " << i + 1 << ", " << m[0].elem_list[i]->node_virtual(0)->number + 1 << ", " << m[0].elem_list[i]->node_virtual(1)->number + 1 << ", " << m[0].elem_list[i]->node_virtual(2)->number + 1 << "\n";
+            inp << "     " << i + 1 ;
+            for (int jj=0; jj<m[0].elem_list[0]->nb_nodes_virtual(); jj++)
+                inp   << ", "  << m[0].elem_list[i]->node_virtual(jj)->number + 1 ;
+            inp << "\n";
         }
         inp << "*Nset, nset=_PickedSet5, internal, generate\n";
         inp << " 1, " << m[0].node_list.size() << ", 1\n";

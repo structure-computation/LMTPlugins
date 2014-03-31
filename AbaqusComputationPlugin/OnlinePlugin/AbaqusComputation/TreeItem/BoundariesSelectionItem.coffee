@@ -1,15 +1,14 @@
 #
 class BoundariesSelectionItem extends TreeItem
-    constructor: ( name = "BoundariesSelection" ) ->
+    constructor: (name = "BoundarySelection" ) ->
         super()
         
+        @_name.set name
         @_viewable.set true
 
     z_index: ->
         return 2000
     
-        @_name.set name
-        
     accept_child: ( ch ) ->
         ch instanceof PickedZoneItem or
         ch instanceof DiscretizationItem or

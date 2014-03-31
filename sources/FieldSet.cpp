@@ -60,10 +60,8 @@ void FieldSet::load_current_time_step(int time_step)
 void FieldSet::save(MP fieldsetitem) const
 {
     int nb_fields_out = fieldsetitem["visualization.color_by.lst"].size();
-    PRINT(nb_fields_out);
     fieldsetitem["visualization.color_by.lst"].clear();
     nb_fields_out = fieldsetitem["visualization.color_by.lst"].size();
-    PRINT(nb_fields_out);
     fieldsetitem.flush();
     for(int f = 0; f < fields.size(); f++)
     {
@@ -73,7 +71,6 @@ void FieldSet::save(MP fieldsetitem) const
         else fieldsetitem["visualization.color_by.lst"] << field; 
     }
     nb_fields_out = fieldsetitem["visualization.color_by.lst"].size();
-    PRINT(nb_fields_out);
     fieldsetitem.flush();
 }
 

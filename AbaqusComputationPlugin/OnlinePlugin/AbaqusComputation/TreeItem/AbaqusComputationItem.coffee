@@ -4,7 +4,7 @@ class AbaqusComputationItem extends TreeItem_Computable
         super()
         
         @_name.set name
-        @_ico.set "img/mesher.png"
+        @_ico.set "img/AbaqusComputation_bouton.png"
         @_viewable.set false
         
         @_computation_mode.set false
