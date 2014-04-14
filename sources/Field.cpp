@@ -83,9 +83,11 @@ void Field::save(MP fielditem) const
     for(int v = 0; v < values.size(); v++)
     {
         MP value = MP::new_obj( type_field );
+  PRINT("coucou1 : dans Field.cpp");
         value[ "_mesh" ] = mesh->save();
         //qDebug() << value["_mesh"];
         
+  PRINT("coucou1");
         QVector<int> indices;
         indices << values[v].data.size();
         TypedArray<double> *data = new TypedArray<double>(indices);

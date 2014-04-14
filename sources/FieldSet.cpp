@@ -67,7 +67,9 @@ void FieldSet::save(MP fieldsetitem) const
     {
         MP field = MP::new_obj("NamedParametrizedDrawable");
         fields[f].save(field);
-        if(nb_fields_out) fieldsetitem["visualization.color_by.lst"][0] = field; 
+        if(nb_fields_out) {
+	  fieldsetitem["visualization.color_by.lst"][0] = field; 
+	}
         else fieldsetitem["visualization.color_by.lst"] << field; 
     }
     nb_fields_out = fieldsetitem["visualization.color_by.lst"].size();

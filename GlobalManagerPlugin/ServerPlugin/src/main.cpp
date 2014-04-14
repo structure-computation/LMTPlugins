@@ -11,6 +11,7 @@ int main( int argc, char **argv ) {
 
     // type d'item observé
     sc.reg_type( "AbaqusComputationItem" ); 
+    sc.reg_type( "IdentificationWithAbaqusItem" );
     sc.reg_type( "TestRenoItem" );  
     sc.reg_type( "CorrelationItem" );
     sc.reg_type( "FieldExportItem" );

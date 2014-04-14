@@ -27,6 +27,76 @@ bool create_dir( const std::string & dir_path )
     return exists(dir_path);
 }
 
+double count_lines(std::string nom_fic){
+    std::string numlines;
+    system("touch res_system.txt");
+    system(("wc -l " + nom_fic + "> res_system.txt").c_str());
+    std::ifstream fichier("res_system.txt");
+    std::string res;
+    std::getline(fichier, res);
+    for (int i = 0; i<(res.size()-nom_fic.size()-1);i++) numlines+=res[i];
+    int numlines_int=atoi(numlines.c_str());
+    return numlines_int;
+}
+
+double load_param(std::string nom_fic, std::string nom_param){
+    std::ifstream strim(nom_fic.c_str());
+    std::string ligne;
+    double param;
+    int numlines=count_lines(nom_fic);
+    for (int i = 0; i<numlines; i++){
+        std::getline(strim, ligne);
+        if (ligne==nom_param){
+            std::getline(strim, ligne);
+            param = atof(ligne.c_str());
+            break;
+        }
+    }
+    return param;
+}
+
+std::string load_param_str(std::string nom_fic, std::string nom_param){
+    std::ifstream strim(nom_fic.c_str());
+    std::string ligne;
+    std::string param;
+    int numlines=count_lines(nom_fic);
+    for (int i = 0; i<numlines; i++){
+        std::getline(strim, ligne);
+        if (ligne==nom_param){
+            std::getline(strim, ligne);
+            param = ligne;
+            break;
+        }
+    }
+    return param;
+}
+
+Vec<double> load_res(std::string nom_fic){
+    std::ifstream strim(nom_fic.c_str());
+    std::string ligne;
+    Vec<double> resultat;
+    
+    int numlines=count_lines(nom_fic);
+    for (int i = 0; i<numlines; i++){
+        std::getline(strim, ligne);
+	double a;
+	std::istringstream convert(ligne);
+	convert >> a;
+        resultat.push_back(a);
+    }
+    return resultat;
+}
+
+void write_mat (Mat<double> M, std::string name){
+    std::ofstream mat (name.c_str());
+    for (int ii = 0; ii < M.col(0).size(); ii++){
+        for (int jj = 0; jj < M.row(0).size(); jj++){
+            mat << double(M(ii,jj)) << " " ;
+        }
+        mat << "\n";
+    }
+}
+
 double calc_dist_segment( Vec <double > point, Vec < Vec < double > > segment){
   
     Vec <double> distances;
@@ -50,9 +120,9 @@ double calc_dist_segment( Vec <double > point, Vec < Vec < double > > segment){
     return mini;
 }
 
-Vec <double> select_cn (Vec<TM> maillages, MP ch, std::string CL, int nbs, Vec <double> &constrained_nodes){
+Vec <double> select_cn (Vec<TM> maillages, MP ch, std::string CL, int nbs, Vec <int> &constrained_nodes){
 
-	    //Vec <double> constrained_nodes;
+	    Vec<int> indices_bc_cn;
 	    if (CL=="nope"){
 		for( int i = 0; i < maillages[0].skin.node_list.size(); ++i )
 		    constrained_nodes << maillages[0].skin.node_list[ i ].number;
@@ -72,7 +142,6 @@ Vec <double> select_cn (Vec<TM> maillages, MP ch, std::string CL, int nbs, Vec <
 			Vec <int> indices;
 			for (int nds = 0; nds < indice_el_bc.size(); nds++)
 			    indices << indice_el_bc[nds];
-			PRINT(indices);
 			Vec < Vec < double > > coor_nds;
 			MP mesh_bc = pel_bc["mesh"];
 			MP pts_bc = mesh_bc["points"];
@@ -87,21 +156,25 @@ Vec <double> select_cn (Vec<TM> maillages, MP ch, std::string CL, int nbs, Vec <
 			coor_nds_bc.push_back(coor_nds);
 		    }
 		}
-		
 		maillages[0].update_skin();
 		for( int nds = 0; nds < maillages[0].skin.node_list.size(); ++nds ){ //  Sélection des noeuds contraints
 		      bool close_to_the_border = 0 ;
+		      int indice;
 		      for (int nbc = 0; nbc < coor_nds_bc.size(); nbc++){
 			      Vec < double > pos_nd = maillages[0].skin.node_list[ nds ].pos;
 			      double dist = calc_dist_segment( pos_nd, coor_nds_bc[nbc]);
-			      if (dist < 1)
+			      if (dist < 1){
 				  close_to_the_border = 1 ;
+				  indice = nbc;
+			      }
 		      }
-		      if (close_to_the_border)
+		      if (close_to_the_border){
 			  constrained_nodes << maillages[0].skin.node_list[ nds ].number;
+			  indices_bc_cn << indice;
+		      }
 		}
 	     }
-	     return constrained_nodes;
+	     return indices_bc_cn;
 }
 
 
@@ -153,12 +226,49 @@ Vec<TM> load_FieldSetItem_into_LMTpp_Mesh(FieldSet fs_input){
     return Vecteur_de_maillages_input;
 }
 
+void  extract_dep_from_LMTppMesh ( Vec<TM> res, Vec < Vec <Vec < double > > > &dep ){
 
-void extract_computation_parameters( MP mp, Vec<TM> &Vecteur_de_maillages_input, Vec<double> &constrained_nodes,  Vec < Vec < std::string > > &Prop_Mat, FieldSet &fs_input_bckp){
+    Vec <Vec <double> > dep_ref ;
+    Vec <double> depU;Vec <double> depV;
+    for (int num_mesh = 0; num_mesh < res.size(); ++num_mesh){
+        for (int n = 0; n < res[ num_mesh ].node_list.size(); ++n){
+            depU << res[ num_mesh ].node_list[ n ].dep[ 0 ];
+            depV << res[ num_mesh ].node_list[ n ].dep[ 1 ];
+        }
+    }
+    dep_ref.push_back(depU);dep_ref.push_back(depV);dep.push_back(dep_ref);
+}
+
+
+void extract_fnod_from_LMTppMesh ( Vec<TM> res_ref, std::string senstrac , Vec < Vec <Vec<double> > > &calc_force , Vec<int> constrained_nodes){
+
+
+    Vec <Vec<double> > fnodaltot;
+    for( int num_mesh = 0; num_mesh < res_ref.size(); ++num_mesh ) {
+	Vec<double> fnodal;
+        for( int n = 0; n < constrained_nodes.size(); ++n ){
+	    if (senstrac == "hor")
+		fnodal << res_ref[num_mesh].node_list[constrained_nodes[n]].f_nodal[0];
+	    else if (senstrac == "ver")
+		fnodal << res_ref[num_mesh].node_list[constrained_nodes[n]].f_nodal[1];
+        }
+        fnodaltot.push_back(fnodal);
+    } 
+    
+    calc_force.push_back(fnodaltot);
+}
+
+
+void extract_computation_parameters( MP mp, Vec<TM> &Vecteur_de_maillages_input, Vec<int> &constrained_nodes,  Vec<int> &indices_bc_cn, Vec < Vec < std::string > > &Prop_Mat, FieldSet &fs_input_bckp){
 
     
     MP ch = mp[ "_children" ]; 
-    double Young, Poisson, loi, rapport, sigma_0, n;
+    double Young, Poisson, loi, rapport, sigma_0, n, ct;
+    std::string param_file, umatname, computation_type;
+    int umat_ndepvar, umat_nparam, umat_nparamid, nparam, nparamid;
+    MP mat;
+    ct = mp["computation_type.num"];
+    bool ex_field =0; 
     
     // CHARGEMENT DU CHAMP D'ENTREE ET DES PROPRIETES MATERIAU
     std::string CL = "nope";
@@ -173,29 +283,71 @@ void extract_computation_parameters( MP mp, Vec<TM> &Vecteur_de_maillages_input,
     for( int ii = 0; ii < ch.size(); ++ii ) {
 	MP c = ch[ ii ];
 	if (( c.type() == "FieldSetItem" ) or ( c.type() == "FieldSetCorreliItem" )){
+	    ex_field =1;
 	    FieldSet fs_input(c); fs_input_bckp = fs_input;
 	    Vecteur_de_maillages_input = load_FieldSetItem_into_LMTpp_Mesh(fs_input);
-	    select_cn (Vecteur_de_maillages_input,  ch,  CL, nbs, constrained_nodes);
+	    indices_bc_cn = select_cn (Vecteur_de_maillages_input,  ch,  CL, nbs, constrained_nodes);
 	}
 	
 	if ( c.type() == "MaterialABQItem" ) {
+	    mat=c;
 	    loi = c["Comportement.num"];
-	    std::cout << loi << std::endl;
 	    Young = c["Young[0]"];
 	    Poisson = c["Poisson[0]"];
-	    if (loi == 1)
+	    if (loi == 1) // Elas_ortho
 		rapport = c["rapport[0]"];
-	    if (loi == 2){
+	    else if (loi == 2){ // Ramberg_Osgood
 		sigma_0 = c["sigma_0[0]"];
 		n = c["n[0]"];
 	    }
+	    else if (loi == 3){ // UMAT
+		QString Qparam_file = c["param_file"];
+	        param_file = Qparam_file.toStdString();
+		QString Qumatname = c["umat_file"];
+	        umatname = Qumatname.toStdString();
+	    }
+	    else if (loi == 4){ // Equation
+		QString Qparam_file = c["param_file"];
+	        param_file = Qparam_file.toStdString();
+	    }
+	    else if (loi == 5){ // Equation + UMAT
+		QString Qparam_file = c["param_file"];
+	        param_file = Qparam_file.toStdString();
+		QString Qumatname = c["umat_file"];
+	        umatname = Qumatname.toStdString();
+	    }
+	    if (ct == 0)
+		computation_type = "2DPS";
+	    else if (ct == 1)
+		computation_type = "2DPE";
+	    else if (ct == 2)
+		computation_type = "3Dex";
 	}
     }
     
     
     // REECRITURE DES PROPRIETES MATERIAU DANS UN FORMAT "GENERIQUE" LMT : vecteur de vecteurs string qui contiennent le nom ([0]) et la valeur ([1])
    
-   if (loi == 0)
+    if ((loi == 3) or (loi==5)){ // UMAT
+	umat_nparam = load_param(param_file,"umat_nparam");
+	umat_ndepvar = load_param(param_file,"umat_ndepvar");
+	umat_nparamid = load_param(param_file,"umat_nparamid");
+	Prop_Mat.resize(1 + 1 + umat_nparam + 1 + 1 + umat_nparamid +1 ); // thelaw + umat_nparam + number of parameters of the UMAT + umat_ndepvar + umat_nparamid + line for umat_nparamid + nparamid lines + umatname
+    }
+    if (loi == 4){ // Equation
+	nparam = load_param(param_file,"nparam");
+	nparamid = load_param(param_file,"nparamid");
+	Prop_Mat.resize(1 +2 + 1 + nparam + nparam  + 1 + nparamid +1); // thelaw + Young + Poisson + nparam + number of parameters of the equation + names of parameters of the equation + nparamid + nparamid lines + equation
+    }
+    if (loi == 5){ // Equation+UMAT
+	umat_nparam = load_param(param_file,"umat_nparam");
+	umat_ndepvar = load_param(param_file,"umat_ndepvar");
+	umat_nparamid = load_param(param_file,"umat_nparamid");
+	Prop_Mat.resize(1 + 1 + umat_nparam + 1 + 1 + umat_nparamid +1 ); // thelaw + umat_nparam + number of parameters of the UMAT + umat_ndepvar + umat_nparamid + line for umat_nparamid + nparamid lines + umatname
+    }
+    
+    
+    if (loi == 0)
 	Prop_Mat.resize(3);
     if (loi == 1)
 	Prop_Mat.resize(4);
@@ -209,36 +361,175 @@ void extract_computation_parameters( MP mp, Vec<TM> &Vecteur_de_maillages_input,
 	Prop_Mat[0] << "Elas_ortho";
     else if (loi == 2)
 	Prop_Mat[0] << "RO";
-    std::string thelaw = Prop_Mat[0][1];
+    else if (loi == 3)
+	Prop_Mat[0] << "UMAT";
+    else if (loi == 4)
+	Prop_Mat[0] << "Equation";
+    else if (loi == 5)
+	Prop_Mat[0] << "UMAT_Lem_diccit";
     
-    Prop_Mat[1] << "Young";
-    Prop_Mat[1] << LMT::to_string(Young*1e9); 
-    Prop_Mat[2] << "Poisson";
-    Prop_Mat[2] << LMT::to_string(Poisson); 
-    if (loi == 1){
-	Prop_Mat[3] << "rapport";
-	Prop_Mat[3] << LMT::to_string(rapport);
+    if ((loi == 3) or (loi == 5)){ // UMAT
+	Prop_Mat[1] << "umat_nparam";
+	Prop_Mat[1] << LMT::to_string(umat_nparam);
+	for (int npa = 0; npa < umat_nparam; npa++){
+	    std::string stri;
+	    stri = "param" + LMT::to_string(npa+1);
+	    Prop_Mat[2+npa] << stri;
+	    std::string par = load_param_str(param_file,stri);
+	    Prop_Mat[2+npa] << par;
+	}
+	Prop_Mat[2+umat_nparam] << "umat_ndepvar";
+	Prop_Mat[2+umat_nparam] << LMT::to_string(umat_ndepvar);
+	Prop_Mat[2+umat_nparam+1] << "umat_nparamid";
+	Prop_Mat[2+umat_nparam+1] << LMT::to_string(umat_nparamid);
+	
+	for (int npa = 0; npa < umat_nparamid; npa++){
+	    std::string stri;
+	    stri = "paramid" + LMT::to_string(npa+1);
+	    Prop_Mat[2+umat_nparam+1+1+npa] << stri;///
+	    std::string par = load_param_str(param_file,stri);
+	    Prop_Mat[2+umat_nparam+1+1+npa] << par;
+	}
+	Prop_Mat[2+umat_nparam+1+1+umat_nparamid] << "umatname";
+	Prop_Mat[2+umat_nparam+1+1+umat_nparamid] << umatname;
     }
-    else if (loi == 2){
-	Prop_Mat[3] << "sigma_0";
-	Prop_Mat[3] << LMT::to_string(sigma_0*1e6);
-	Prop_Mat[4] << "n";
-	Prop_Mat[4] << LMT::to_string(n);
+    else if (loi == 4){ // Equation // thelaw + Young + Poisson + nparam + number of parameters of the equation + names of parameters of the equation + nparamid + nparamid lines + equation
+	Prop_Mat[1] << "Young";
+	Prop_Mat[1] << LMT::to_string(Young*1e9); 
+	Prop_Mat[2] << "Poisson";
+	Prop_Mat[2] << LMT::to_string(Poisson); 
+	Prop_Mat[2+1] << "nparam";
+	Prop_Mat[2+1] << LMT::to_string(nparam);
+	for (int npa = 0; npa < nparam; npa++){
+	    std::string stri;
+	    stri = "param" + LMT::to_string(npa+1);
+	    Prop_Mat[2+2+npa] << stri;
+	    std::string par = load_param_str(param_file,stri);
+	    Prop_Mat[2+2+npa] << par;
+	}
+	for (int npa = 0; npa < nparam; npa++){
+	    std::string stri;
+	    stri = "param" + LMT::to_string(npa+1) + "_symbol";
+	    Prop_Mat[2+2+nparam+npa] << stri;
+	    std::string par = load_param_str(param_file,stri);
+	    Prop_Mat[2+2+nparam+npa] << par;
+	}
+	  
+	Prop_Mat[2+2+2*nparam] << "nparamid";
+	Prop_Mat[2+2+2*nparam] << LMT::to_string(nparamid);
+	
+	for (int npa = 0; npa < nparamid; npa++){
+	    std::string stri;
+	    stri = "paramid" + LMT::to_string(npa+1);
+	    Prop_Mat[2+2+2*nparam+1+npa] << stri;///
+	    std::string par = load_param_str(param_file,stri);
+	    Prop_Mat[2+2+2*nparam+1+npa] << par;
+	}
+	std::string eq = load_param_str(param_file,"equation");
+	Prop_Mat[2+2+2*nparam+1+nparamid] << "equation";
+	Prop_Mat[2+2+2*nparam+1+nparamid] << eq;
     }
+//     else if (loi == 5){ // UMAT_Lem_diccit
+// 	Prop_Mat[1] << "umat_nparam";
+// 	Prop_Mat[1] << LMT::to_string(umat_nparam);
+// 	for (int npa = 0; npa < umat_nparam; npa++){
+// 	    std::string stri;
+// 	    stri = "param" + LMT::to_string(npa+1);
+// 	    Prop_Mat[2+npa] << stri;
+// 	    std::string par = load_param_str(param_file,stri);
+// 	    Prop_Mat[2+npa] << par;
+// 	}
+// 	Prop_Mat[2+umat_nparam] << "umat_ndepvar";
+// 	Prop_Mat[2+umat_nparam] << LMT::to_string(umat_ndepvar);
+// 	Prop_Mat[2+umat_nparam+1] << "umat_nparamid";
+// 	Prop_Mat[2+umat_nparam+1] << LMT::to_string(umat_nparamid);
+// 	
+// 	for (int npa = 0; npa < umat_nparamid; npa++){
+// 	    std::string stri;
+// 	    stri = "paramid" + LMT::to_string(npa+1);
+// 	    Prop_Mat[2+umat_nparam+1+1+npa] << stri;///
+// 	    std::string par = load_param_str(param_file,stri);
+// 	    Prop_Mat[2+umat_nparam+1+1+npa] << par;
+// 	}
+// 	Prop_Mat[2+umat_nparam+1+1+umat_nparamid] << "umatname";
+// 	Prop_Mat[2+umat_nparam+1+1+umat_nparamid] << umatname;
+//     }
+    else { // no UMAT or equation
+	Prop_Mat[1] << "Young";
+	Prop_Mat[1] << LMT::to_string(Young*1e9); 
+	Prop_Mat[2] << "Poisson";
+	Prop_Mat[2] << LMT::to_string(Poisson); 
+	if (loi == 1){
+	    Prop_Mat[3] << "rapport";
+	    Prop_Mat[3] << LMT::to_string(rapport);
+	}
+	else if (loi == 2){
+	    Prop_Mat[3] << "sigma_0";
+	    Prop_Mat[3] << LMT::to_string(sigma_0*1e6);
+	    Prop_Mat[4] << "n";
+	    Prop_Mat[4] << LMT::to_string(n);
+	}
+    }
+    
+    Prop_Mat.resize(Prop_Mat.size()+1);
+    Prop_Mat[Prop_Mat.size()-1] << computation_type;
+    
+    if (computation_type == "3Dex"){
+	double n_el = mp [ "n_el" ];
+	Prop_Mat[Prop_Mat.size()-1] << LMT::to_string(n_el);
+    }
+    else{
+	Prop_Mat[Prop_Mat.size()-1] << "0";
+    }
+    
+    if (ex_field == 0)
+	PRINT("NO INPUT FIELD OR MESH");
+    
+}
+
+void put_string_in_MP(Vec <std::string> strvec, MP &mp){
+
+    std::istringstream iss(strvec[1]);
+    double prop;
+    iss >> prop;
+    QString qstr = QString::fromStdString(strvec[1]);
+    if (strvec[0] == "Young"){
+	prop /= 1e9;
+	qstr = QString::number(prop);
+    }
+    if (strvec[0] == "sigma_0"){
+	prop /= 1e6;
+	qstr = QString::number(prop);
+    }
+    qDebug() << qstr;
+    mp[(strvec[0] + "[0]").c_str()] = prop;
+    mp.flush();
+}
+
+void push_back_material_parameters( MP &mp, Vec < Vec < std::string > > Prop_Mat){
+
+    MP ch = mp[ "_children" ]; 
+    for( int ii = 0; ii < ch.size(); ++ii ) {
+	MP c = ch[ ii ];
+	if ( c.type() == "MaterialABQItem" ) {
+	    for (int nprop =0; nprop < Prop_Mat.size(); nprop++)
+		put_string_in_MP(Prop_Mat[nprop], c);
+	}
+    }
+    mp.flush();
     
 }
 
 
-void put_result_in_MP (Vec<TM> &maillages, MP &mp, FieldSet &fs_output){// SORTIE DANS UN FieldSet "calcul"
-  
+void put_result_in_MP (Vec<TM> maillages, MP &mp, FieldSet &fs_output){// SORTIE DANS UN FieldSet "calcul"
+
     double pix2m = mp[ "pix2m" ];
     for (int num_mesh = 0; num_mesh < maillages.size(); num_mesh++){
 	for (int no = 0; no < maillages[num_mesh].node_list.size(); no++ ) {
 	    fs_output.fields[0].values[num_mesh].data[no] = maillages[num_mesh].node_list[no].dep[0]/pix2m;
 	    fs_output.fields[1].values[num_mesh].data[no] = maillages[num_mesh].node_list[no].dep[1]/pix2m;
-	}
+	} 
     }
     fs_output.save(mp["_output[0]"]);
-  
 }
 
