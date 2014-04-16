@@ -10,14 +10,15 @@ int main( int argc, char **argv ) {
     quint64 model_id = atoi(argv[1]);   
     sc.reg_type( "CorrelationItem" );
     
+    
     MP mp = sc.load_ptr(model_id);
     qDebug() << "###############   launch CorrelationItem ###############" ;
     CorreliUpdater updater;
     updater.sc = &sc;
     updater.exec( mp );
     qDebug() << "###############   finish stand alone CorrelationItem ###############" ;
-    
-
+     
+   
 //     // attente
 //     while ( SodaClient::Event event = sc.event() ) {
 //         MP mp = event.mp();

@@ -8,6 +8,7 @@
 #include "dic/correlation/ImgInterp.h"
 #include "LMT/include/mesh/mesh.h"
 #include "header_abq.h"
+#include "LMT/include/containers/apply_ij.h"
 #include "/media/mathieu/Data/Abaqus/include/odb_API.h" // pour les fonctions odb d'abaqus
 #include "dic/correlation/mesh_carac_correlation.h"
 #include <iostream>
@@ -87,7 +88,17 @@ void Write2DINP (Vec<TM> &m, std::string racine_fic, Vec<double> constrained_nod
 	    }
 	    for (int numeps = 0; numeps<neps; numeps++){
 		//inp << "sig" << numeps << "=" << Prop_Mat[2+2+nparam][1] << "*(" << Prop_Mat[2+2+nparam+1][1] << "+eps" << numeps << ")**" << Prop_Mat[2+2+nparam+2][1] << "\n"; // SWIFT
-		inp << "sig" << numeps << "=" << Prop_Mat[2+2+nparam][1] << "+" << Prop_Mat[2+2+nparam+1][1] << "*eps" << numeps << "**" << Prop_Mat[2+2+nparam+2][1] << "\n"; // POWER LAW
+		//inp << "sig" << numeps << "=" << Prop_Mat[2+2+nparam][1] << "+" << Prop_Mat[2+2+nparam+1][1] << "*eps" << numeps << "**" << Prop_Mat[2+2+nparam+2][1] << "\n"; // POWER LAW
+		std::string eq = Prop_Mat[Prop_Mat.size()-2][1]; 
+		std::string subs = "varsigma";
+		Vec<std::size_t> fs = find_str_in_str(eq, subs);
+		std::string sube = "varepsilonp";
+		Vec<std::size_t> fe = find_str_in_str(eq, sube);
+		inp << eq.substr(0,fs[0]);
+		inp << "sig" << numeps; 
+		inp << eq.substr(fs[0]+subs.size(),fe[0]-(fs[0]+subs.size()));
+		inp << "eps" << numeps;
+		inp << eq.substr(fe[0]+sube.size(),eq.size()) << "\n";
 	    }
 	  
 	}
@@ -399,12 +410,14 @@ void Write2DINP (Vec<TM> &m, std::string racine_fic, Vec<double> constrained_nod
         
         for (int i=0; i < m.size(); ++i  ){// steps
             inp << "** \n";
-            inp << "** STEP: Step-" << i+1  << ", inc=11000\n";
+            //inp << "** STEP: Step-" << i+1  << ", inc=11000\n";
+            inp << "** STEP: Step-" << i+1  << "\n";
             inp << "** \n";
-            inp << "*Step, NLGEOM, name=Step-" << i+1 << "\n";
+            //inp << "*Step, NLGEOM, name=Step-" << i+1 << "\n";
+            inp << "*Step, name=Step-" << i+1 << "\n";
             inp << "*Static\n"; 
-	    //inp << "0.01, 1., 0.0001, 0.1\n";
-	    inp << "0.01, 1., 1e-05, 0.01\n";
+	    inp << "0.01, 1., 0.0001, 0.1\n";
+	    //inp << "0.01, 1., 1e-05, 0.01\n";
             inp << "** \n";
             inp << "** BOUNDARY CONDITIONS\n";
 	    if (computation_type == "3Dex"){ 
@@ -503,8 +516,24 @@ void Write2DINP (Vec<TM> &m, std::string racine_fic, Vec<double> constrained_nod
     std::remove((racine_fic +".msg").c_str());
 }
 
-Vec<TM> load_abq_res_odb(std::string nom_fic, Vec<TM> res){
-    
+
+   struct PutElementalField_from_abq {
+	template< class V, class E >
+	void operator()(  V &v, unsigned j , E& e, unsigned i) const {
+	    typedef typename E::Pvec Pvec;               
+	    
+	    if (4*i == j)
+	      e.epsilon[0] = v;
+	    if (4*i+1 == j)
+	      e.epsilon[1] = v;
+	    if (4*i+3 == j)
+	      e.epsilon[2] = v;
+	    
+	}
+    };
+
+void load_abq_res_odb(std::string nom_fic, Vec<TM> &res){
+  
     std::cout << " " << std::endl;
     std::cout << "Reading ";
     std::cout << nom_fic.c_str() << std::endl;
@@ -563,6 +592,7 @@ Vec<TM> load_abq_res_odb(std::string nom_fic, Vec<TM> res){
     }
     int num_step = 0;
     for (stepIter.first(); !stepIter.isDone(); stepIter.next()) {
+      
         //std::cout << " " << std::endl;
         //std::cout << stepIter.currentKey().CStr()  << std::endl; // Nom du step
         //std::cout << " " << std::endl;
@@ -593,6 +623,7 @@ Vec<TM> load_abq_res_odb(std::string nom_fic, Vec<TM> res){
         const odb_SequenceFieldValue& displacements = lastFrame.fieldOutputs()["U"].values();
         const odb_SequenceFieldValue& reac_forces = lastFrame.fieldOutputs()["RF"].values();
 	
+	// NODAL VALUES
         int numValues = displacements.size();
         int numComp = 0;
 	//int n_layers = displacements.size()/face_nodes.size();
@@ -609,20 +640,94 @@ Vec<TM> load_abq_res_odb(std::string nom_fic, Vec<TM> res){
 		const float* const coord = node.coordinates();
 		if (coord[2] == 0) face = 1;
 		else face = 0;
+		for (int comp=0; comp < numComp; comp++) {
+		    if (face)
+			res[num_step].node_list[i].dep[comp] = U[comp];
+		    double noeud = i;
+		    int num_layer = floor(noeud/face_nodes.size());
+		    res[num_step].node_list[i-num_layer*face_nodes.size()].f_nodal[comp] += RF[comp];
+		}
 	    }
-            for (int comp=0; comp < numComp; comp++) {
-		if (face)
+	    else{
+		for (int comp=0; comp < numComp; comp++) {
 		    res[num_step].node_list[i].dep[comp] = U[comp];
-		double noeud = i;
-		int num_layer = floor(noeud/face_nodes.size());
-                res[num_step].node_list[i-num_layer*face_nodes.size()].f_nodal[comp] += RF[comp];
-            }
+		    res[num_step].node_list[i].f_nodal[comp] += RF[comp];
+		}
+	    }
         }
+        
+        // ELEMENT VALUE
+	odb_FieldOutput& stress = lastFrame.fieldOutputs()["S"];
+	odb_FieldOutput& strain = lastFrame.fieldOutputs()["E"];
+	const odb_SequenceFieldBulkData& seqStressBulkData = stress.bulkDataBlocks();
+	const odb_SequenceFieldBulkData& seqStrainBulkData = strain.bulkDataBlocks();
+	int numStressBlocks = seqStressBulkData.size();
+	int numStrainBlocks = seqStrainBulkData.size();
+	
+	for (int jblock=0; jblock<numStressBlocks; jblock++) {
+	    const odb_FieldBulkData& bulkData = seqStressBulkData[jblock];
+	    int numValues = bulkData.length();
+	    int numComp = bulkData.width();
+	    float* data = bulkData.data();
+	    int nElems = bulkData.numberOfElements();
+	    int numIP = numValues/nElems;
+	    int* elementLabels = bulkData.elementLabels();
+	    int* integrationPoints = bulkData.integrationPoints();
+	    const odb_SectionPoint& myBulkSectionPoint =  bulkData.sectionPoint();
+	    int sectPoint = myBulkSectionPoint.number();
+	    
+	    Vec<double> vecteur;
+	    for(int np=0; np<numValues; np++)
+		vecteur << data[np] ;
+	   // apply_ij( vecteur, res[num_step].elem_list,  PutElementalField_from_abq() );
+	    
+// 	    for (int elem = 0, ipPosition=0, dataPosition=0; elem<numValues; elem+=numIP) {
+// 		for (int ip = 0; ip<numIP; ip++) {
+// 		   Vec<double> components ;
+// 		   std::cout << data[dataPosition] << std::endl;
+// 		   std::cout << data[dataPosition+1] << std::endl;
+// 		   std::cout << data[dataPosition+2] << std::endl;
+// 		   double c0 = data[dataPosition];
+// 		   double c1 = data[dataPosition+1];
+// 		   double c2 = data[dataPosition+2];
+// 		   res[num_step].elem_list[elem*numIP+ip]->set_field( "sigma", (c0, c1, c2));
+// 		   for (int comp = 0; comp<numComp; comp++){
+// 		      components << data[dataPosition++];
+// 		      //dataPosition++;
+// 		   }
+// 		   PRINT(components);
+// 		   components.resize(3);
+// 		   //res[num_step].elem_list[elem*numIP+ip]->set_field( "sigma", components);
+// 		}
+// 	    }
+	}
+	for (int jblock=0; jblock<numStrainBlocks; jblock++) {
+	    const odb_FieldBulkData& bulkData = seqStrainBulkData[jblock];
+	    int numValues = bulkData.length();
+	    int numComp = bulkData.width();
+	    float* data = bulkData.data();
+	    int nElems = bulkData.numberOfElements();
+	    int numIP = numValues/nElems;
+	    int* elementLabels = bulkData.elementLabels();
+	    int* integrationPoints = bulkData.integrationPoints();
+	    const odb_SectionPoint& myBulkSectionPoint =  bulkData.sectionPoint();
+	    int sectPoint = myBulkSectionPoint.number();
+	   
+	    Vec<double> vecteur;
+	    for(int np=0; np<numValues; np++)
+		vecteur << data[np] ;
+	    //apply_ij( vecteur, res[num_step].elem_list,  PutElementalField_from_abq() );
+	    
+	}
+	
+        
         num_step += 1;
     }
-    
+
+    odb.close();
+    odb_finalizeAPI();
     std::cout << " " << std::endl;
-    return res;
+    //return res;
     
     //  odb.close();
     //  odb_finalizeAPI();  // terminer l'interface c++ abaqus
@@ -631,7 +736,7 @@ Vec<TM> load_abq_res_odb(std::string nom_fic, Vec<TM> res){
 }
 
 
-Vec<TM> calc_abq_into_LMTppMesh(Vec<TM> &m_ref, Vec<double> constrained_nodes, double pix2m, Vec < Vec < std::string > > Prop_Mat , double thickness){
+void calc_abq_into_LMTppMesh(Vec<TM> &Vecteur_de_maillages_output, Vec<TM> &m_ref, Vec<double> constrained_nodes, double pix2m, Vec < Vec < std::string > > Prop_Mat , double thickness){
      
    
     char* HomeDir;
@@ -662,12 +767,15 @@ Vec<TM> calc_abq_into_LMTppMesh(Vec<TM> &m_ref, Vec<double> constrained_nodes, d
     }
     else{
         //system(("abaqus interactive job=" + racine_fic + ".inp cpus=6 double > res_s.txt").c_str() );
-        system(("/media/mathieu/Data/Abaqus/exec/abq6112.exe interactive job=" + racine_fic + ".inp cpus=8 scratch=" + scratch).c_str() );
         std::cout << "/media/mathieu/Data/Abaqus/exec/abq6112.exe interactive job=" << racine_fic << ".inp cpus=8 scratch=" << scratch << std::endl;
+        system(("/media/mathieu/Data/Abaqus/exec/abq6112.exe interactive job=" + racine_fic + ".inp cpus=8 scratch=" + scratch).c_str() );
     }
     
     std::string nom_fic = racine_fic + ".odb";
-    Vec<TM> Vecteur_de_maillages_output = load_abq_res_odb(nom_fic, m_ref);
-    return Vecteur_de_maillages_output;
+    //Vec<TM> Vecteur_de_maillages_output = load_abq_res_odb(nom_fic, m_ref);
+    
+    
+    load_abq_res_odb(nom_fic, Vecteur_de_maillages_output);
+    
     
 }

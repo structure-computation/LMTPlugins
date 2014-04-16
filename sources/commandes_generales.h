@@ -27,6 +27,20 @@ bool create_dir( const std::string & dir_path )
     return exists(dir_path);
 }
 
+Vec<std::size_t> find_str_in_str(std::string str, std::string sub){
+    std::size_t idx ;
+    Vec<std::size_t> solution;
+    for(std::size_t pos = 0;pos < str.size();++pos){
+        idx = str.find(sub,pos);
+        pos=idx;
+        if (idx>str.size())
+            break;
+        else
+            solution << idx;
+    }
+    return solution;
+}
+
 double count_lines(std::string nom_fic){
     std::string numlines;
     system("touch res_system.txt");
