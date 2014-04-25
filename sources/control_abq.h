@@ -318,15 +318,15 @@ void Write2DINP (Vec<TM> &m, std::string racine_fic, Vec<double> constrained_nod
             inp << "*DENSITY\n";
             inp << "2.7e-9\n";
             inp << "*User Material, constants=66\n";
-            inp << "<E>,        <Nu>,      <sig1>,     <eps1>,    <sig2>,     <eps2>,   <sig3>,    <eps3>\n";
-            inp << "<sig4>,    <eps4>,   <sig5>,     <eps5>,    <sig6>,     <eps6>,   <sig7>,    <eps7>\n";
-            inp << "<sig8>,    <eps8>,   <sig9>,     <eps9>,    <sig10>,     <eps10>,   <sig11>,    <eps11>\n";
-            inp << "<sig12>,    <eps12>,   <sig13>,     <eps13>,    <sig14>,     <eps14>,   <sig15>,    <eps15>\n";
-            inp << "<sig16>,    <eps16>,   <sig17>,     <eps17>,    <sig18>,     <eps18>,   <sig19>,    <eps19>\n";
-            inp << "<sig20>,    <eps20>,   <sig21>,     <eps21>,    <sig22>,     <eps22>,   <sig23>,    <eps23>\n";
-            inp << "<sig24>,    <eps24>,   <sig25>,     <eps25>,    <sig26>,     <eps26>,   <sig27>,    <eps27>\n";
-            inp << "<sig28>,    <eps28>,   <sig29>,     <eps29>,    <pth>,       <s>,       <S>,        <Dcr>,\n";
-            inp << "<mDam>,     <eDam>\n";
+            inp << "<E>,        <Nu>,     <sig0>,     <eps0>,  <sig1>,     <eps1>,    <sig2>,     <eps2>, \n";
+            inp << "<sig3>,    <eps3>, <sig4>,    <eps4>,   <sig5>,     <eps5>,    <sig6>,     <eps6>,   \n";
+            inp << "<sig7>,    <eps7>,  <sig8>,    <eps8>,   <sig9>,     <eps9>,    <sig10>,     <eps10>,   \n";
+            inp << "<sig11>,    <eps11>, <sig12>,    <eps12>,   <sig13>,     <eps13>,    <sig14>,     <eps14>,   \n";
+            inp << "<sig15>,    <eps15>, <sig16>,    <eps16>,   <sig17>,     <eps17>,    <sig18>,     <eps18>,   \n";
+            inp << "<sig19>,    <eps19>, <sig20>,    <eps20>,   <sig21>,     <eps21>,    <sig22>,     <eps22>,   \n";
+            inp << "<sig23>,    <eps23>, <sig24>,    <eps24>,   <sig25>,     <eps25>,    <sig26>,     <eps26>,   \n";
+            inp << "<sig27>,    <eps27>, <sig28>,    <eps28>,   <sig29>,     <eps29>,    <pth>,       <s>,       \n";
+            inp << "<S>,        <Dcr>, <mDam>,     <eDam>\n";
 	  
 	}
         else if (thelaw == "dpc"){/*
@@ -656,70 +656,64 @@ void load_abq_res_odb(std::string nom_fic, Vec<TM> &res){
 	    }
         }
         
-        // ELEMENT VALUE
-	odb_FieldOutput& stress = lastFrame.fieldOutputs()["S"];
-	odb_FieldOutput& strain = lastFrame.fieldOutputs()["E"];
-	const odb_SequenceFieldBulkData& seqStressBulkData = stress.bulkDataBlocks();
-	const odb_SequenceFieldBulkData& seqStrainBulkData = strain.bulkDataBlocks();
-	int numStressBlocks = seqStressBulkData.size();
-	int numStrainBlocks = seqStrainBulkData.size();
-	
-	for (int jblock=0; jblock<numStressBlocks; jblock++) {
-	    const odb_FieldBulkData& bulkData = seqStressBulkData[jblock];
-	    int numValues = bulkData.length();
-	    int numComp = bulkData.width();
-	    float* data = bulkData.data();
-	    int nElems = bulkData.numberOfElements();
-	    int numIP = numValues/nElems;
-	    int* elementLabels = bulkData.elementLabels();
-	    int* integrationPoints = bulkData.integrationPoints();
-	    const odb_SectionPoint& myBulkSectionPoint =  bulkData.sectionPoint();
-	    int sectPoint = myBulkSectionPoint.number();
-	    
-	    Vec<double> vecteur;
-	    for(int np=0; np<numValues; np++)
-		vecteur << data[np] ;
-	   // apply_ij( vecteur, res[num_step].elem_list,  PutElementalField_from_abq() );
-	    
+//         // ELEMENT VALUE
+// 	odb_FieldOutput& stress = lastFrame.fieldOutputs()["S"];
+// 	odb_FieldOutput& strain = lastFrame.fieldOutputs()["E"];
+// 	const odb_SequenceFieldBulkData& seqStressBulkData = stress.bulkDataBlocks();
+// 	const odb_SequenceFieldBulkData& seqStrainBulkData = strain.bulkDataBlocks();
+// 	int numStressBlocks = seqStressBulkData.size();
+// 	int numStrainBlocks = seqStrainBulkData.size();
+// 	
+// 	for (int jblock=0; jblock<numStressBlocks; jblock++) {
+// 	    const odb_FieldBulkData& bulkData = seqStressBulkData[jblock];
+// 	    int numValues = bulkData.length();
+// 	    int numComp = bulkData.width();
+// 	    float* data = bulkData.data();
+// 	    int nElems = bulkData.numberOfElements();
+// 	    int numIP = numValues/nElems;
+// 	    int* elementLabels = bulkData.elementLabels();
+// 	    int* integrationPoints = bulkData.integrationPoints();
+// 	    const odb_SectionPoint& myBulkSectionPoint =  bulkData.sectionPoint();
+// 	    int sectPoint = myBulkSectionPoint.number();
+// 	    
 // 	    for (int elem = 0, ipPosition=0, dataPosition=0; elem<numValues; elem+=numIP) {
 // 		for (int ip = 0; ip<numIP; ip++) {
 // 		   Vec<double> components ;
-// 		   std::cout << data[dataPosition] << std::endl;
-// 		   std::cout << data[dataPosition+1] << std::endl;
-// 		   std::cout << data[dataPosition+2] << std::endl;
 // 		   double c0 = data[dataPosition];
 // 		   double c1 = data[dataPosition+1];
-// 		   double c2 = data[dataPosition+2];
-// 		   res[num_step].elem_list[elem*numIP+ip]->set_field( "sigma", (c0, c1, c2));
+// 		   double c2 = data[dataPosition+3];
+// 		   res[num_step].elem_list[elem*numIP+ip]->set_field( "sigma", Vec<double,3>(c0, c1, c2));
 // 		   for (int comp = 0; comp<numComp; comp++){
-// 		      components << data[dataPosition++];
-// 		      //dataPosition++;
+// 		      dataPosition++;
 // 		   }
-// 		   PRINT(components);
-// 		   components.resize(3);
-// 		   //res[num_step].elem_list[elem*numIP+ip]->set_field( "sigma", components);
 // 		}
 // 	    }
-	}
-	for (int jblock=0; jblock<numStrainBlocks; jblock++) {
-	    const odb_FieldBulkData& bulkData = seqStrainBulkData[jblock];
-	    int numValues = bulkData.length();
-	    int numComp = bulkData.width();
-	    float* data = bulkData.data();
-	    int nElems = bulkData.numberOfElements();
-	    int numIP = numValues/nElems;
-	    int* elementLabels = bulkData.elementLabels();
-	    int* integrationPoints = bulkData.integrationPoints();
-	    const odb_SectionPoint& myBulkSectionPoint =  bulkData.sectionPoint();
-	    int sectPoint = myBulkSectionPoint.number();
-	   
-	    Vec<double> vecteur;
-	    for(int np=0; np<numValues; np++)
-		vecteur << data[np] ;
-	    //apply_ij( vecteur, res[num_step].elem_list,  PutElementalField_from_abq() );
-	    
-	}
-	
+// 	}
+// 	for (int jblock=0; jblock<numStrainBlocks; jblock++) {
+// 	    const odb_FieldBulkData& bulkData = seqStrainBulkData[jblock];
+// 	    int numValues = bulkData.length();
+// 	    int numComp = bulkData.width();
+// 	    float* data = bulkData.data();
+// 	    int nElems = bulkData.numberOfElements();
+// 	    int numIP = numValues/nElems;
+// 	    int* elementLabels = bulkData.elementLabels();
+// 	    int* integrationPoints = bulkData.integrationPoints();
+// 	    const odb_SectionPoint& myBulkSectionPoint =  bulkData.sectionPoint();
+// 	    int sectPoint = myBulkSectionPoint.number();
+// 	    
+// 	    for (int elem = 0, ipPosition=0, dataPosition=0; elem<numValues; elem+=numIP) {
+// 		for (int ip = 0; ip<numIP; ip++) {
+// 		   Vec<double> components ;
+// 		   double c0 = data[dataPosition];
+// 		   double c1 = data[dataPosition+1];
+// 		   double c2 = data[dataPosition+3];
+// 		   res[num_step].elem_list[elem*numIP+ip]->set_field( "epsilon", Vec<double,3>(c0, c1, c2));
+// 		   for (int comp = 0; comp<numComp; comp++){
+// 		      dataPosition++;
+// 		   }
+// 		}
+// 	    }
+// 	}
         
         num_step += 1;
     }

@@ -7,7 +7,6 @@ class IdentificationWithAbaqusItem extends TreeItem_Computable
            iterations : 10
            relaxation : 1
            offset : 0.01
-           force : "/media/mathieu/Data/bourgueil/plast_florent/effort_2219_L5.txt"
            id_done : 0
         
         @_name.set name

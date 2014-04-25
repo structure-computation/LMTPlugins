@@ -11,9 +11,12 @@
 #include <iostream>
 #include <boost/graph/graph_concepts.hpp>
 #include "FieldSet.h"
+#include <time.h>
 
 typedef LMT::Mesh<Mesh_carac_pb_correlation_basic<double,2> > TM;
 typedef TM::Pvec Pvec;
+typedef ImgInterp<double,2/*,ImgInterpOrder3_Kernel*/> I2;
+LMT::Vec<I2> images;
 
 bool exists( const std::string & file )
 {
@@ -272,12 +275,131 @@ void extract_fnod_from_LMTppMesh ( Vec<TM> res_ref, std::string senstrac , Vec <
     calc_force.push_back(fnodaltot);
 }
 
+void extract_id_properties(Vec < Vec < std::string > > Prop_Mat, Vec<int> &prop2id){
+  
+    std::string thelaw = Prop_Mat[0][1];
+    
+    if (thelaw == "Elas_iso"){
+	prop2id << 2; // nu
+    }
+    else if (thelaw == "Elas_ortho"){
+	prop2id << 2;// nu
+	prop2id << 3;// E1/E2
+    }
+    else if (thelaw == "RO"){
+	prop2id << 3;// sigma_0
+	prop2id << 4;// n
+    }
+    else if (thelaw == "UMAT"){
+	std::istringstream iss(Prop_Mat[1][1]);
+	int umat_nparam;
+	iss >> umat_nparam;
+	std::string texte2 = Prop_Mat[1+1+umat_nparam+1][1];
+	std::istringstream iss2(texte2);
+	int umat_nparamid;
+	iss2 >> umat_nparamid;
+	for (int npa = 0; npa < umat_nparamid; npa++){
+	    std::string stri = "paramid" + LMT::to_string(npa);
+	    std::string texte = Prop_Mat[1+1+umat_nparam+1+1+npa][1];
+	    std::istringstream is(Prop_Mat[1+1+umat_nparam+1+1+npa][1]);
+	    int prop;
+	    is >> prop;
+	    prop2id << prop + 1 ;
+	}
+    }
+    else if (thelaw == "Equation"){
+	std::istringstream iss(Prop_Mat[3][1]);
+	int nparam;
+	iss >> nparam;
+	std::string texte2 = Prop_Mat[2+2+2*nparam][1];
+	std::istringstream iss2(texte2);
+	int nparamid; 
+	iss2 >> nparamid;
+	for (int npa = 0; npa < nparamid; npa++){
+	    std::istringstream is(Prop_Mat[2+2+2*nparam+1+npa][1]);
+	    int prop;
+	    is >> prop;
+	    prop2id << prop + 3 ;
+	}
+    }
+    else if (thelaw == "UMAT_Lem_diccit"){
+	std::istringstream iss(Prop_Mat[1][1]);
+	int umat_nparam;
+	iss >> umat_nparam;
+	std::string texte2 = Prop_Mat[1+1+umat_nparam+1][1];
+	std::istringstream iss2(texte2);
+	int umat_nparamid;
+	iss2 >> umat_nparamid;
+	for (int npa = 0; npa < umat_nparamid; npa++){
+	    std::string stri = "paramid" + LMT::to_string(npa);
+	    std::string texte = Prop_Mat[1+1+umat_nparam+1+1+npa][1];
+	    std::istringstream is(Prop_Mat[1+1+umat_nparam+1+1+npa][1]);
+	    int prop;
+	    is >> prop;
+	    prop2id << prop + 1 ;
+	}
+    }
+  
+  
+}
 
-void extract_computation_parameters( MP mp, Vec<TM> &Vecteur_de_maillages_input, Vec<int> &constrained_nodes,  Vec<int> &indices_bc_cn, Vec < Vec < std::string > > &Prop_Mat, FieldSet &fs_input_bckp){
+void extract_images(MP mp, LMT::Vec<I2> &images){
+ 
+   MP ch = mp[ "_children" ]; 
+    for( int ii = 0; ii < ch.size(); ++ii ) {
+	MP c = ch[ ii ];
+	if ( c.type() == "ImgSetItem" ) {
+            for( int j = 0; j < c[ "_children" ].size(); ++j ) {
+                MP im = c[ "_children" ][ j ];
+                if ( im.type() == "ImgItem" ) {
+                    I2 *img = images.new_elem();
+                    QString name = im[ "img.src" ];
+                    if ( im[ "img.src" ].type() != "Path" )
+                        name = "../CorreliOnline/html/" + name;
+
+                    try {
+                        img->load( name.toAscii().data() );
+                        img->reverse_y();
+                    } catch ( std::string msg ) {
+                        //add_message( mp, ET_Error, "Img " + name + " does not exist" );
+			PRINT("Images does not exist");
+                        return false;
+                    }
+                } /*else if ( im.type() == "RawVolume" ) {
+                    I2 *img = images.new_elem();
+                    MP ms( im[ "img_size" ] );
+                    Vec<int,3> S( ms[ 0 ], ms[ 1 ], ms[ 2 ] );
+                    PRINT( S );
+
+                    MP volume = im[ "_children" ][ 0 ];
+                    qDebug() << volume;
+                    MP data = updater->sc->load_ptr( volume[ "_ptr" ] );
+                    qDebug() << data;
+
+	            QString name = data;
+                    PRINT( name.toAscii().data() );
+
+                    try {
+                        typedef unsigned char PI8;
+                        img->template load_binary<PI8>( name.toAscii().data(), S );
+                    } catch ( std::string msg ) {
+                        add_message( mp, Updater::ET_Error, "Img " + name + " does not exist" );
+                        return false;
+                    }
+		    PRINT( name.toAscii().data() );
+                }*/
+            }
+        }
+  
+    }
+}
+
+
+void extract_computation_parameters( MP mp, Vec<TM> &Vecteur_de_maillages_input, Vec<int> &constrained_nodes,  Vec<int> &indices_bc_cn, Vec < Vec < std::string > > &Prop_Mat, FieldSet &fs_input_bckp, Vec<Vec<std::string> > &force_files){
 
     
     MP ch = mp[ "_children" ]; 
-    double Young, Poisson, loi, rapport, sigma_0, n, ct;
+    double Young, Poisson, loi, rapport, sigma_0, n, ct, sign;
     std::string param_file, umatname, computation_type;
     int umat_ndepvar, umat_nparam, umat_nparamid, nparam, nparamid;
     MP mat;
@@ -443,31 +565,6 @@ void extract_computation_parameters( MP mp, Vec<TM> &Vecteur_de_maillages_input,
 	Prop_Mat[2+2+2*nparam+1+nparamid] << "equation";
 	Prop_Mat[2+2+2*nparam+1+nparamid] << eq;
     }
-//     else if (loi == 5){ // UMAT_Lem_diccit
-// 	Prop_Mat[1] << "umat_nparam";
-// 	Prop_Mat[1] << LMT::to_string(umat_nparam);
-// 	for (int npa = 0; npa < umat_nparam; npa++){
-// 	    std::string stri;
-// 	    stri = "param" + LMT::to_string(npa+1);
-// 	    Prop_Mat[2+npa] << stri;
-// 	    std::string par = load_param_str(param_file,stri);
-// 	    Prop_Mat[2+npa] << par;
-// 	}
-// 	Prop_Mat[2+umat_nparam] << "umat_ndepvar";
-// 	Prop_Mat[2+umat_nparam] << LMT::to_string(umat_ndepvar);
-// 	Prop_Mat[2+umat_nparam+1] << "umat_nparamid";
-// 	Prop_Mat[2+umat_nparam+1] << LMT::to_string(umat_nparamid);
-// 	
-// 	for (int npa = 0; npa < umat_nparamid; npa++){
-// 	    std::string stri;
-// 	    stri = "paramid" + LMT::to_string(npa+1);
-// 	    Prop_Mat[2+umat_nparam+1+1+npa] << stri;///
-// 	    std::string par = load_param_str(param_file,stri);
-// 	    Prop_Mat[2+umat_nparam+1+1+npa] << par;
-// 	}
-// 	Prop_Mat[2+umat_nparam+1+1+umat_nparamid] << "umatname";
-// 	Prop_Mat[2+umat_nparam+1+1+umat_nparamid] << umatname;
-//     }
     else { // no UMAT or equation
 	Prop_Mat[1] << "Young";
 	Prop_Mat[1] << LMT::to_string(Young*1e9); 
@@ -498,6 +595,25 @@ void extract_computation_parameters( MP mp, Vec<TM> &Vecteur_de_maillages_input,
     
     if (ex_field == 0)
 	PRINT("NO INPUT FIELD OR MESH");
+    
+    MP bs = ch[ nbs ];
+    MP chil = bs[ "_children" ]; 
+    force_files.resize(chil.size());
+    for( int ii = 0; ii < chil.size(); ++ii ) {
+	MP c = chil[ ii ];
+	QString Qforce_file = c["force"]; 
+	force_files[ii] << Qforce_file.toStdString();
+	sign = c["force_sign.num"];
+	PRINT(sign);
+	if (sign == 0)
+	   force_files[ii] << "+";
+	else if (sign == 1)
+	   force_files[ii] << "-";
+	else if (sign == 2)
+	   force_files[ii] << "0";
+	
+    }
+    
     
 }
 
@@ -537,13 +653,103 @@ void push_back_material_parameters( MP &mp, Vec < Vec < std::string > > Prop_Mat
 
 void put_result_in_MP (Vec<TM> maillages, MP &mp, FieldSet &fs_output){// SORTIE DANS UN FieldSet "calcul"
 
+    PRINT("coucou");
     double pix2m = mp[ "pix2m" ];
     for (int num_mesh = 0; num_mesh < maillages.size(); num_mesh++){
+    PRINT("coucou");
 	for (int no = 0; no < maillages[num_mesh].node_list.size(); no++ ) {
 	    fs_output.fields[0].values[num_mesh].data[no] = maillages[num_mesh].node_list[no].dep[0]/pix2m;
 	    fs_output.fields[1].values[num_mesh].data[no] = maillages[num_mesh].node_list[no].dep[1]/pix2m;
 	} 
     }
+    PRINT("coucou");
     fs_output.save(mp["_output[0]"]);
+    PRINT("coucou");
 }
 
+    
+void write_identification_report (std::string report_address, Vec<TM> &Mesh_Vector_output, Vec <Vec<std::string> > Prop_Mat, int it, int iterations, Mat<double,Sym<>,SparseLine<> >M_d, Vec<Mat<double,Sym<>,SparseLine<> > >M_f, Vec<double>F_d, Vec <Vec<double> > F_f, Vec <Vec<double> > calc_force, Vec <Vec<double> > meas_force, Vec<int>prop2id, double ponderation, Vec<double> dif){
+
+    system(("touch " + report_address).c_str());
+    std::ofstream report (report_address.c_str());
+    
+    time_t rawtime;
+    struct tm * timeinfo;
+    time (&rawtime);
+    timeinfo = localtime (&rawtime);
+    
+    report << "Report generated on " << asctime(timeinfo) << "\n";
+    report << " \n";
+    report << "There were " << Mesh_Vector_output.size() << " steps in the computation.\n";
+    report << "The used mesh contains " << Mesh_Vector_output[0].node_list.size() << " nodes and " << Mesh_Vector_output[0].elem_list.size() << " elements.\n";
+    report << " \n";
+    if (it==0)
+	report << "1 iteration of the identification procedure was ran (" << iterations << " max).\n";
+    else
+	report << it+1 << " iterations of the identification procedure were ran (" << iterations << " max).\n";
+    report << "\n";
+    
+    if (it+1 == iterations){
+	report << "!!!! /!\\ !!!!\n";
+	report << "The procedure did not converge before the final number of iterations. You might want to re-run it with a larger number of iterations.\n";
+	report << "!!!! /!\\ !!!!\n";
+	report << "\n";
+	report << "The last parameters were :\n";
+    }
+    else 
+	report << "The identified parameters were :\n";
+    report << "\n";
+    for (int p2id =0; p2id<prop2id.size(); p2id++){
+	report << Prop_Mat[prop2id[p2id]][0] << " : " << Prop_Mat[prop2id[p2id]][1] << "\n";
+    }
+    report << "(last relative increments - 1 is 100% - : ";
+    for (int ii =0; ii< dif.size(); ii++)
+	report << dif[ii] << ", ";
+    report << ")\n";
+    report << "\n";
+    report << "\n";
+    report << "The correlation matrix associated to displacements was :\n";
+    for (int ii = 0; ii < M_d.col(0).size(); ii++){
+        for (int jj = 0; jj < M_d.row(0).size(); jj++){
+            report << double(M_d(ii,jj)) << " " ;
+        }
+        report << "\n";
+    }
+    report << "\n";
+    report << "The second member associated to displacements was :\n";
+    for (int ii = 0; ii < F_d.size(); ii++){
+        report << F_d[ii] << " " ;
+        report << "\n";
+    }
+    report << "\n";
+    report << "The correlation matrixes associated to forces were :\n";
+    for (int nbc = 0; nbc < F_f.size(); nbc++){
+	Mat<double,Sym<>,SparseLine<> > M_ff = M_f[nbc];
+	report << "Boundary n° " << nbc+1 << "\n" ; 
+	for (int ii = 0; ii < M_d.col(0).size(); ii++){
+	    for (int jj = 0; jj < M_d.row(0).size(); jj++){
+		report << double(M_ff(ii,jj))*ponderation << " " ;
+	    }
+	    report << "\n";
+	}
+	report << "\n";
+    }
+    report << "The second members associated to forces were :\n";
+    for (int nbc = 0; nbc < F_f.size(); nbc++){
+	Vec<double> F_ff = F_f[nbc];
+	report << "Boundary n° " << nbc+1 << "\n" ; 
+	for (int ii = 0; ii < M_d.col(0).size(); ii++){
+	    report << F_ff[ii]*ponderation << " " ;
+	    report << "\n";
+	}
+	report << "\n";
+    }
+    
+    report << "\n";
+    report << "\n";
+    report << "\n";
+    report << "\n";
+    report << "\n";
+  
+  
+}

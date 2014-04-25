@@ -16,16 +16,17 @@ bool AbaqusComputationUpdater::run( MP mp ) {
     
     //// Variables 
     Vec<TM> Vecteur_de_maillages_input;  
-    Vec<double> constrained_nodes; 
+    Vec<int> constrained_nodes; 
     Vec<int> indices_bc_cn;
     MP param = mp["_children[0]"];
     double pix2m = param[ "pix2m" ];
     double thickness = param[ "thickness" ];
     FieldSet fs_output;
     Vec < Vec < std::string > > Prop_Mat; // FORMAT "GENERIQUE" LMT : vecteur de vecteurs string qui contiennent le nom ([0]) et la valeur ([1])
+    Vec<Vec< std::string> > force_files;
     //////////////
     
-    extract_computation_parameters( param, Vecteur_de_maillages_input, constrained_nodes, indices_bc_cn,  Prop_Mat, fs_output); // Lecture des paramètres du calcul
+    extract_computation_parameters( param, Vecteur_de_maillages_input, constrained_nodes, indices_bc_cn,  Prop_Mat, fs_output, force_files); // Lecture des paramètres du calcul
     
     add_message( mp, ET_Info, "Lancement du calcul" );    mp.flush();
     Vec<TM> Vecteur_de_maillages_output = Vecteur_de_maillages_input;
