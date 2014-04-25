@@ -46,8 +46,8 @@ Vec<std::size_t> find_str_in_str(std::string str, std::string sub){
 
 double count_lines(std::string nom_fic){
     std::string numlines;
-    system("touch res_system.txt");
-    system(("wc -l " + nom_fic + "> res_system.txt").c_str());
+    int value = system("touch res_system.txt");
+    value = system(("wc -l " + nom_fic + "> res_system.txt").c_str());
     std::ifstream fichier("res_system.txt");
     std::string res;
     std::getline(fichier, res);
@@ -363,7 +363,7 @@ void extract_images(MP mp, LMT::Vec<I2> &images){
                     } catch ( std::string msg ) {
                         //add_message( mp, ET_Error, "Img " + name + " does not exist" );
 			PRINT("Images does not exist");
-                        return false;
+                        //return false;
                     }
                 } /*else if ( im.type() == "RawVolume" ) {
                     I2 *img = images.new_elem();
@@ -452,6 +452,18 @@ void extract_computation_parameters( MP mp, Vec<TM> &Vecteur_de_maillages_input,
 		QString Qumatname = c["umat_file"];
 	        umatname = Qumatname.toStdString();
 	    }
+	    if (ct == 0)
+		computation_type = "2DPS";
+	    else if (ct == 1)
+		computation_type = "2DPE";
+	    else if (ct == 2)
+		computation_type = "3Dex";
+	}
+	else if ( c.type() == "Material_Code_Aster_Item" ) {
+	    mat=c;
+	    loi = c["Comportement.num"];
+	    Young = c["Young[0]"];
+	    Poisson = c["Poisson[0]"];
 	    if (ct == 0)
 		computation_type = "2DPS";
 	    else if (ct == 1)
@@ -670,7 +682,7 @@ void put_result_in_MP (Vec<TM> maillages, MP &mp, FieldSet &fs_output){// SORTIE
     
 void write_identification_report (std::string report_address, Vec<TM> &Mesh_Vector_output, Vec <Vec<std::string> > Prop_Mat, int it, int iterations, Mat<double,Sym<>,SparseLine<> >M_d, Vec<Mat<double,Sym<>,SparseLine<> > >M_f, Vec<double>F_d, Vec <Vec<double> > F_f, Vec <Vec<double> > calc_force, Vec <Vec<double> > meas_force, Vec<int>prop2id, double ponderation, Vec<double> dif){
 
-    system(("touch " + report_address).c_str());
+    int value = system(("touch " + report_address).c_str());
     std::ofstream report (report_address.c_str());
     
     time_t rawtime;
