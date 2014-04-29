@@ -11,11 +11,10 @@
 #include "AbaqusComputationUpdater.h"
 
 
-//template<unsigned dim>
 bool AbaqusComputationUpdater::run( MP mp ) {
     
     //// Variables 
-    Vec<TM> Vecteur_de_maillages_input;  
+    Vec<TM> Mesh_Vector_input;  
     Vec<int> constrained_nodes; 
     Vec<int> indices_bc_cn;
     MP param = mp["_children[0]"];
@@ -26,14 +25,15 @@ bool AbaqusComputationUpdater::run( MP mp ) {
     Vec<Vec< std::string> > force_files;
     //////////////
     
-    extract_computation_parameters( param, Vecteur_de_maillages_input, constrained_nodes, indices_bc_cn,  Prop_Mat, fs_output, force_files); // Lecture des paramètres du calcul
+    extract_computation_parameters( param, Mesh_Vector_input, constrained_nodes, indices_bc_cn,  Prop_Mat, fs_output, force_files); // Lecture des paramètres du calcul
     
     add_message( mp, ET_Info, "Lancement du calcul" );    mp.flush();
-    Vec<TM> Vecteur_de_maillages_output = Vecteur_de_maillages_input;
-    calc_abq_into_LMTppMesh(Vecteur_de_maillages_output, Vecteur_de_maillages_input, constrained_nodes, pix2m, Prop_Mat, thickness); // Ref field computation for a given set of parameter
+    Vec<TM> Mesh_Vector_output = Mesh_Vector_input;
+    calc_abq_into_LMTppMesh(Mesh_Vector_output, Mesh_Vector_input, constrained_nodes, pix2m, Prop_Mat, thickness); // Ref field computation for a given set of parameter
     add_message( mp, ET_Info, "Calcul terminé" );    mp.flush();
     
-    put_result_in_MP(Vecteur_de_maillages_output, mp, fs_output); // Sortie dans un FieldSet "calcul"
+    put_result_in_MP(Mesh_Vector_output, mp, fs_output); // Sortie dans un FieldSet "calcul"
     add_message( mp, ET_Info, "Résultat renvoyé" );    mp.flush();  
+    return 0;
 }
 

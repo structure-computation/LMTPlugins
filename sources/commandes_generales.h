@@ -18,10 +18,18 @@ typedef TM::Pvec Pvec;
 typedef ImgInterp<double,2/*,ImgInterpOrder3_Kernel*/> I2;
 LMT::Vec<I2> images;
 
+
+
 bool exists( const std::string & file )
 {
      std::ifstream fichier( file.c_str() );
     return !fichier.fail();
+}
+
+void put_void_file_in(std::string resfile){
+    if (exists(resfile)) 
+      remove(resfile.c_str()); 
+    int vide = system(("touch " + resfile).c_str());
 }
 
 bool create_dir( const std::string & dir_path )
@@ -102,6 +110,45 @@ Vec<double> load_res(std::string nom_fic){
         resultat.push_back(a);
     }
     return resultat;
+}
+
+Vec<Vec<double> >  load_vecvec(std::string filename){
+    std::ifstream strim(filename.c_str());
+    std::string ligne;
+    Vec<Vec<double> > res;
+    int numlines=count_lines(filename);
+    for (int i = 0; i<numlines; i++){
+	Vec <double> tmp;
+        std::getline(strim, ligne);
+	if (ligne.size() == 0)
+	   bool dummy;
+	else {
+	    Vec<std::size_t> nplaces = find_str_in_str(ligne, " ");
+	    Vec<int> endspaces, begspaces;
+	    for (int ii = 0; ii<nplaces.size()-1; ii++){
+		if (nplaces[ii+1] != nplaces[ii]+1){
+		    endspaces << nplaces[ii];
+		    begspaces << nplaces[ii+1];
+		}
+	    }
+	    for (int ii = 0; ii<begspaces.size(); ii++){
+		std::string tmpstr = ligne.substr(endspaces[ii]+1,begspaces[ii]-1-endspaces[ii]);
+		std::istringstream iss(tmpstr);
+		double number;
+		iss >> number;
+		tmp << number;
+	    }
+	    if (nplaces[nplaces.size()-1]<ligne.size()){
+		std::string tmpstr = ligne.substr(nplaces[nplaces.size()-1]+1,ligne.size()-nplaces[nplaces.size()-1]);
+		std::istringstream iss(tmpstr);
+		double number;
+		iss >> number;
+		tmp << number;
+	    }
+	    res.push_back(tmp);
+	}
+    }
+    return res;
 }
 
 void write_mat (Mat<double> M, std::string name){
@@ -676,7 +723,7 @@ void put_result_in_MP (Vec<TM> maillages, MP &mp, FieldSet &fs_output){// SORTIE
     }
     PRINT("coucou");
     fs_output.save(mp["_output[0]"]);
-    PRINT("coucou");
+    PRINT("coucou1");
 }
 
     

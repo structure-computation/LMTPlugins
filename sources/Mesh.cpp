@@ -59,6 +59,7 @@ void Mesh_vecs::load(MP mesh)
 
 MP Mesh_vecs::save() const
 {
+    PRINT("hop (Mesh.cpp)");
     MP mesh = MP::new_obj("Mesh");
     mesh[ "points" ]        = MP::new_lst();
     mesh[ "_elements" ]     = MP::new_lst();
@@ -77,15 +78,17 @@ MP Mesh_vecs::save() const
     mesh[ "_pelected_elements" ] = MP::new_lst();
     
     // nodes
+    PRINT("hop (Mesh.cpp)");
+    PRINT(nodes.size());
     for( int i = 0; i < nodes.size(); ++i ) {
         MP pos = MP::new_lst( "Vec_3" );
         for( int d = 0; d < 3; ++d )
             pos << nodes[ i ][ d ];
-        
         MP pnt = MP::new_obj( "Point" );
         pnt[ "pos" ] = pos;
         mesh[ "points" ] << pnt;
     }
+    PRINT("hop (Mesh.cpp)");
     
     // elements
     TypedArray<int> *tr_con = new TypedArray<int>;
@@ -99,6 +102,7 @@ MP Mesh_vecs::save() const
                 te_con->_data << elements[n][i];
     }
     
+    PRINT("hop (Mesh.cpp)");
     for( int n = 0; n < skin_elements.size(); ++n )
         if ( skin_elements[ n ].size() == 3 )
             for( int i = 0; i < skin_elements[ n ].size(); ++i )
@@ -109,18 +113,22 @@ MP Mesh_vecs::save() const
     tr_con->_size[ 0 ] = 3;
     tr_con->_size[ 1 ] = tr_con->_data.size() / 3;
     
+    PRINT("hop (Mesh.cpp)");
     MP triangles = MP::new_obj( "Element_TriangleList" );
     triangles[ "indices" ] = tr_con;
     mesh[ "_elements" ] << triangles;
     
+    PRINT("hop (Mesh.cpp)");
     // tetra
     te_con->_size.resize( 2 );
     te_con->_size[ 0 ] = 4;
     te_con->_size[ 1 ] = te_con->_data.size() / 4;
     
+    PRINT("hop (Mesh.cpp)");
     MP tetrahedra = MP::new_obj( "Element_TetrahedraList" );
     tetrahedra[ "indices" ] = te_con;
     mesh[ "_elements" ] << tetrahedra;
     
+    PRINT("hop");
     return mesh;
 }
