@@ -324,8 +324,70 @@ void extract_fnod_from_LMTppMesh ( Vec<TM> res_ref, std::string senstrac , Vec <
     calc_force.push_back(fnodaltot);
 }
 
-void extract_id_properties(Vec < Vec < std::string > > Prop_Mat, Vec<int> &prop2id){
+void extract_images(MP mp, LMT::Vec<I2> &images){
+ 
+   MP ch = mp[ "_children" ]; 
+    for( int ii = 0; ii < ch.size(); ++ii ) {
+	MP c = ch[ ii ];
+	if ( c.type() == "ImgSetItem" ) {
+            for( int j = 0; j < c[ "_children" ].size(); ++j ) {
+                MP im = c[ "_children" ][ j ];
+                if ( im.type() == "ImgItem" ) {
+                    I2 *img = images.new_elem();
+                    QString name = im[ "img.src" ];
+                    if ( im[ "img.src" ].type() != "Path" )
+                        name = "../CorreliOnline/html/" + name;
+
+                    try {
+                        img->load( name.toAscii().data() );
+                        img->reverse_y();
+                    } catch ( std::string msg ) {
+                        //add_message( mp, ET_Error, "Img " + name + " does not exist" );
+			PRINT("Images does not exist");
+                        //return false;
+                    }
+                } /*else if ( im.type() == "RawVolume" ) {
+                    I2 *img = images.new_elem();
+                    MP ms( im[ "img_size" ] );
+                    Vec<int,3> S( ms[ 0 ], ms[ 1 ], ms[ 2 ] );
+                    PRINT( S );
+
+                    MP volume = im[ "_children" ][ 0 ];
+                    qDebug() << volume;
+                    MP data = updater->sc->load_ptr( volume[ "_ptr" ] );
+                    qDebug() << data;
+
+	            QString name = data;
+                    PRINT( name.toAscii().data() );
+
+                    try {
+                        typedef unsigned char PI8;
+                        img->template load_binary<PI8>( name.toAscii().data(), S );
+                    } catch ( std::string msg ) {
+                        add_message( mp, Updater::ET_Error, "Img " + name + " does not exist" );
+                        return false;
+                    }
+		    PRINT( name.toAscii().data() );
+                }*/
+            }
+        }
   
+    }
+}
+
+void extract_id_properties( MP mp, Vec < Vec < std::string > > Prop_Mat, Vec<int> &prop2id){
+  
+   int cochea, cochen, coches;
+   MP ch = mp[ "_children" ]; 
+   for( int ii = 0; ii < ch.size(); ++ii ) {
+	MP c = ch[ ii ];
+	if ( c.type() == "Material_Code_Aster_Item" ) {
+		coches = c["sigma_y[1]"];
+		cochea = c["a[1]"];
+		cochen = c["n[1]"];
+	}
+   }
+	  
     std::string thelaw = Prop_Mat[0][1];
     
     if (thelaw == "Elas_iso"){
@@ -336,9 +398,12 @@ void extract_id_properties(Vec < Vec < std::string > > Prop_Mat, Vec<int> &prop2
 	prop2id << 3;// E1/E2
     }
     else if (thelaw == "Powerlaw"){
-	prop2id << 3;// a
-	//prop2id << 4;// n
-	prop2id << 5;// sigma_y
+	if (cochea == 1)
+	  prop2id << 3;// a
+	if (cochen == 1)
+	  prop2id << 4;// n
+	if (coches == 1)
+	  prop2id << 5;// sigma_y
     }
     else if (thelaw == "RO"){
 	prop2id << 3;// sigma_0
@@ -395,57 +460,6 @@ void extract_id_properties(Vec < Vec < std::string > > Prop_Mat, Vec<int> &prop2
     }
   
   
-}
-
-void extract_images(MP mp, LMT::Vec<I2> &images){
- 
-   MP ch = mp[ "_children" ]; 
-    for( int ii = 0; ii < ch.size(); ++ii ) {
-	MP c = ch[ ii ];
-	if ( c.type() == "ImgSetItem" ) {
-            for( int j = 0; j < c[ "_children" ].size(); ++j ) {
-                MP im = c[ "_children" ][ j ];
-                if ( im.type() == "ImgItem" ) {
-                    I2 *img = images.new_elem();
-                    QString name = im[ "img.src" ];
-                    if ( im[ "img.src" ].type() != "Path" )
-                        name = "../CorreliOnline/html/" + name;
-
-                    try {
-                        img->load( name.toAscii().data() );
-                        img->reverse_y();
-                    } catch ( std::string msg ) {
-                        //add_message( mp, ET_Error, "Img " + name + " does not exist" );
-			PRINT("Images does not exist");
-                        //return false;
-                    }
-                } /*else if ( im.type() == "RawVolume" ) {
-                    I2 *img = images.new_elem();
-                    MP ms( im[ "img_size" ] );
-                    Vec<int,3> S( ms[ 0 ], ms[ 1 ], ms[ 2 ] );
-                    PRINT( S );
-
-                    MP volume = im[ "_children" ][ 0 ];
-                    qDebug() << volume;
-                    MP data = updater->sc->load_ptr( volume[ "_ptr" ] );
-                    qDebug() << data;
-
-	            QString name = data;
-                    PRINT( name.toAscii().data() );
-
-                    try {
-                        typedef unsigned char PI8;
-                        img->template load_binary<PI8>( name.toAscii().data(), S );
-                    } catch ( std::string msg ) {
-                        add_message( mp, Updater::ET_Error, "Img " + name + " does not exist" );
-                        return false;
-                    }
-		    PRINT( name.toAscii().data() );
-                }*/
-            }
-        }
-  
-    }
 }
 
 
@@ -645,8 +659,11 @@ void extract_computation_parameters( MP mp, Vec<TM> &Vecteur_de_maillages_input,
 		computation_type = "3Dex";
 	    if (loi == 1){ // Powerlaw
 		sigma_y = c["sigma_y[0]"];
+		int coches = c["sigma_y[1]"];
 		a = c["a[0]"];
+		int cochea = c["a[1]"];
 		n = c["n[0]"];
+		int cochen = c["n[1]"];
 	    }
 	    
 	    if (loi == 0) // Elas_iso
@@ -832,10 +849,6 @@ void assemble_global_matrix (Mat<double,Sym<>,SparseLine<> > &M_tot, Vec<double>
 	
 	M_tot = M_red;
 	F_tot = F_red ;
- 	PRINT(M_red);
-	PRINT("coucou");
-	PRINT(UF);
-	PRINT(VMF[0]);
 	if (UF){
 		for (int ncl = min(indices_bc_cn); ncl < max(indices_bc_cn)+1; ncl++){
     //	        int ncl = 1;
@@ -846,7 +859,6 @@ void assemble_global_matrix (Mat<double,Sym<>,SparseLine<> > &M_tot, Vec<double>
 		}
 	}
 	
-	PRINT("coucou");
  	PRINT(M_red);
  	PRINT(F_red);
 	
