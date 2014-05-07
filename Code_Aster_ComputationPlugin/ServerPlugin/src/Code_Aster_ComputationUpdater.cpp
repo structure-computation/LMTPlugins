@@ -18,7 +18,6 @@ bool Code_Aster_ComputationUpdater::run( MP mp ) {
     Vec<int> constrained_nodes; 
     Vec<int> indices_bc_cn;
     MP param = mp["_children[0]"];
-    MP field = mp["_children[1]"];
     double pix2m = param[ "pix2m" ];
     double thickness = param[ "thickness" ];
     FieldSet fs_output;
@@ -36,6 +35,7 @@ bool Code_Aster_ComputationUpdater::run( MP mp ) {
     put_result_in_MP(Mesh_Vector_output, mp, fs_output); // Sortie dans un FieldSet "calcul"
     add_message( mp, ET_Info, "Résultat renvoyé" );    mp.flush();  
     return 0;
+    
 }
 
 

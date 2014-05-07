@@ -15,7 +15,7 @@ void FieldSet::load(MP fieldsetitem)
         /// Recuperation du maillage
         qDebug() << "-----récupération du maillage-----" ;
         const int nb_times = fieldsetitem["visualization.color_by.lst[0].data._data"].size();
-        PRINT(nb_times);
+        //PRINT(nb_times);
         if(nb_times)
         {
             MP mesh_data = fieldsetitem["visualization.color_by.lst[0].data._data[0].field._mesh"];

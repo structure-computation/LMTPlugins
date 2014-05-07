@@ -16,7 +16,7 @@
 template<class n >
 struct N;
 
-void Write_msh_file (TM &m, std::string root_file, double pix2m, std::string computation_type, double thickness){
+void Write_msh_file (TM &m, std::string root_file, double pix2m, std::string computation_type){
 
      std::string name_file = ( root_file + ".msh" );
      if (exists(name_file)) remove(name_file.c_str());
@@ -103,6 +103,8 @@ void Write_export_file (std::string root_file){
     exp << "F msh " << root_file << ".msh D  19\n";
     exp << "F libr " << root_file << "_DX.resu R  61\n";
     exp << "F libr " << root_file << "_DY.resu R  62\n";
+    exp << "F libr " << root_file << "_FX.resu R  63\n";
+    exp << "F libr " << root_file << "_FY.resu R  64\n";
   
 }
 
@@ -115,6 +117,7 @@ void Write_comm_file (std::string root_file, Vec<TM> mesh, Vec < Vec < std::stri
     
     std::string computation_type = Prop_Mat[Prop_Mat.size()-1][0];
     std::string thelaw = Prop_Mat[0][1];
+
     
     comm << "  \n";
     comm << "DEBUT(PAR_LOT = 'NON', IMPR_MACRO = 'NON', IGNORE_ALARM = ('SUPERVIS_1','MODELISA4_6','ALGORITH7_60',),);\n";
@@ -160,17 +163,32 @@ void Write_comm_file (std::string root_file, Vec<TM> mesh, Vec < Vec < std::stri
 	comm << "NU__     = " << Prop_Mat[2][1] << ";\n";
 	comm << "E__      = " << Prop_Mat[1][1] << ";\n";
         comm << "\n";
-	comm << "ACIERCM = DEFI_MATERIAU(ELAS = _F(E = E__,\n";
+	comm << "MAT = DEFI_MATERIAU(ELAS = _F(E = E__,\n";
 	comm << "				      NU = NU__,\n";
 	comm << "				      ALPHA = 0.), \n";
 	comm << "				);\n";
 	comm << "    \n";
-	comm << "CHMAT = AFFE_MATERIAU(MAILLAGE = MAIL,\n";
-	comm << "			  AFFE=_F(TOUT = 'OUI',\n";
-	comm << "				  MATER = ACIERCM,),\n";
-	comm << "			 );\n";
     }
-    
+    else if (thelaw == "Powerlaw"){
+	comm << "E__      = " << Prop_Mat[1][1] << ";\n";
+	comm << "NU__     = " << Prop_Mat[2][1] << ";\n";
+	comm << "A_PUIS__ = " << Prop_Mat[3][1] << ";\n";
+	comm << "N_PUIS__ = " << Prop_Mat[4][1] << ";\n";
+	comm << "SY__     = " << Prop_Mat[5][1] << ";\n";
+        comm << "\n";
+	comm << "MAT = DEFI_MATERIAU(ELAS = _F(E = E__,\n";
+	comm << "				      NU = NU__,\n";
+	comm << "				      ALPHA = 0.), \n";
+	comm << "			 ECRO_PUIS = _F(SY = SY__,\n";
+	comm << "				       A_PUIS = A_PUIS__, \n";
+	comm << "				       N_PUIS = N_PUIS__), \n";
+	comm << "				);\n";
+	comm << "    \n";
+    }
+    comm << "CHMAT = AFFE_MATERIAU(MAILLAGE = MAIL,\n";
+    comm << "			  AFFE=_F(TOUT = 'OUI',\n";
+    comm << "				  MATER = MAT,),\n";
+    comm << "			 );\n";
     comm << "\n";
     comm << "#================================================================================\n";
     comm << "#=====  3  - DEFINITION OF BOUNDARY CONDITIONS / LOADING ========== =============\n";
@@ -208,16 +226,18 @@ void Write_comm_file (std::string root_file, Vec<TM> mesh, Vec < Vec < std::stri
 	for (int nc=0; nc<TM::dim; nc++){
 	    comm << "dep_" << constrained_nodes[nn]+1 << "_" << "XYZ"[nc] << " = DEFI_FONCTION(NOM_PARA='INST' ,\n";
 	    comm << "				VALE = ( 0. , 0.,";
-	    for (int num_mesh =0; num_mesh < mesh.size(); num_mesh++)
+	    for (int num_mesh = 0; num_mesh < mesh.size(); num_mesh++)
 		comm << "\n					 " << num_mesh+1  <<  ". , " << mesh[num_mesh].node_list[constrained_nodes[nn]].dep[nc]*pix2m << " ,";
 	    comm << "),) ;\n";
 	    comm << "\n";
 	 }
     }
-        comm << "    # DEPLACEMENTS PARAMETRIQUES SUR LES BORDS\n";
+    comm << "    # DEPLACEMENTS PARAMETRIQUES SUR LES BORDS\n";
     comm << "\n";
     comm << "TRAC1 = AFFE_CHAR_CINE_F( MODELE = MO, \n";
     comm << "			MECA_IMPO=(";
+    if (constrained_nodes.size() == 0)
+	PRINT("NO BOUNDARY CONDITION SELECTED");
     for (int nn=0; nn<constrained_nodes.size(); nn++){
 	comm << "\n				_F( NOEUD='N" << constrained_nodes[nn]+1 << "', ";
 	for (int nc=0; nc<TM::dim; nc++)
@@ -236,6 +256,8 @@ void Write_comm_file (std::string root_file, Vec<TM> mesh, Vec < Vec < std::stri
     comm << "                             _F(CHARGE = TRAC1,),),\n";
     if (thelaw == "Elas_iso")
 	comm << "		    COMP_ELAS=_F(RELATION='ELAS', DEFORMATION='GROT_GDEP',),\n";
+    else if (thelaw == "Powerlaw")
+	comm << "		    COMP_INCR=_F(RELATION='VMIS_ISOT_PUIS', DEFORMATION='GROT_GDEP',),\n";
     comm << "                    INCREMENT = _F(LIST_INST = LINSTC,\n";
     comm << "                                   INST_FIN  = LTPS[NB_T-1],\n";
     comm << "                                  ),\n";
@@ -244,6 +266,10 @@ void Write_comm_file (std::string root_file, Vec<TM> mesh, Vec < Vec < std::stri
     comm << "                    CONVERGENCE = _F(RESI_GLOB_RELA = 1.E-4,),\n";
     comm << "                    ARCHIVAGE = _F(LIST_INST = LINST,),\n";
     comm << "                   );\n";
+    comm << "\n";
+    comm << "SIG = CALC_CHAMP(reuse=SIG,\n";
+    comm << "		 RESULTAT = SIG,\n";
+    comm << "		 FORCE = 'FORC_NODA', );\n";
     comm << "\n";
     comm << "#================================================================================\n";
     comm << "#=====  5  - OUTPUT =============================================================\n";
@@ -263,7 +289,7 @@ void Write_comm_file (std::string root_file, Vec<TM> mesh, Vec < Vec < std::stri
     comm << "\n";
     comm << "lnoeud = ['N1";
     for (int nn=1; nn<mesh[0].node_list.size(); nn++)
-	comm << "', 'N" << nn ;
+	comm << "', 'N" << nn+1 ;
     comm << "']\n";
     comm << "\n";
     comm << "LeTitre = 'Table reduite - p='+str(1.);\n";
@@ -285,6 +311,32 @@ void Write_comm_file (std::string root_file, Vec<TM> mesh, Vec < Vec < std::stri
     comm << "           FORMAT = 'TABLEAU_CROISE',\n";
     comm << "           NOM_PARA = ('NOEUD', 'INST', 'DY'),\n";
     comm << "           UNITE = 62,)\n";
+    comm << "\n";
+    comm << "MATABLEF = CREA_TABLE(RESU = _F(RESULTAT = SIG,\n";
+    comm << "                               NOM_CHAM ='FORC_NODA',\n";
+    comm << "                               TOUT_CMP = 'OUI',\n";
+    comm << "                               TOUT = 'OUI',\n";
+    comm << "                               LIST_INST = LINST,),\n";
+    comm << "                     TITRE = '',\n";
+    comm << "                    );\n";
+    comm << "\n";
+    comm << "TabRedf = CALC_TABLE(TABLE = MATABLEF,\n";
+    comm << "                    TITRE = LeTitre,\n";
+    comm << "                    ACTION = (_F(OPERATION = 'EXTR',\n";
+    comm << "                                 NOM_PARA = ('NOEUD', 'INST', 'DX', 'DY'),),\n";
+    comm << "                              _F(OPERATION = 'FILTRE',\n";
+    comm << "                                 NOM_PARA = 'NOEUD',\n";
+    comm << "                                 VALE_K = lnoeud,),),)\n";
+    comm << "\n";
+    comm << "IMPR_TABLE(TABLE = TabRedf,\n";
+    comm << "           FORMAT = 'TABLEAU_CROISE',\n";
+    comm << "           NOM_PARA = ('NOEUD', 'INST', 'DX'),\n";
+    comm << "           UNITE = 63,)\n";
+    comm << "\n";
+    comm << "IMPR_TABLE(TABLE = TabRedf,\n";
+    comm << "           FORMAT = 'TABLEAU_CROISE',\n";
+    comm << "           NOM_PARA = ('NOEUD', 'INST', 'DY'),\n";
+    comm << "           UNITE = 64,)\n";
     comm << "\n";
     comm << "FIN();\n";
 }
@@ -316,7 +368,7 @@ Vec<int> clear_result_file(std::string filename){
     return num_nodes;
 }
 
-void load_aster_res_into_LMTppMesh(std::string root_file, Vec<TM> mesh){
+void load_aster_res_into_LMTppMesh(std::string root_file, Vec<TM> &mesh, double thickness){
     
     Vec<int> num_nodes;
     for (int nc=0; nc<TM::dim; nc++){
@@ -328,11 +380,20 @@ void load_aster_res_into_LMTppMesh(std::string root_file, Vec<TM> mesh){
 	    }
 	}
     }
+    for (int nc=0; nc<TM::dim; nc++){
+	num_nodes = clear_result_file(root_file + "_F" + "XYZ"[nc] + ".resu");
+	Vec<Vec<double> > result_file = load_vecvec(root_file + "_F" + "XYZ"[nc] + ".resu");
+	for (int num_mesh=0; num_mesh<mesh.size(); num_mesh++){
+	    for (int nn=0; nn<num_nodes.size(); nn++){
+		mesh[num_mesh].node_list[num_nodes[nn]-1].f_nodal[nc] = thickness*result_file[num_mesh][nn+1];
+	    }
+	}
+    }
+    
 }
     
 void calc_code_aster_into_LMTppMesh(Vec<TM> &Mesh_vector_output, Vec<TM> &m_ref, Vec<double> constrained_nodes, double pix2m, Vec < Vec < std::string > > Prop_Mat , double thickness){
      
-   
     char* HomeDir;
     HomeDir = getenv ("HOME");
     std::string root_dir = std::string(HomeDir) + "/scratch";
@@ -340,14 +401,14 @@ void calc_code_aster_into_LMTppMesh(Vec<TM> &Mesh_vector_output, Vec<TM> &m_ref,
     create_dir(root_dir);
     std::string thelaw = Prop_Mat[0][1];
     
-    Write_msh_file(m_ref[0], root_file, pix2m, Prop_Mat[Prop_Mat.size()-1][0], thickness);
+    Write_msh_file(m_ref[0], root_file, pix2m, Prop_Mat[Prop_Mat.size()-1][0]);
     Write_export_file(root_file);
     Write_comm_file(root_file, m_ref, Prop_Mat, constrained_nodes, pix2m);
     
     put_void_file_in(root_file + "result.txt");
     int res_sys = system(("/opt/aster/bin/as_run " + root_file + ".export > " + root_file + "result.txt").c_str()); // COMPUTATION
 
-    load_aster_res_into_LMTppMesh(root_file, Mesh_vector_output);
+    load_aster_res_into_LMTppMesh(root_file, Mesh_vector_output, thickness);
     
     
 }

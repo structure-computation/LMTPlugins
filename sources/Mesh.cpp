@@ -11,7 +11,7 @@ void Mesh_vecs::load(MP mesh)
     /// Recuperation des noeuds
     PRINT("Recuperation des noeuds");
     const unsigned nb_nodes = mesh["points"].size();
-    qDebug() << nb_nodes;
+    //qDebug() << nb_nodes;
     nodes.reserve(nb_nodes);
     for(int n = 0; n < nb_nodes; n++)
     {
@@ -31,7 +31,7 @@ void Mesh_vecs::load(MP mesh)
     TypedArray<int> *indices_elem = dynamic_cast<TypedArray<int> *>( mesh[ "_elements[0].indices" ].model() );
     const int nodes_by_elem = indices_elem->size(0);
     const unsigned nb_elems = indices_elem->size(1);
-    qDebug() << nodes_by_elem << "," << nb_elems;
+    //qDebug() << nodes_by_elem << "," << nb_elems;
     elements.resize(nb_elems);
     for(unsigned e = 0, cpt = 0; e < nb_elems; e++)
     {
@@ -59,7 +59,6 @@ void Mesh_vecs::load(MP mesh)
 
 MP Mesh_vecs::save() const
 {
-    PRINT("hop (Mesh.cpp)");
     MP mesh = MP::new_obj("Mesh");
     mesh[ "points" ]        = MP::new_lst();
     mesh[ "_elements" ]     = MP::new_lst();
@@ -113,22 +112,18 @@ MP Mesh_vecs::save() const
     tr_con->_size[ 0 ] = 3;
     tr_con->_size[ 1 ] = tr_con->_data.size() / 3;
     
-    PRINT("hop (Mesh.cpp)");
     MP triangles = MP::new_obj( "Element_TriangleList" );
     triangles[ "indices" ] = tr_con;
     mesh[ "_elements" ] << triangles;
     
-    PRINT("hop (Mesh.cpp)");
     // tetra
     te_con->_size.resize( 2 );
     te_con->_size[ 0 ] = 4;
     te_con->_size[ 1 ] = te_con->_data.size() / 4;
     
-    PRINT("hop (Mesh.cpp)");
     MP tetrahedra = MP::new_obj( "Element_TetrahedraList" );
     tetrahedra[ "indices" ] = te_con;
     mesh[ "_elements" ] << tetrahedra;
     
-    PRINT("hop");
     return mesh;
 }

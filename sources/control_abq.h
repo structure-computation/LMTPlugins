@@ -16,8 +16,8 @@
 #include "FieldSet.h"
 #include "commandes_generales.h"
 
-void Write2DINP (Vec<TM> &m, std::string racine_fic, Vec<double> constrained_nodes, double pix2m, Vec < Vec < std::string > > Prop_Mat, double thickness){
-    std::string nom_fic = ( racine_fic + ".inp" );
+void Write2DINP (Vec<TM> &m, std::string root_dir, Vec<double> constrained_nodes, double pix2m, Vec < Vec < std::string > > Prop_Mat, double thickness){
+    std::string nom_fic = ( root_dir + ".inp" );
     for (int z = 0; z <1; ++z) { // fausse boucle pour écrire l'inp
         
         //////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -413,8 +413,8 @@ void Write2DINP (Vec<TM> &m, std::string racine_fic, Vec<double> constrained_nod
             //inp << "** STEP: Step-" << i+1  << ", inc=11000\n";
             inp << "** STEP: Step-" << i+1  << "\n";
             inp << "** \n";
-            //inp << "*Step, NLGEOM, name=Step-" << i+1 << "\n";
-            inp << "*Step, name=Step-" << i+1 << "\n";
+            inp << "*Step, NLGEOM, name=Step-" << i+1 << "\n";
+            //inp << "*Step, name=Step-" << i+1 << "\n";
             inp << "*Static\n"; 
 	    inp << "0.01, 1., 0.0001, 0.1\n";
 	    //inp << "0.01, 1., 1e-05, 0.01\n";
@@ -508,12 +508,12 @@ void Write2DINP (Vec<TM> &m, std::string racine_fic, Vec<double> constrained_nod
         }
     }
     
-    std::remove((racine_fic +".odb").c_str());
-    std::remove((racine_fic +".sta").c_str());
-    std::remove((racine_fic +".sim").c_str());
-    std::remove((racine_fic +".prt").c_str());
-    std::remove((racine_fic +".dat").c_str());
-    std::remove((racine_fic +".msg").c_str());
+    std::remove((root_dir +".odb").c_str());
+    std::remove((root_dir +".sta").c_str());
+    std::remove((root_dir +".sim").c_str());
+    std::remove((root_dir +".prt").c_str());
+    std::remove((root_dir +".dat").c_str());
+    std::remove((root_dir +".msg").c_str());
 }
 
 
@@ -721,55 +721,49 @@ void load_abq_res_odb(std::string nom_fic, Vec<TM> &res){
     odb.close();
     odb_finalizeAPI();
     std::cout << " " << std::endl;
-    //return res;
     
-    //  odb.close();
-    //  odb_finalizeAPI();  // terminer l'interface c++ abaqus
-    
-    //  return res;
 }
 
 
-void calc_abq_into_LMTppMesh(Vec<TM> &Vecteur_de_maillages_output, Vec<TM> &m_ref, Vec<double> constrained_nodes, double pix2m, Vec < Vec < std::string > > Prop_Mat , double thickness){
+Vec<TM> calc_abq_into_LMTppMesh(Vec<TM> &m_ref, Vec<double> constrained_nodes, double pix2m, Vec < Vec < std::string > > Prop_Mat , double thickness){
      
-   
+    Vec<TM> Vecteur_de_maillages_output = m_ref;
     char* HomeDir;
     HomeDir = getenv ("HOME");
-    std::string racine_fic = std::string(HomeDir) + "/aaa_test";
+    std::string root_dir = std::string(HomeDir) + "/aaa_test";
     
-    Write2DINP (m_ref, racine_fic, constrained_nodes, pix2m, Prop_Mat, thickness);
+    Write2DINP (m_ref, root_dir, constrained_nodes, pix2m, Prop_Mat, thickness);
     
-    std::string nom_fic_lck = racine_fic + ".lck";if (exists(nom_fic_lck)) remove(nom_fic_lck.c_str());
-    std::string nom_fic_odb = racine_fic + ".odb";if (exists(nom_fic_odb)) remove(nom_fic_odb.c_str());
+    std::string nom_fic_lck = root_dir + ".lck";if (exists(nom_fic_lck)) remove(nom_fic_lck.c_str());
+    std::string nom_fic_odb = root_dir + ".odb";if (exists(nom_fic_odb)) remove(nom_fic_odb.c_str());
     std::string thelaw = Prop_Mat[0][1];
     
     char* UserName;
     UserName = getenv ("USER");
-    std::string scratch = racine_fic + "/";
-    std::string scratch2 = racine_fic + "/" + std::string(UserName) + "_" + std::string(HomeDir) +  "/";
+    std::string scratch = root_dir + "/";
+    std::string scratch2 = root_dir + "/" + std::string(UserName) + "_" + std::string(HomeDir) +  "/";
     bool success = create_dir(scratch2);
     
     if ((thelaw == "UMAT") or (thelaw == "UMAT_Lem_diccit")){
         std::string umatname = Prop_Mat[Prop_Mat.size()-2][1];
-        //system(("abaqus interactive job=" + racine_fic + ".inp user=" + umatname + ".f double > res_s.txt").c_str() );
-        std::cout << "/media/mathieu/Data/Abaqus/exec/abq6112.exe interactive job=" << racine_fic << ".inp scratch=" << scratch << " user=" << umatname << " double" << std::endl;
-         system(("/media/mathieu/Data/Abaqus/exec/abq6112.exe interactive job=" + racine_fic + ".inp scratch=" + scratch + " user=" + umatname + " double").c_str() );
+        //system(("abaqus interactive job=" + root_dir + ".inp user=" + umatname + ".f double > res_s.txt").c_str() );
+        std::cout << "/media/mathieu/Data/Abaqus/exec/abq6112.exe interactive job=" << root_dir << ".inp scratch=" << scratch << " user=" << umatname << " double" << std::endl;
+         system(("/media/mathieu/Data/Abaqus/exec/abq6112.exe interactive job=" + root_dir + ".inp scratch=" + scratch + " user=" + umatname + " double").c_str() );
     }
     else if (thelaw == "dpc"){
-        //system(("abaqus interactive job=" + racine_fic + ".inp user=elasticity_variation_epsvol.f double > res_s.txt").c_str() );
-        system(("/media/mathieu/Data/Abaqus/exec/abq6112.exe interactive job=" + racine_fic + ".inp user=elasticity_variation_epsvol.f double").c_str() );
+        //system(("abaqus interactive job=" + root_dir + ".inp user=elasticity_variation_epsvol.f double > res_s.txt").c_str() );
+        system(("/media/mathieu/Data/Abaqus/exec/abq6112.exe interactive job=" + root_dir + ".inp user=elasticity_variation_epsvol.f double").c_str() );
     }
     else{
-        //system(("abaqus interactive job=" + racine_fic + ".inp cpus=6 double > res_s.txt").c_str() );
-        std::cout << "/media/mathieu/Data/Abaqus/exec/abq6112.exe interactive job=" << racine_fic << ".inp cpus=8 scratch=" << scratch << std::endl;
-        system(("/media/mathieu/Data/Abaqus/exec/abq6112.exe interactive job=" + racine_fic + ".inp cpus=8 scratch=" + scratch).c_str() );
+        //system(("abaqus interactive job=" + root_dir + ".inp cpus=6 double > res_s.txt").c_str() );
+        std::cout << "/media/mathieu/Data/Abaqus/exec/abq6112.exe interactive job=" << root_dir << ".inp cpus=8 scratch=" << scratch << std::endl;
+        system(("/media/mathieu/Data/Abaqus/exec/abq6112.exe interactive job=" + root_dir + ".inp cpus=8 scratch=" + scratch).c_str() );
     }
     
-    std::string nom_fic = racine_fic + ".odb";
+    std::string nom_fic = root_dir + ".odb";
     //Vec<TM> Vecteur_de_maillages_output = load_abq_res_odb(nom_fic, m_ref);
-    
     
     load_abq_res_odb(nom_fic, Vecteur_de_maillages_output);
     
-    
+    return Vecteur_de_maillages_output;
 }
