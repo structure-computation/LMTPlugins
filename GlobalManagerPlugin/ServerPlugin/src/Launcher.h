@@ -62,6 +62,10 @@ class Launcher : public QObject {
               commande = "../IdentificationWithAbaqusPlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " + temp_str ;
               output = std::system(commande.c_str());
           }
+          else if(mp.type() == "IdentificationWithCode_AsterItem" ){
+              commande = "../IdentificationWithCode_AsterPlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " + temp_str ;
+              output = std::system(commande.c_str());
+          }
           else if(mp.type() == "TestRenoItem" ){
               commande = "../TestRenoPlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " + temp_str ;
               output = std::system(commande.c_str());

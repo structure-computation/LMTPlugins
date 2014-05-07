@@ -3,7 +3,7 @@ class TreeAppApplication_FieldExport extends TreeAppApplication
         super()
          
         @name = 'FieldExport'
-        @powered_with    = '???'
+        @powered_with    = 'LMT'
         
         _ina = ( app ) =>
             app.data.focus.get() != app.selected_canvas_inst()?[ 0 ]?.cm.view_id

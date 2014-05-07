@@ -23,8 +23,6 @@ void Write_msh_file (TM &m, std::string root_file, double pix2m, std::string com
      int vide = system(("touch " + name_file).c_str());
      std::ofstream msh( name_file.c_str() , std::ios::app);
      
-     PRINT(name_file);
-     
      int type_elem;
      if (m.elem_list[0]->nb_nodes_virtual() == 3){
 	  if (computation_type == "2DPS") type_elem = 2;
@@ -392,8 +390,9 @@ void load_aster_res_into_LMTppMesh(std::string root_file, Vec<TM> &mesh, double 
     
 }
     
-void calc_code_aster_into_LMTppMesh(Vec<TM> &Mesh_vector_output, Vec<TM> &m_ref, Vec<double> constrained_nodes, double pix2m, Vec < Vec < std::string > > Prop_Mat , double thickness){
-     
+Vec<TM> calc_code_aster_into_LMTppMesh(Vec<TM> &m_ref, Vec<double> constrained_nodes, double pix2m, Vec < Vec < std::string > > Prop_Mat , double thickness){
+    
+    Vec<TM> Mesh_vector_output = m_ref;
     char* HomeDir;
     HomeDir = getenv ("HOME");
     std::string root_dir = std::string(HomeDir) + "/scratch";
@@ -409,6 +408,6 @@ void calc_code_aster_into_LMTppMesh(Vec<TM> &Mesh_vector_output, Vec<TM> &m_ref,
     int res_sys = system(("/opt/aster/bin/as_run " + root_file + ".export > " + root_file + "result.txt").c_str()); // COMPUTATION
 
     load_aster_res_into_LMTppMesh(root_file, Mesh_vector_output, thickness);
-    
+    return Mesh_vector_output;
     
 }

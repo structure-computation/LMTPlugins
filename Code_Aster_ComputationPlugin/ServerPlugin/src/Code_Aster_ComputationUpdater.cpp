@@ -28,8 +28,7 @@ bool Code_Aster_ComputationUpdater::run( MP mp ) {
     extract_computation_parameters( param, Mesh_Vector_input, constrained_nodes, indices_bc_cn,  Prop_Mat, fs_output, force_files); // Lecture des paramètres du calcul
     
     add_message( mp, ET_Info, "Lancement du calcul" );    mp.flush();
-    Vec<TM> Mesh_Vector_output = Mesh_Vector_input;
-    calc_code_aster_into_LMTppMesh(Mesh_Vector_output, Mesh_Vector_input, constrained_nodes, pix2m, Prop_Mat, thickness); // Computation for a given set of parameter
+    Vec<TM> Mesh_Vector_output = calc_code_aster_into_LMTppMesh(Mesh_Vector_input, constrained_nodes, pix2m, Prop_Mat, thickness); // Computation for a given set of parameter
     add_message( mp, ET_Info, "Calcul terminé" );    mp.flush();
     
     put_result_in_MP(Mesh_Vector_output, mp, fs_output); // Sortie dans un FieldSet "calcul"

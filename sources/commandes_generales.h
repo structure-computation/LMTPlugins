@@ -335,6 +335,11 @@ void extract_id_properties(Vec < Vec < std::string > > Prop_Mat, Vec<int> &prop2
 	prop2id << 2;// nu
 	prop2id << 3;// E1/E2
     }
+    else if (thelaw == "Powerlaw"){
+	prop2id << 3;// a
+	//prop2id << 4;// n
+	prop2id << 5;// sigma_y
+    }
     else if (thelaw == "RO"){
 	prop2id << 3;// sigma_0
 	prop2id << 4;// n
@@ -666,7 +671,7 @@ void extract_computation_parameters( MP mp, Vec<TM> &Vecteur_de_maillages_input,
 		Prop_Mat[3] << "a";
 		Prop_Mat[3] << LMT::to_string(a); 
 		Prop_Mat[4] << "n";
-		Prop_Mat[4] << LMT::to_string(Poisson); 
+		Prop_Mat[4] << LMT::to_string(n); 
 		Prop_Mat[5] << "sigma_y";
 		Prop_Mat[5] << LMT::to_string(sigma_y*1e6); 
 	    }
@@ -777,10 +782,9 @@ void build_matrix_for_the_kinematic_part(Mat<double,Sym<>,SparseLine<> > &M_red,
 	
 }
 
-void build_matrix_for_the_force_part(Vec<Mat<double, Sym<> ,SparseLine<> > > &VMF, Vec <Vec<double> > &VFF, Vec<Vec< std::string> > force_files, Vec <Vec<double> > calc_force, Vec <Vec <Vec <double> > > calc_force_nodes, Vec<int> indices_bc_cn, double n_im, Vec <Vec <Vec <double> > > comp_disp, double pix2m, double offset, std::string method){
+void build_matrix_for_the_force_part(Vec<Mat<double, Sym<> ,SparseLine<> > > &VMF, Vec <Vec<double> > &VFF, Vec<Vec< std::string> > force_files, Vec <Vec<double> > calc_force, Vec <Vec <Vec <double> > > calc_force_nodes, Vec<int> indices_bc_cn, double n_im, double n_prop, Vec <Vec <Vec <double> > > comp_disp, double pix2m, double offset, std::string method){
 		
 		Vec<double> meas_force, res_f;
-		int n_prop = max(indices_bc_cn) +1 - min(indices_bc_cn);
 		
 		// transfert from nodal forces to global forces associated to the bc groups
 		for (int ncl = min(indices_bc_cn); ncl < max(indices_bc_cn)+1; ncl++){
@@ -828,6 +832,10 @@ void assemble_global_matrix (Mat<double,Sym<>,SparseLine<> > &M_tot, Vec<double>
 	
 	M_tot = M_red;
 	F_tot = F_red ;
+ 	PRINT(M_red);
+	PRINT("coucou");
+	PRINT(UF);
+	PRINT(VMF[0]);
 	if (UF){
 		for (int ncl = min(indices_bc_cn); ncl < max(indices_bc_cn)+1; ncl++){
     //	        int ncl = 1;
@@ -838,6 +846,7 @@ void assemble_global_matrix (Mat<double,Sym<>,SparseLine<> > &M_tot, Vec<double>
 		}
 	}
 	
+	PRINT("coucou");
  	PRINT(M_red);
  	PRINT(F_red);
 	
@@ -857,15 +866,20 @@ Vec<double> solve_with_max(Mat<double,Sym<>,SparseLine<> > M_tot, Vec<double> F_
 	PRINT(dif);
 
 	for (int jj=0; jj< dif.size(); jj++){
-	    if (dif[jj] >  0.5) dif[jj]= 0.5;
-	    if (dif[jj] < -0.5) dif[jj]=-0.5;
-	    PRINT( dif );
+	    if (dif[jj] >  0.5){
+		dif[jj]= 0.5;
+		PRINT( dif );
+	    }
+	    if (dif[jj] < -0.5){
+		dif[jj]=-0.5;
+		PRINT( dif );
+	    }
 	}
 	return dif;
   
 }
 
-update_properties(Vec < Vec < std::string > > &Prop_Mat, Vec < Vec < std::string > > Prop_Mat_Backup, Vec<int> prop2id, Vec<double> dif, std::string thelaw){
+void update_properties(Vec < Vec < std::string > > &Prop_Mat, Vec < Vec < std::string > > Prop_Mat_Backup, Vec<int> prop2id, Vec<double> dif, std::string thelaw){
 
         Prop_Mat = Prop_Mat_Backup;
 	// Properties update
@@ -993,7 +1007,8 @@ void calc_young_for_elastic_case(Vec<int> indices_bc_cn,  Vec<Vec< std::string> 
 		    double prop;
 		    iss >> prop;
 		    prop /=  coef_vec[0];
-		    Prop_Mat[1][1] = LMT::to_string(prop); 
+		    Prop_Mat[1][1] = LMT::to_string(prop/1e9); 
+		    PRINT(Prop_Mat[1][1]);
 		}
 	
 		std::cout << " " << std::endl;
