@@ -1,0 +1,7 @@
+*.[oa]
+*~
+*.dep
+*.exe.cmd
+*.os.cmd
+*.os
+*.cmd
