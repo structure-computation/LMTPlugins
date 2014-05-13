@@ -11,7 +11,7 @@ void Mesh_vecs::load(MP mesh)
     /// Recuperation des noeuds
     PRINT("Recuperation des noeuds");
     const unsigned nb_nodes = mesh["points"].size();
-    qDebug() << nb_nodes;
+    //qDebug() << nb_nodes;
     nodes.reserve(nb_nodes);
     for(int n = 0; n < nb_nodes; n++)
     {
@@ -31,7 +31,7 @@ void Mesh_vecs::load(MP mesh)
     TypedArray<int> *indices_elem = dynamic_cast<TypedArray<int> *>( mesh[ "_elements[0].indices" ].model() );
     const int nodes_by_elem = indices_elem->size(0);
     const unsigned nb_elems = indices_elem->size(1);
-    qDebug() << nodes_by_elem << "," << nb_elems;
+    //qDebug() << nodes_by_elem << "," << nb_elems;
     elements.resize(nb_elems);
     for(unsigned e = 0, cpt = 0; e < nb_elems; e++)
     {
@@ -77,15 +77,17 @@ MP Mesh_vecs::save() const
     mesh[ "_pelected_elements" ] = MP::new_lst();
     
     // nodes
+    PRINT("hop (Mesh.cpp)");
+    PRINT(nodes.size());
     for( int i = 0; i < nodes.size(); ++i ) {
         MP pos = MP::new_lst( "Vec_3" );
         for( int d = 0; d < 3; ++d )
             pos << nodes[ i ][ d ];
-        
         MP pnt = MP::new_obj( "Point" );
         pnt[ "pos" ] = pos;
         mesh[ "points" ] << pnt;
     }
+    PRINT("hop (Mesh.cpp)");
     
     // elements
     TypedArray<int> *tr_con = new TypedArray<int>;
@@ -99,6 +101,7 @@ MP Mesh_vecs::save() const
                 te_con->_data << elements[n][i];
     }
     
+    PRINT("hop (Mesh.cpp)");
     for( int n = 0; n < skin_elements.size(); ++n )
         if ( skin_elements[ n ].size() == 3 )
             for( int i = 0; i < skin_elements[ n ].size(); ++i )

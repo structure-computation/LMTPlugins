@@ -1,15 +1,15 @@
 #
-class AbaqusComputationItem extends TreeItem_Computable
-    constructor: ( name = "AbaqusComputation" ) ->
+class Code_Aster_ComputationItem extends TreeItem_Computable
+    constructor: ( name = "Code_Aster_Computation" ) ->
         super()
         
         @_name.set name
-        @_ico.set "img/AbaqusComputation_bouton.png"
+        @_ico.set "img/Code_Aster_Computation_bouton.png"
         @_viewable.set false
         
         @_computation_mode.set false
 
-        @add_child new AbaqusDataItem
+        @add_child new Code_Aster_DataItem
         @add_output new FieldSetItem
         
     
@@ -24,3 +24,5 @@ class AbaqusComputationItem extends TreeItem_Computable
         
     disp_only_in_model_editor: ->
 #         @mesh
+
+    

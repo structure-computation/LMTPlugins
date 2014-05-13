@@ -309,8 +309,11 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
         dic.rotation_in_rigid_body = false;
     for( int j = 1; j < images.size(); ++j ) {
         double bef = time_of_day_in_sec();
-        dic.exec_rigid_body( images[ 0 ], images[ j ], dic_mesh, dep_DM(), lum_DM() );
+	//if (j == 1)
+	dic.exec_rigid_body( images[ 0 ], images[ j ], dic_mesh, dep_DM(), lum_DM() );
+	PRINT(dic_mesh.node_list[0].dep);
         dic.exec( images[ 0 ], images[ j ], dic_mesh, dep_DM(), lum_DM() );
+	PRINT(dic_mesh.node_list[0].dep);
 
         I2 residual_img, residual_adv_img;
         if ( dim == 2 ) {
@@ -383,7 +386,6 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
             _save_img( output_field[ "_residual_adv" ], residual_adv_img.to_QImage( true ), j );
             _save_img( output_field[ "_residual"     ], residual_img    .to_QImage( true ), j );
         }
-
 
         // display
         double aft = time_of_day_in_sec();
