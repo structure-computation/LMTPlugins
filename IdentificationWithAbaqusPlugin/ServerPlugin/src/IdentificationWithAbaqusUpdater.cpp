@@ -54,7 +54,7 @@ bool IdentificationWithAbaqusUpdater::run( MP mpid ) {
     
     extract_computation_parameters( param, Mesh_Vector_input, constrained_nodes, indices_bc_cn,  Prop_Mat, fs_output, force_files); // Lecture des paramètres du calcul
     PRINT(force_files);
-    extract_id_properties(Prop_Mat, prop2id); // Lecture des paramètres d'identification
+    extract_id_properties(param, Prop_Mat, prop2id); // Lecture des paramètres d'identification
 
     //////////////
     
@@ -114,13 +114,13 @@ bool IdentificationWithAbaqusUpdater::run( MP mpid ) {
 	}
 	
 	build_matrix_for_the_kinematic_part(M_red, F_red, Mesh_Vector_input, Mesh_Vector_output, images, comp_disp, pix2m, offset, method);
-	if (UF) build_matrix_for_the_force_part(VMF, VFF, force_files, calc_force, calc_force_nodes, indices_bc_cn, Mesh_Vector_output.size(), comp_disp, pix2m, offset, method);
+	if (UF) build_matrix_for_the_force_part(VMF, VFF, force_files, calc_force, calc_force_nodes, indices_bc_cn, Mesh_Vector_output.size(), prop2id.size(), comp_disp, pix2m, offset, method);
 	assemble_global_matrix (M_tot, F_tot, M_red, F_red, VMF, VFF, UF, indices_bc_cn, ponderation_efforts, w);
 	
 	Vec<double> dif = solve_with_max(M_tot, F_tot, max_level, resolution, relaxation);
 	update_properties(Prop_Mat, Prop_Mat_Backup, prop2id, dif, thelaw);
 	
-	if ( (norm_inf( dif ) < 1e-3) or (it+1 == iterations) ){
+	if ( (norm_inf( dif ) < 1e-2) or (it+1 == iterations) ){
 	   //it_report, M_d_report, M_f_report, F_d_report, F_f_report, calc_force_report, meas_force_report
 	    it_report = it;
 	    dif_report = dif;
@@ -148,7 +148,7 @@ bool IdentificationWithAbaqusUpdater::run( MP mpid ) {
     mpid["id_done"] = id_ok;
     push_back_material_parameters(param, Prop_Mat); mpid.flush();
     
-    std::string report_address = root_dir + "/report.txt";
+    std::string report_address = root_dir + "/report";
     write_identification_report (report_address, Mesh_Vector_output, Prop_Mat, it_report, iterations, M_d_report, M_f_report, F_d_report, F_f_report, calc_force_report, meas_force_report, prop2id, ponderation_efforts, dif_report);
 
     //put_result_in_MP(Mesh_Vector_output, mpid, fs_output); // Sortie dans un FieldSet "calcul"

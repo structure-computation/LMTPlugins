@@ -6,6 +6,7 @@
 #include <QtCore/QDataStream>
 #include "LMT/include/containers/vec.h"
 #include "LMT/include/containers/eig_lapack.h"
+#include "LMT/include/containers/mat_true_inv.h"
 #include "dic/correlation/ImgInterp.h"
 #include "dic/correlation/DicCPU.h"
 #include "LMT/include/mesh/mesh.h"
@@ -752,7 +753,6 @@ Vec<Vec<double> >  fill_disp_vectors_with(Vec<TM> Mesh_Vector){
 void build_matrix_for_the_kinematic_part(Mat<double,Sym<>,SparseLine<> > &M_red, Vec<double> &F_red, Vec<TM> &Mesh_Vector_input, Vec<TM> &Mesh_Vector_output, Vec<I2> images, Vec <Vec <Vec <double> > > comp_disp, double pix2m, double offset, std::string method){	
 	
 	Vec<Vec<double> > meas_disp = fill_disp_vectors_with(Mesh_Vector_input) * pix2m;
-	
 	for( int num_mesh = 0; num_mesh < Mesh_Vector_input.size(); ++num_mesh ) { // num_mesh <=> steps
 	  
 	    Vec<Vec<double> > der;
@@ -762,6 +762,9 @@ void build_matrix_for_the_kinematic_part(Mat<double,Sym<>,SparseLine<> > &M_red,
 		CS = (comp_disp[0] - comp_disp[nsf])/offset/pix2m;
 		Vec <double> temp;
 		for (int ii=0+num_mesh*Mesh_Vector_input[ num_mesh ].node_list.size(); ii< Mesh_Vector_input[ num_mesh ].node_list.size()+num_mesh*Mesh_Vector_input[ num_mesh ].node_list.size(); ii++){
+		    //PRINT(ii);
+		    //PRINT(CS[0][ii]);  
+		    //PRINT(CS[1][ii]);
 		    temp.push_back(CS[0][ii]);
 		    temp.push_back(CS[1][ii]);
 		}
@@ -1029,7 +1032,15 @@ void calc_young_for_elastic_case(Vec<int> indices_bc_cn,  Vec<Vec< std::string> 
 
     
 void write_identification_report (std::string report_address, Vec<TM> &Mesh_Vector_output, Vec <Vec<std::string> > Prop_Mat, int it, int iterations, Mat<double,Sym<>,SparseLine<> >M_d, Vec<Mat<double,Sym<>,SparseLine<> > >M_f, Vec<double>F_d, Vec <Vec<double> > F_f, Vec <Vec<double> > calc_force, Vec <Vec<double> > meas_force, Vec<int>prop2id, double ponderation, Vec<double> dif){
-
+    
+    bool ok=0;
+    int num_report = 1 ;
+    while (ok==0)
+	if (exists((report_address + "_" + to_string(num_report) + ".txt").c_str()))
+	    num_report++;
+	else ok = 1;
+	
+    report_address = report_address + "_" + to_string(num_report) + ".txt";
     int value = system(("touch " + report_address).c_str());
     std::ofstream report (report_address.c_str());
     
@@ -1105,6 +1116,57 @@ void write_identification_report (std::string report_address, Vec<TM> &Mesh_Vect
 	report << "\n";
     }
     
+    Mat<double,Sym<>,SparseLine<> > M_tot = M_d;
+    Vec<double> F_tot = F_d ;
+    for (int ncl = 0; ncl < M_f.size(); ncl++){
+	M_tot +=  ponderation * M_f[ncl] / M_f.size();
+	F_tot +=  ponderation * F_f[ncl] / M_f.size();
+    }
+    report << "The global matrix assembled from the previous ones was :\n";
+    for (int ii = 0; ii < M_d.col(0).size(); ii++){
+        for (int jj = 0; jj < M_d.row(0).size(); jj++){
+            report << double(M_tot(ii,jj)) << " " ;
+        }
+        report << "\n";
+    }
+    
+    bool inversible=1;
+    for (int ii = 0; ii < M_tot.col(0).size(); ii++){
+        for (int jj = 0; jj < M_tot.row(0).size(); jj++){
+	    if ((M_tot(ii,jj) == 0) and (inversible)){
+		PRINT("One of the parameters seems to have no influence on the result. Please dismiss it from the analysis");
+		report << "One of the parameters seems to have no influence on the result. Please dismiss it from the analysis";
+		inversible = 0;
+	    }
+	}
+    }
+    
+    if (inversible){
+	Mat<double > M_cov = 2*true_inv(M_tot);
+	report << "\n";
+	report << "The global covariance matrix was :\n";
+	for (int ii = 0; ii < M_d.col(0).size(); ii++){
+	    for (int jj = 0; jj < M_d.row(0).size(); jj++){
+		report << double(M_cov(ii,jj)) << " " ;
+	    }
+	    report << "\n";
+	}
+	Mat<double > M_cov_norm; M_cov_norm.resize(F_f[0].size());
+	for( int r = 0; r < F_f[0].size(); ++r ) {
+	    for( int c = 0; c < F_f[0].size(); ++c ){
+		M_cov_norm(r,c) = M_cov(r,c)/(pow( abs(M_cov(r,r) * M_cov(c,c)) , 0.5));
+	    }
+	}
+	report << "\n";
+	report << "The global normalized covariance matrix was :\n";
+	for (int ii = 0; ii < M_d.col(0).size(); ii++){
+	    for (int jj = 0; jj < M_d.row(0).size(); jj++){
+		report << double(M_cov_norm(ii,jj)) << " " ;
+	    }
+	    report << "\n";
+	}
+	
+    }
     report << "\n";
     report << "\n";
     report << "\n";
