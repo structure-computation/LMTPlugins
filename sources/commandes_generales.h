@@ -22,25 +22,29 @@ typedef ImgInterp<double,2/*,ImgInterpOrder3_Kernel*/> I2;
 LMT::Vec<I2> images;
 
 
-
+// Tests if a file exists
 bool exists( const std::string & file )
 {
      std::ifstream fichier( file.c_str() );
     return !fichier.fail();
 }
 
+// Creates void file or replace an existing one by a void file
 void put_void_file_in(std::string resfile){
     if (exists(resfile)) 
       remove(resfile.c_str()); 
     int vide = system(("touch " + resfile).c_str());
 }
 
+// Creates a directory or a tree of dirs and subdirs
 bool create_dir( const std::string & dir_path )
 {
     int b = system(("mkdir -p " + dir_path).c_str());
     return exists(dir_path);
 }
 
+// Finds the positions of a smaller string (e.g. a letter) in a larger string. 
+// Returns the positions of the first letter of the smallest string in the larger one.
 Vec<std::size_t> find_str_in_str(std::string str, std::string sub){
     std::size_t idx ;
     Vec<std::size_t> solution;
@@ -55,26 +59,36 @@ Vec<std::size_t> find_str_in_str(std::string str, std::string sub){
     return solution;
 }
 
-double count_lines(std::string nom_fic){
+// Counts the number of lines in a file
+double count_lines(std::string file_name){
     std::string numlines;
     int value = system("touch res_system.txt");
-    value = system(("wc -l " + nom_fic + "> res_system.txt").c_str());
+    value = system(("wc -l " + file_name + "> res_system.txt").c_str());
     std::ifstream fichier("res_system.txt");
     std::string res;
     std::getline(fichier, res);
-    for (int i = 0; i<(res.size()-nom_fic.size()-1);i++) numlines+=res[i];
+    for (int i = 0; i<(res.size()-file_name.size()-1);i++) numlines+=res[i];
     int numlines_int=atoi(numlines.c_str());
     return numlines_int;
 }
 
-double load_param(std::string nom_fic, std::string nom_param){
-    std::ifstream strim(nom_fic.c_str());
+// Loads a double in a text parameter file. If the File is as follows :
+//
+//  Blabla
+//  4
+//
+//  E
+//  18
+//
+// Then this functions looks for the first line that is equal to "param_name" and takes the next line to be the output. Ex : load_param(filename, "E") will be the double 18.
+double load_param(std::string file_name, std::string param_name){
+    std::ifstream strim(file_name.c_str());
     std::string ligne;
     double param;
-    int numlines=count_lines(nom_fic);
+    int numlines=count_lines(file_name);
     for (int i = 0; i<numlines; i++){
         std::getline(strim, ligne);
-        if (ligne==nom_param){
+        if (ligne==param_name){
             std::getline(strim, ligne);
             param = atof(ligne.c_str());
             break;
@@ -83,14 +97,23 @@ double load_param(std::string nom_fic, std::string nom_param){
     return param;
 }
 
-std::string load_param_str(std::string nom_fic, std::string nom_param){
-    std::ifstream strim(nom_fic.c_str());
+// Loads a str in a text parameter file. If the File is as follows :
+//
+//  Blabla
+//  super
+//
+//  E
+//  18
+//
+// Then this functions looks for the first line that is equal to "param_name" and takes the next line to be the output. Ex : load_param(filename, "E") will be the std::string "super".
+std::string load_param_str(std::string file_name, std::string param_name){
+    std::ifstream strim(file_name.c_str());
     std::string ligne;
     std::string param;
-    int numlines=count_lines(nom_fic);
+    int numlines=count_lines(file_name);
     for (int i = 0; i<numlines; i++){
         std::getline(strim, ligne);
-        if (ligne==nom_param){
+        if (ligne==param_name){
             std::getline(strim, ligne);
             param = ligne;
             break;
@@ -99,12 +122,13 @@ std::string load_param_str(std::string nom_fic, std::string nom_param){
     return param;
 }
 
-Vec<double> load_res(std::string nom_fic){
-    std::ifstream strim(nom_fic.c_str());
+// Loads a text file into a double vector. One line for each element of the vector.
+Vec<double> load_res(std::string file_name){
+    std::ifstream strim(file_name.c_str());
     std::string ligne;
     Vec<double> resultat;
     
-    int numlines=count_lines(nom_fic);
+    int numlines=count_lines(file_name);
     for (int i = 0; i<numlines; i++){
         std::getline(strim, ligne);
 	double a;
@@ -115,6 +139,8 @@ Vec<double> load_res(std::string nom_fic){
     return resultat;
 }
 
+
+// Loads a text file into a double vector of vectors. One line for each element of the vector of vectors.
 Vec<Vec<double> >  load_vecvec(std::string filename){
     std::ifstream strim(filename.c_str());
     std::string ligne;
@@ -154,8 +180,9 @@ Vec<Vec<double> >  load_vecvec(std::string filename){
     return res;
 }
 
-void write_mat (Mat<double> M, std::string name){
-    std::ofstream mat (name.c_str());
+// Writes a Mat in a text file
+void write_mat (Mat<double> M, std::string filename){
+    std::ofstream mat (filename.c_str());
     for (int ii = 0; ii < M.col(0).size(); ii++){
         for (int jj = 0; jj < M.row(0).size(); jj++){
             mat << double(M(ii,jj)) << " " ;
@@ -164,6 +191,7 @@ void write_mat (Mat<double> M, std::string name){
     }
 }
 
+// Compute the distance between a point and a segment (defined by its two extreme points).
 double calc_dist_segment( Vec <double > point, Vec < Vec < double > > segment){
   
     Vec <double> distances;
@@ -187,6 +215,8 @@ double calc_dist_segment( Vec <double > point, Vec < Vec < double > > segment){
     return mini;
 }
 
+// Selection of the nodes where boundary conditions are applied in a computation. 
+// If segments have been selected, returns a vector containing the number of the segment associated with the node (else the Vector will be empty)
 Vec <double> select_cn (Vec<TM> maillages, MP ch, std::string CL, int nbs, Vec <int> &constrained_nodes){
 
 	    Vec<int> indices_bc_cn;
@@ -244,7 +274,7 @@ Vec <double> select_cn (Vec<TM> maillages, MP ch, std::string CL, int nbs, Vec <
 	     return indices_bc_cn;
 }
 
-
+// Loads a MeshItem in a 2D LMTpp Mesh object
 TM load_into_2DLMTpp_Mesh(MP mesh){ 
     TM dic_mesh;
     TypedArray<int> *indices_elem = dynamic_cast<TypedArray<int> *>( mesh[ "_elements[0].indices" ].model() );
@@ -276,6 +306,7 @@ TM load_into_2DLMTpp_Mesh(MP mesh){
 }
 
 
+// Loads a FieldSetItem in a 2D LMTpp Mesh Vector (with displacements)
 Vec<TM> load_FieldSetItem_into_LMTpp_Mesh(FieldSet fs_input){
     Mesh_vecs maillage = fs_input.mesh;
     MP maillage_transfert = maillage.save();
@@ -293,6 +324,7 @@ Vec<TM> load_FieldSetItem_into_LMTpp_Mesh(FieldSet fs_input){
     return Vecteur_de_maillages_input;
 }
 
+// Adds a vec(vec(double)) containing the displacements from a vec(mesh) to a vector of vec(vec(double))
 void  extract_dep_from_LMTppMesh ( Vec<TM> res, Vec < Vec <Vec < double > > > &dep ){
 
     Vec <Vec <double> > dep_ref ;
@@ -307,8 +339,8 @@ void  extract_dep_from_LMTppMesh ( Vec<TM> res, Vec < Vec <Vec < double > > > &d
 }
 
 
+// Adds a vec(vec(double)) containing the nodal forces (at some constrained_nodes) from a vec(mesh) to a vector of vec(vec(double))
 void extract_fnod_from_LMTppMesh ( Vec<TM> res_ref, std::string senstrac , Vec < Vec <Vec<double> > > &calc_force , Vec<int> constrained_nodes){
-
 
     Vec <Vec<double> > fnodaltot;
     for( int num_mesh = 0; num_mesh < res_ref.size(); ++num_mesh ) {
@@ -325,6 +357,7 @@ void extract_fnod_from_LMTppMesh ( Vec<TM> res_ref, std::string senstrac , Vec <
     calc_force.push_back(fnodaltot);
 }
 
+// Loads images from a MP children
 void extract_images(MP mp, LMT::Vec<I2> &images){
  
    MP ch = mp[ "_children" ]; 
@@ -376,6 +409,7 @@ void extract_images(MP mp, LMT::Vec<I2> &images){
     }
 }
 
+// Extracts the properties to be identified (related to the position of the property in the Prop_Mat)
 void extract_id_properties( MP mp, Vec < Vec < std::string > > Prop_Mat, Vec<int> &prop2id){
   
    int cochea, cochen, coches;
@@ -463,9 +497,8 @@ void extract_id_properties( MP mp, Vec < Vec < std::string > > Prop_Mat, Vec<int
   
 }
 
-
+// Extracts the computation properties in a computation Item (e.g. AbaqusDataItm or Code_Aster_DataItem) : mesh, boundary conditions, material...
 void extract_computation_parameters( MP mp, Vec<TM> &Vecteur_de_maillages_input, Vec<int> &constrained_nodes,  Vec<int> &indices_bc_cn, Vec < Vec < std::string > > &Prop_Mat, FieldSet &fs_input_bckp, Vec<Vec<std::string> > &force_files){
-
     
     MP ch = mp[ "_children" ]; 
     double Young, Poisson, loi, rapport, sigma_0, n, ct, sign, sigma_y, a ;
@@ -733,7 +766,7 @@ void extract_computation_parameters( MP mp, Vec<TM> &Vecteur_de_maillages_input,
     
 }
 
-
+// Creates a vec(vec(double) with the displacements from a Mesh Vector
 Vec<Vec<double> >  fill_disp_vectors_with(Vec<TM> Mesh_Vector){
   
 	Vec<Vec<double> > disp;
@@ -749,7 +782,8 @@ Vec<Vec<double> >  fill_disp_vectors_with(Vec<TM> Mesh_Vector){
 	return disp;
 	
 }
-	    
+
+// build_matrix(to be inverted for ID)_for_the_kinematic_part : integrated dic or femu.
 void build_matrix_for_the_kinematic_part(Mat<double,Sym<>,SparseLine<> > &M_red, Vec<double> &F_red, Vec<TM> &Mesh_Vector_input, Vec<TM> &Mesh_Vector_output, Vec<I2> images, Vec <Vec <Vec <double> > > comp_disp, double pix2m, double offset, std::string method){	
 	
 	Vec<Vec<double> > meas_disp = fill_disp_vectors_with(Mesh_Vector_input) * pix2m;
@@ -801,7 +835,7 @@ void build_matrix_for_the_kinematic_part(Mat<double,Sym<>,SparseLine<> > &M_red,
 	}
 	
 }
-
+// build_matrix(to be inverted for ID)_for_the_force_part, for all the boundary conditions segments selected
 void build_matrix_for_the_force_part(Vec<Mat<double, Sym<> ,SparseLine<> > > &VMF, Vec <Vec<double> > &VFF, Vec<Vec< std::string> > force_files, Vec <Vec<double> > calc_force, Vec <Vec <Vec <double> > > calc_force_nodes, Vec<int> indices_bc_cn, double n_im, double n_prop, Vec <Vec <Vec <double> > > comp_disp, double pix2m, double offset, std::string method){
 		
 		Vec<double> meas_force, res_f;
@@ -848,6 +882,7 @@ void build_matrix_for_the_force_part(Vec<Mat<double, Sym<> ,SparseLine<> > > &VM
 		}
 }
 
+// assemble kinematic and force parts of an ID problem
 void assemble_global_matrix (Mat<double,Sym<>,SparseLine<> > &M_tot, Vec<double> &F_tot, Mat<double,Sym<>,SparseLine<> > M_red, Vec<double> F_red, Vec<Mat<double, Sym<> ,SparseLine<> > > VMF, Vec <Vec<double> > VFF, bool UF, Vec<int> indices_bc_cn, double ponderation_efforts, double w){
 	
 	M_tot = M_red;
@@ -875,25 +910,26 @@ void assemble_global_matrix (Mat<double,Sym<>,SparseLine<> > &M_tot, Vec<double>
 	}
 }
 
+// Solves an inverse problem using_eig_sym ; result (dif) limited to a min/max_level for each component
 Vec<double> solve_with_max(Mat<double,Sym<>,SparseLine<> > M_tot, Vec<double> F_tot, double max_level, double resolution, double relaxation){
 
 	Vec<double> dif = - relaxation * solve_using_eig_sym( M_tot , F_tot , resolution ); // RESOLUTION dp=N-1 B
 	PRINT(dif);
 
 	for (int jj=0; jj< dif.size(); jj++){
-	    if (dif[jj] >  0.5){
-		dif[jj]= 0.5;
+	    if (dif[jj] >  max_level){
+		dif[jj]= max_level;
 		PRINT( dif );
 	    }
-	    if (dif[jj] < -0.5){
-		dif[jj]=-0.5;
+	    if (dif[jj] < -max_level){
+		dif[jj]=-max_level;
 		PRINT( dif );
 	    }
 	}
 	return dif;
-  
 }
 
+// Updates material propoerties of an ID problem after solving
 void update_properties(Vec < Vec < std::string > > &Prop_Mat, Vec < Vec < std::string > > Prop_Mat_Backup, Vec<int> prop2id, Vec<double> dif, std::string thelaw){
 
         Prop_Mat = Prop_Mat_Backup;
@@ -915,6 +951,7 @@ void update_properties(Vec < Vec < std::string > > &Prop_Mat, Vec < Vec < std::s
   
 }
 
+// Puts a string in the attributes of a MP ; strvec[0]=attr_name, strvec[1] = value;
 void put_string_in_MP(Vec <std::string> strvec, MP &mp){
 
     std::istringstream iss(strvec[1]);
@@ -934,12 +971,14 @@ void put_string_in_MP(Vec <std::string> strvec, MP &mp){
     mp.flush();
 }
 
+// Send a set of material properties to a MP
 void push_back_material_parameters( MP &mp, Vec < Vec < std::string > > Prop_Mat){
 
     MP ch = mp[ "_children" ]; 
     for( int ii = 0; ii < ch.size(); ++ii ) {
 	MP c = ch[ ii ];
 	if ( c.type() == "MaterialABQItem" ) {
+	    ///////////////////// SUPPOSED TO DEPEND ON THE TYPE OF LAW USED
 	    for (int nprop =0; nprop < Prop_Mat.size(); nprop++)
 		put_string_in_MP(Prop_Mat[nprop], c);
 	}
@@ -948,6 +987,7 @@ void push_back_material_parameters( MP &mp, Vec < Vec < std::string > > Prop_Mat
     
 }
 
+// Send a vec(Mesh) with its displacements to a MP
 void put_result_in_MP (Vec<TM> maillages, MP &mp, FieldSet &fs_output){// SORTIE DANS UN FieldSet "calcul"
 
     double pix2m = mp[ "pix2m" ];
@@ -960,7 +1000,7 @@ void put_result_in_MP (Vec<TM> maillages, MP &mp, FieldSet &fs_output){// SORTIE
     fs_output.save(mp["_output[0]"]);
 }
 
-
+// During the computation of sensitivity fields, gives bak a Prop_Mat vector which is the reference one modified for the "sf"th parameter
 Vec < Vec < std::string > > update_material_parameters(Vec < Vec < std::string > > Prop_Mat_Backup, Vec<int> prop2id, int sf, double offset){
 
 	    Vec < Vec < std::string > > Prop_Mat = Prop_Mat_Backup;
@@ -977,6 +1017,7 @@ Vec < Vec < std::string > > update_material_parameters(Vec < Vec < std::string >
   
 }
 
+// In the case of an elastic ID problem(Poisson ratio only identified), cross-multiplication to deduce the Young modulus
 void calc_young_for_elastic_case(Vec<int> indices_bc_cn,  Vec<Vec< std::string> > force_files, Vec <Vec<double> > calc_force, Vec <Vec <Vec <double> > > calc_force_nodes, double n_prop, double n_im, Vec < Vec < std::string > > &Prop_Mat){
 
 		std::cout << " " << std::endl;
@@ -1030,7 +1071,7 @@ void calc_young_for_elastic_case(Vec<int> indices_bc_cn,  Vec<Vec< std::string> 
   
 }
 
-    
+// write_identification_report
 void write_identification_report (std::string report_address, Vec<TM> &Mesh_Vector_output, Vec <Vec<std::string> > Prop_Mat, int it, int iterations, Mat<double,Sym<>,SparseLine<> >M_d, Vec<Mat<double,Sym<>,SparseLine<> > >M_f, Vec<double>F_d, Vec <Vec<double> > F_f, Vec <Vec<double> > calc_force, Vec <Vec<double> > meas_force, Vec<int>prop2id, double ponderation, Vec<double> dif){
     
     bool ok=0;
