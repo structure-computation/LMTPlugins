@@ -311,8 +311,10 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
         double bef = time_of_day_in_sec();
 	//if (j == 1)
 	dic.exec_rigid_body( images[ 0 ], images[ j ], dic_mesh, dep_DM(), lum_DM() );
+	PRINT("Starting with image :" + to_string(j));
 	PRINT(dic_mesh.node_list[0].dep);
         dic.exec( images[ 0 ], images[ j ], dic_mesh, dep_DM(), lum_DM() );
+	PRINT("Image " + to_string(j) + " treated");
 	PRINT(dic_mesh.node_list[0].dep);
 
         I2 residual_img, residual_adv_img;
