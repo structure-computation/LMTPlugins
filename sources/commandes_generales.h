@@ -522,7 +522,10 @@ void extract_computation_parameters( MP mp, Vec<TM> &Vecteur_de_maillages_input,
 	MP c = ch[ ii ];
 	if (( c.type() == "FieldSetItem" ) or ( c.type() == "FieldSetCorreliItem" )){
 	    ex_field++;
-	    FieldSet fs_input(c); fs_input_bckp = fs_input;
+	    FieldSet fs_input(c); 
+	    fs_input_bckp.load(c);
+	    
+	    
 	    Vecteur_de_maillages_input = load_FieldSetItem_into_LMTpp_Mesh(fs_input);
 	    indices_bc_cn = select_cn (Vecteur_de_maillages_input,  ch,  CL, nbs, constrained_nodes);
 	}
@@ -990,7 +993,8 @@ void push_back_material_parameters( MP &mp, Vec < Vec < std::string > > Prop_Mat
 // Send a vec(Mesh) with its displacements to a MP
 void put_result_in_MP (Vec<TM> maillages, MP &mp, FieldSet &fs_output){// SORTIE DANS UN FieldSet "calcul"
 
-    double pix2m = mp[ "pix2m" ];
+    MP param = mp["_children[0]"];
+    double pix2m = param[ "pix2m" ];
     for (int num_mesh = 0; num_mesh < maillages.size(); num_mesh++){
 	for (int no = 0; no < maillages[num_mesh].node_list.size(); no++ ) {
 	    fs_output.fields[0].values[num_mesh].data[no] = maillages[num_mesh].node_list[no].dep[0]/pix2m;

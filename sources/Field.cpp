@@ -98,7 +98,7 @@ void Field::save(MP fielditem) const
         disp[ "pos" ] = MP::new_lst();
         
         MP pos_v = MP::new_obj();
-        pos_v[ "axe_value" ] = values[v].time;
+        pos_v[ "axe_value" ] = v;
         pos_v[ "axe_name" ] = "time";
         disp[ "pos" ] << pos_v;
         

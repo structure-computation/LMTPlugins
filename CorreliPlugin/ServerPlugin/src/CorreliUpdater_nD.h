@@ -395,6 +395,7 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
         QString intermediate_time = QString("%1").arg( aft - bef );
         QString iter = QString("%1").arg( j );
         updater->add_message( mp, Updater::ET_Info, "Correlation " + iter + " done in " + intermediate_time + "s" );
+	sleep(5);
         mp.flush();
     }
 
