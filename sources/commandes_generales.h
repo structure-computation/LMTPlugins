@@ -954,36 +954,57 @@ void update_properties(Vec < Vec < std::string > > &Prop_Mat, Vec < Vec < std::s
   
 }
 
-// Puts a string in the attributes of a MP ; strvec[0]=attr_name, strvec[1] = value;
-void put_string_in_MP(Vec <std::string> strvec, MP &mp){
+// Puts a string in a double
+void put_string_in_double(std::string str, double &prop){
 
-    std::istringstream iss(strvec[1]);
-    double prop;
+    std::istringstream iss(str);
     iss >> prop;
-    QString qstr = QString::fromStdString(strvec[1]);
-    if (strvec[0] == "Young"){
-	prop /= 1e9;
-	qstr = QString::number(prop);
-    }
-    if (strvec[0] == "sigma_0"){
-	prop /= 1e6;
-	qstr = QString::number(prop);
-    }
-    qDebug() << qstr;
-    mp[(strvec[0] + "[0]").c_str()] = prop;
-    mp.flush();
+    
 }
 
 // Send a set of material properties to a MP
 void push_back_material_parameters( MP &mp, Vec < Vec < std::string > > Prop_Mat){
 
     MP ch = mp[ "_children" ]; 
+    double prop;
+    std::string thelaw = Prop_Mat[0][1];
     for( int ii = 0; ii < ch.size(); ++ii ) {
 	MP c = ch[ ii ];
 	if ( c.type() == "MaterialABQItem" ) {
-	    ///////////////////// SUPPOSED TO DEPEND ON THE TYPE OF LAW USED
-	    for (int nprop =0; nprop < Prop_Mat.size(); nprop++)
-		put_string_in_MP(Prop_Mat[nprop], c);
+	    if ((thelaw == "Elas_iso") or (thelaw == "Elas_ortho") or (thelaw == "RO")){
+		put_string_in_double(Prop_Mat[1][1], prop);
+		PRINT(prop);
+		c["Young[0]"]=prop;
+		put_string_in_double(Prop_Mat[2][1], prop);
+		PRINT(prop);
+		c["Poisson[0]"]=prop;
+	    }
+	    if ((thelaw == "Elas_ortho")){
+		put_string_in_double(Prop_Mat[3][1], prop);
+		c["rapport[0]"]=prop;
+	    }
+	    if ((thelaw == "RO")){
+		put_string_in_double(Prop_Mat[3][1], prop);
+		c["sigma_0[0]"]=prop/1e6;
+		put_string_in_double(Prop_Mat[4][1], prop);
+		c["n[0]"]=prop;
+	    }
+	}
+	if ( c.type() == "Material_Code_Aster_Item" ) {
+	    if ((thelaw == "Elas_iso") or (thelaw == "Powerlaw")){
+		put_string_in_double(Prop_Mat[1][1], prop);
+		c["Young[0]"]=prop/1e9;
+		put_string_in_double(Prop_Mat[2][1], prop);
+		c["Poisson[0]"]=prop;
+	    }
+	    if ((thelaw == "Powerlaw")){
+		put_string_in_double(Prop_Mat[3][1], prop);
+		c["a[0]"]=prop;
+		put_string_in_double(Prop_Mat[4][1], prop);
+		c["n[0]"]=prop;
+		put_string_in_double(Prop_Mat[5][1], prop);
+		c["sigma_y[0]"]=prop/1e6;
+	    }
 	}
     }
     mp.flush();

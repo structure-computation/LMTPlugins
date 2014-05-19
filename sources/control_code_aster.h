@@ -393,7 +393,6 @@ void load_aster_res_into_LMTppMesh(std::string root_file, Vec<TM> &mesh, double 
 	    }
 	}
     }
-    
 }
     
 // Lauch an Code_Aster computation and gets the result, based on a LMT::Mesh (and its displacements for boundary conditions)
@@ -412,9 +411,13 @@ Vec<TM> calc_code_aster_into_LMTppMesh(Vec<TM> &m_ref, Vec<double> constrained_n
     Write_comm_file(root_file, m_ref, Prop_Mat, constrained_nodes, pix2m);
     
     put_void_file_in(root_file + "result.txt");
+    std::cout << " " << std::endl;
+    std::cout << "LAUNCHING COMPUTATION WITH CODE_ASTER..." << std::endl;
     int res_sys = system(("/opt/aster/bin/as_run " + root_file + ".export > " + root_file + "result.txt").c_str()); // COMPUTATION
-
     load_aster_res_into_LMTppMesh(root_file, Mesh_vector_output, thickness);
+    std::cout << "... COMPUTATION JUST ENDED" << std::endl;
+    std::cout << "  " << std::endl;
+    
     return Mesh_vector_output;
     
 }
