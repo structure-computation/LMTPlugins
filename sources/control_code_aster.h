@@ -415,7 +415,10 @@ Vec<TM> calc_code_aster_into_LMTppMesh(Vec<TM> &m_ref, Vec<double> constrained_n
     std::cout << "LAUNCHING COMPUTATION WITH CODE_ASTER..." << std::endl;
     int res_sys = system(("/opt/aster/bin/as_run " + root_file + ".export > " + root_file + "result.txt").c_str()); // COMPUTATION
     load_aster_res_into_LMTppMesh(root_file, Mesh_vector_output, thickness);
-    std::cout << "... COMPUTATION JUST ENDED" << std::endl;
+    if (res_sys == 0)
+	std::cout << "... COMPUTATION JUST ENDED, AND WELL" << std::endl;
+    else
+	std::cout << "... COMPUTATION ENDED BECAUSE OF A CRASH. PLEASE CHECK THE COMPUTATION REPORT " << std::endl;
     std::cout << "  " << std::endl;
     
     return Mesh_vector_output;

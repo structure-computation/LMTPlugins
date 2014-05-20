@@ -217,19 +217,18 @@ double calc_dist_segment( Vec <double > point, Vec < Vec < double > > segment){
 
 // Selection of the nodes where boundary conditions are applied in a computation. 
 // If segments have been selected, returns a vector containing the number of the segment associated with the node (else the Vector will be empty)
-Vec <double> select_cn (Vec<TM> maillages, MP ch, std::string CL, int nbs, Vec <int> &constrained_nodes){
+Vec <double> select_cn (Vec<TM> &meshes, MP ch, std::string &CL, int nbs, Vec <int> &constrained_nodes, double pix2m){
 
-	    Vec<int> indices_bc_cn;
-	    if (CL=="nope"){
-		for( int i = 0; i < maillages[0].skin.node_list.size(); ++i )
-		    constrained_nodes << maillages[0].skin.node_list[ i ].number;
-	    }
-	    else if (CL=="picked"){
+	    int numbc=0;
+	    Vec<int> indices_bc_cn, bc_num, units;
+	    Vec< Vec< double > > vdx, vdy;
+	    if (CL=="picked"){
 	      
 		MP bs = ch[ nbs ];
 		MP bs2 = bs[ 2 ]; // va chercher la liste dans le bsitem
 		Vec < Vec < Vec < double > > >  coor_nds_bc;
-		
+		if (bs2.size() == 0)
+		    CL = "nope";
 		for (int bc = 0; bc < bs2.size(); bc++){                  //  Récupération des coordonnées des segments choisis
 		    MP morceau = bs2 [ bc ];
 		    if ( morceau.type() == "PickedZoneItem"){
@@ -251,14 +250,35 @@ Vec <double> select_cn (Vec<TM> maillages, MP ch, std::string CL, int nbs, Vec <
 			    coor_nds.push_back(coor_nd);
 			}
 			coor_nds_bc.push_back(coor_nds);
+			
+			MP BCType = morceau["_children[0]"];
+			int choice = BCType["Choice.num"];
+			int unit = BCType["Input_unit.num"];
+			units << unit;
+			if (choice == 0) // from field
+			    bool dummy; // do nothing
+			else if (choice == 1){ // disps drom files
+			    bc_num << numbc;
+			    QString Qdx = BCType["Displacement_X"]; 
+			    std::string dxfile ;
+			    dxfile = Qdx.toStdString();
+			    Vec <double> dx = load_res(dxfile);
+			    vdx.push_back(dx);
+			    QString Qdy = BCType["Displacement_Y"]; 
+			    std::string dyfile ;
+			    dyfile = Qdy.toStdString();
+			    Vec <double> dy = load_res(dyfile);
+			    vdy.push_back(dy);
+			}
 		    }
+		    numbc++;
 		}
-		maillages[0].update_skin();
-		for( int nds = 0; nds < maillages[0].skin.node_list.size(); ++nds ){ //  Sélection des noeuds contraints
+		meshes[0].update_skin();
+		for( int nds = 0; nds < meshes[0].skin.node_list.size(); ++nds ){ //  Sélection des noeuds contraints
 		      bool close_to_the_border = 0 ;
 		      int indice;
 		      for (int nbc = 0; nbc < coor_nds_bc.size(); nbc++){
-			      Vec < double > pos_nd = maillages[0].skin.node_list[ nds ].pos;
+			      Vec < double > pos_nd = meshes[0].skin.node_list[ nds ].pos;
 			      double dist = calc_dist_segment( pos_nd, coor_nds_bc[nbc]);
 			      if (dist < 1){
 				  close_to_the_border = 1 ;
@@ -266,10 +286,30 @@ Vec <double> select_cn (Vec<TM> maillages, MP ch, std::string CL, int nbs, Vec <
 			      }
 		      }
 		      if (close_to_the_border){
-			  constrained_nodes << maillages[0].skin.node_list[ nds ].number;
-			  indices_bc_cn << indice;
+			    constrained_nodes << meshes[0].skin.node_list[ nds ].number;
+			    indices_bc_cn << indice;
+			    for (int nbc = 0; nbc < bc_num.size(); nbc++){ // modification of the input (measured) mesh if the bc is taken from a file
+				  // nbc is the number of bc from text files
+				  if (indice == bc_num[nbc]){
+				      double coef;
+				      if (units[nbc] == 0) coef=pix2m;
+				      else if (units[nbc] == 1) coef=1;
+				      if ((vdx[nbc].size() >= meshes.size()) and (vdy[nbc].size() >= meshes.size())){
+					  for (int num_mesh =0; num_mesh < meshes.size(); num_mesh++){
+					      meshes[num_mesh].node_list[ nds ].dep[0] = vdx[nbc][num_mesh]/coef;
+					      meshes[num_mesh].node_list[ nds ].dep[1] = vdy[nbc][num_mesh]/coef;
+					  }
+				      }
+				      else PRINT("NOT ENOUGH INFORMATION IN THE TEXTE FILE (BC" + to_string(nbc) +")");
+				  }
+			    }
 		      }
 		}
+	     }
+	     PRINT("end");
+	     if (CL=="nope"){
+		for( int i = 0; i < meshes[0].skin.node_list.size(); ++i )
+		    constrained_nodes << meshes[0].skin.node_list[ i ].number;
 	     }
 	     return indices_bc_cn;
 }
@@ -311,17 +351,17 @@ Vec<TM> load_FieldSetItem_into_LMTpp_Mesh(FieldSet fs_input){
     Mesh_vecs maillage = fs_input.mesh;
     MP maillage_transfert = maillage.save();
     TM dic_mesh = load_into_2DLMTpp_Mesh(maillage_transfert);
-    Vec<TM> Vecteur_de_maillages_input;
-    Vecteur_de_maillages_input.resize(fs_input.fields[0].values.size()); 
-    for (int num_mesh = 0; num_mesh < Vecteur_de_maillages_input.size(); num_mesh++){
-        Vecteur_de_maillages_input[num_mesh]=dic_mesh;
-        for (int no = 0; no < Vecteur_de_maillages_input[num_mesh].node_list.size(); no++ ) {
-            Vecteur_de_maillages_input[num_mesh].node_list[no].dep[0] = fs_input.fields[0].values[num_mesh].data[no];
-            Vecteur_de_maillages_input[num_mesh].node_list[no].dep[1] = fs_input.fields[1].values[num_mesh].data[no];
+    Vec<TM> Mesh_vector_input;
+    Mesh_vector_input.resize(fs_input.fields[0].values.size()); 
+    for (int num_mesh = 0; num_mesh < Mesh_vector_input.size(); num_mesh++){
+        Mesh_vector_input[num_mesh]=dic_mesh;
+        for (int no = 0; no < Mesh_vector_input[num_mesh].node_list.size(); no++ ) {
+            Mesh_vector_input[num_mesh].node_list[no].dep[0] = fs_input.fields[0].values[num_mesh].data[no];
+            Mesh_vector_input[num_mesh].node_list[no].dep[1] = fs_input.fields[1].values[num_mesh].data[no];
         }
-        Vecteur_de_maillages_input[num_mesh].update_skin();        
+        Mesh_vector_input[num_mesh].update_skin();        
     }
-    return Vecteur_de_maillages_input;
+    return Mesh_vector_input;
 }
 
 // Adds a vec(vec(double)) containing the displacements from a vec(mesh) to a vector of vec(vec(double))
@@ -498,9 +538,10 @@ void extract_id_properties( MP mp, Vec < Vec < std::string > > Prop_Mat, Vec<int
 }
 
 // Extracts the computation properties in a computation Item (e.g. AbaqusDataItm or Code_Aster_DataItem) : mesh, boundary conditions, material...
-void extract_computation_parameters( MP mp, Vec<TM> &Vecteur_de_maillages_input, Vec<int> &constrained_nodes,  Vec<int> &indices_bc_cn, Vec < Vec < std::string > > &Prop_Mat, FieldSet &fs_input_bckp, Vec<Vec<std::string> > &force_files){
+void extract_computation_parameters( MP mp, Vec<TM> &Mesh_vector_input, Vec<int> &constrained_nodes,  Vec<int> &indices_bc_cn, Vec < Vec < std::string > > &Prop_Mat, FieldSet &fs_input_bckp, Vec<Vec<std::string> > &force_files){
     
     MP ch = mp[ "_children" ]; 
+    double pix2m = mp[ "pix2m" ];
     double Young, Poisson, loi, rapport, sigma_0, n, ct, sign, sigma_y, a ;
     std::string param_file, umatname, computation_type;
     int umat_ndepvar, umat_nparam, umat_nparamid, nparam, nparamid;
@@ -524,10 +565,8 @@ void extract_computation_parameters( MP mp, Vec<TM> &Vecteur_de_maillages_input,
 	    ex_field++;
 	    FieldSet fs_input(c); 
 	    fs_input_bckp.load(c);
-	    
-	    
-	    Vecteur_de_maillages_input = load_FieldSetItem_into_LMTpp_Mesh(fs_input);
-	    indices_bc_cn = select_cn (Vecteur_de_maillages_input,  ch,  CL, nbs, constrained_nodes);
+	    Mesh_vector_input = load_FieldSetItem_into_LMTpp_Mesh(fs_input);
+	    indices_bc_cn = select_cn (Mesh_vector_input,  ch,  CL, nbs, constrained_nodes, pix2m);
 	}
 	
 	if ( c.type() == "MaterialABQItem" ) {
@@ -1012,14 +1051,14 @@ void push_back_material_parameters( MP &mp, Vec < Vec < std::string > > Prop_Mat
 }
 
 // Send a vec(Mesh) with its displacements to a MP
-void put_result_in_MP (Vec<TM> maillages, MP &mp, FieldSet &fs_output){// SORTIE DANS UN FieldSet "calcul"
+void put_result_in_MP (Vec<TM> meshes, MP &mp, FieldSet &fs_output){// SORTIE DANS UN FieldSet "calcul"
 
     MP param = mp["_children[0]"];
     double pix2m = param[ "pix2m" ];
-    for (int num_mesh = 0; num_mesh < maillages.size(); num_mesh++){
-	for (int no = 0; no < maillages[num_mesh].node_list.size(); no++ ) {
-	    fs_output.fields[0].values[num_mesh].data[no] = maillages[num_mesh].node_list[no].dep[0]/pix2m;
-	    fs_output.fields[1].values[num_mesh].data[no] = maillages[num_mesh].node_list[no].dep[1]/pix2m;
+    for (int num_mesh = 0; num_mesh < meshes.size(); num_mesh++){
+	for (int no = 0; no < meshes[num_mesh].node_list.size(); no++ ) {
+	    fs_output.fields[0].values[num_mesh].data[no] = meshes[num_mesh].node_list[no].dep[0]/pix2m;
+	    fs_output.fields[1].values[num_mesh].data[no] = meshes[num_mesh].node_list[no].dep[1]/pix2m;
 	} 
     }
     fs_output.save(mp["_output[0]"]);
@@ -1106,6 +1145,10 @@ void write_identification_report (std::string report_address, Vec<TM> &Mesh_Vect
 	    num_report++;
 	else ok = 1;
 	
+    int refsize;
+    if (F_f.size()!=0) refsize = F_f[0].size();
+    else refsize = F_d.size();
+	
     report_address = report_address + "_" + to_string(num_report) + ".txt";
     int value = system(("touch " + report_address).c_str());
     std::ofstream report (report_address.c_str());
@@ -1158,6 +1201,7 @@ void write_identification_report (std::string report_address, Vec<TM> &Mesh_Vect
         report << F_d[ii] << " " ;
         report << "\n";
     }
+    
     report << "\n";
     report << "The correlation matrixes associated to forces were :\n";
     for (int nbc = 0; nbc < F_f.size(); nbc++){
@@ -1181,6 +1225,7 @@ void write_identification_report (std::string report_address, Vec<TM> &Mesh_Vect
 	}
 	report << "\n";
     }
+    report << "\n";
     
     Mat<double,Sym<>,SparseLine<> > M_tot = M_d;
     Vec<double> F_tot = F_d ;
@@ -1211,22 +1256,22 @@ void write_identification_report (std::string report_address, Vec<TM> &Mesh_Vect
 	Mat<double > M_cov = 2*true_inv(M_tot);
 	report << "\n";
 	report << "The global covariance matrix was :\n";
-	for (int ii = 0; ii < M_d.col(0).size(); ii++){
-	    for (int jj = 0; jj < M_d.row(0).size(); jj++){
+	for (int ii = 0; ii < refsize; ii++){
+	    for (int jj = 0; jj < refsize; jj++){
 		report << double(M_cov(ii,jj)) << " " ;
 	    }
 	    report << "\n";
 	}
-	Mat<double > M_cov_norm; M_cov_norm.resize(F_f[0].size());
-	for( int r = 0; r < F_f[0].size(); ++r ) {
-	    for( int c = 0; c < F_f[0].size(); ++c ){
+	Mat<double > M_cov_norm; M_cov_norm.resize(refsize);
+	for( int r = 0; r < refsize; ++r ) {
+	    for( int c = 0; c < refsize; ++c ){
 		M_cov_norm(r,c) = M_cov(r,c)/(pow( abs(M_cov(r,r) * M_cov(c,c)) , 0.5));
 	    }
 	}
 	report << "\n";
 	report << "The global normalized covariance matrix was :\n";
-	for (int ii = 0; ii < M_d.col(0).size(); ii++){
-	    for (int jj = 0; jj < M_d.row(0).size(); jj++){
+	for (int ii = 0; ii < refsize; ii++){
+	    for (int jj = 0; jj < refsize; jj++){
 		report << double(M_cov_norm(ii,jj)) << " " ;
 	    }
 	    report << "\n";

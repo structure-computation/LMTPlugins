@@ -305,6 +305,7 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
     Vec<Vec<Pvec> > dep; dep.resize( images.size() - 1 );
     Vec<TM2> mesh_vec; mesh_vec.resize( images.size() - 1 );
     double t0 = time_of_day_in_sec();
+    int delay;
     if ( dim == 3 )
         dic.rotation_in_rigid_body = false;
     for( int j = 1; j < images.size(); ++j ) {
@@ -395,12 +396,13 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
         QString intermediate_time = QString("%1").arg( aft - bef );
         QString iter = QString("%1").arg( j );
         updater->add_message( mp, Updater::ET_Info, "Correlation " + iter + " done in " + intermediate_time + "s" );
-	sleep(5);
+	delay = 1;
+	sleep(delay);
         mp.flush();
     }
 
     double t1 = time_of_day_in_sec();
-    QString global_time = QString("%1").arg( t1 - t0 );
+    QString global_time = QString("%1").arg( t1 - t0 - delay );
 
     QString num_pic = QString("%1").arg( images.size() );
     updater->add_message( mp, Updater::ET_Success, "Correlation of " + num_pic + " pictures computed in " + global_time + "s" );
