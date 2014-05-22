@@ -19,6 +19,7 @@ void FieldSet::load(MP fieldsetitem)
         if(nb_times)
         {
             MP mesh_data = fieldsetitem["visualization.color_by.lst[0].data._data[0].field._mesh"];
+	    qDebug() << mesh_data.type();
             mesh = mesh_data;   /// voir Mesh.cpp
         }
         else
@@ -32,7 +33,6 @@ void FieldSet::load(MP fieldsetitem)
         
         // récupération des champs de déplacement
         for(int f = 0; f < 2; f++){
-            PRINT(f);
             //qDebug() << fieldsetitem["visualization.color_by.lst"][f];
             fields << Field(fieldsetitem["visualization.color_by.lst"][f],&mesh);   /// voir Field.cpp
         }
@@ -67,13 +67,17 @@ void FieldSet::save(MP fieldsetitem) const
     {
         MP field = MP::new_obj("NamedParametrizedDrawable");
         fields[f].save(field);
+	MP tmp = field[ "data._data" ];
+	qDebug() << tmp;
+	PRINT(field[ "data._data" ].size());
         if(nb_fields_out) {
-	  fieldsetitem["visualization.color_by.lst"][0] = field; 
+	     fieldsetitem["visualization.color_by.lst"][0] = field; 
 	}
         else fieldsetitem["visualization.color_by.lst"] << field; 
     }
     nb_fields_out = fieldsetitem["visualization.color_by.lst"].size();
     fieldsetitem.flush();
+    PRINT(nb_fields_out);
 }
 
 FieldSet FieldSet::operator+(const FieldSet& other) const

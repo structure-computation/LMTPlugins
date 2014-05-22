@@ -259,7 +259,7 @@ void Write_comm_file (std::string root_file, Vec<TM> mesh, Vec < Vec < std::stri
     if (thelaw == "Elas_iso")
 	comm << "		    COMP_ELAS=_F(RELATION='ELAS', DEFORMATION='GROT_GDEP',),\n";
     else if (thelaw == "Powerlaw")
-	comm << "		    COMP_INCR=_F(RELATION='VMIS_ISOT_PUIS', DEFORMATION='GROT_GDEP',),\n";
+	comm << "		    COMP_INCR=_F(RELATION='VMIS_ISOT_PUIS', DEFORMATION='SIMO_MIEHE',),\n";
     comm << "                    INCREMENT = _F(LIST_INST = LINSTC,\n";
     comm << "                                   INST_FIN  = LTPS[NB_T-1],\n";
     comm << "                                  ),\n";
@@ -399,6 +399,7 @@ void load_aster_res_into_LMTppMesh(std::string root_file, Vec<TM> &mesh, double 
 Vec<TM> calc_code_aster_into_LMTppMesh(Vec<TM> &m_ref, Vec<double> constrained_nodes, double pix2m, Vec < Vec < std::string > > Prop_Mat , double thickness){
     
     Vec<TM> Mesh_vector_output = m_ref;
+    PRINT(m_ref[0].node_list.size());
     char* HomeDir;
     HomeDir = getenv ("HOME");
     std::string root_dir = std::string(HomeDir) + "/scratch";

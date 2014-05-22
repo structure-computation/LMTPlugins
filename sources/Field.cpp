@@ -73,15 +73,20 @@ void Field::save(MP fielditem) const
     
     fielditem[ "name" ] = name;
     fielditem[ "data" ] = interpolated_field;
-    
     QString type_field;
     if(type == Nodal)
         type_field = "NodalField";
-    else
+    else if(type == Elemental)
         type_field = "ElementalField";
+    else 
+        type_field = "NodalField";
+    //type_field = "NodalField";
+    
+    qDebug() << type_field;
     
     for(int v = 0; v < values.size(); v++)
     {
+	PRINT(v);
         MP value = MP::new_obj( type_field );
         value[ "_mesh" ] = mesh->save();
         //qDebug() << value["_mesh"];
@@ -103,6 +108,7 @@ void Field::save(MP fielditem) const
         disp[ "pos" ] << pos_v;
         
         interpolated_field[ "_data" ] << disp;
+	//qDebug() << interpolated_field[ "_data" ];
     }
 }
 
