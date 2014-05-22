@@ -3,7 +3,7 @@
 
 #include <QtCore/QString>
 #include <QtCore/QVector>
-#include "../../LMT/include/containers/vec.h"
+#include "containers/vec.h"
 #include <Soca/MP.h>
 class Mesh_vecs;
 
