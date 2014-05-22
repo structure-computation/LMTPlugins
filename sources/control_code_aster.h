@@ -16,6 +16,8 @@
 template<class n >
 struct N;
 
+
+// Writes the mesh in a .msh file (gmsh file)
 void Write_msh_file (TM &m, std::string root_file, double pix2m, std::string computation_type){
 
      std::string name_file = ( root_file + ".msh" );
@@ -57,6 +59,7 @@ void Write_msh_file (TM &m, std::string root_file, double pix2m, std::string com
   
 }
 
+// Writes the export file for code_aster
 void Write_export_file (std::string root_file){
     
     std::string name_file = ( root_file + ".export" );
@@ -106,6 +109,7 @@ void Write_export_file (std::string root_file){
   
 }
 
+// Writes a command file for code_aster, based on a Vec(LMT::Mesh)
 void Write_comm_file (std::string root_file, Vec<TM> mesh, Vec < Vec < std::string > > Prop_Mat, Vec<double> constrained_nodes, double pix2m){
     
     std::string name_file = ( root_file + ".comm" );
@@ -339,6 +343,7 @@ void Write_comm_file (std::string root_file, Vec<TM> mesh, Vec < Vec < std::stri
     comm << "FIN();\n";
 }
 
+// Cleans code_aster result file to leave just the data, and returns the order of the mesh nodes
 Vec<int> clear_result_file(std::string filename){
   
     std::ifstream strim(filename.c_str());
@@ -366,6 +371,7 @@ Vec<int> clear_result_file(std::string filename){
     return num_nodes;
 }
 
+// Loads a code_aster result from a bunch of txt file to a vec(LMT::Mesh). Doesn't create the mesh : supposed to be known (same and elements node numbers than the result : this part is commented in the beginning). 
 void load_aster_res_into_LMTppMesh(std::string root_file, Vec<TM> &mesh, double thickness){
     
     Vec<int> num_nodes;
@@ -387,9 +393,9 @@ void load_aster_res_into_LMTppMesh(std::string root_file, Vec<TM> &mesh, double 
 	    }
 	}
     }
-    
 }
     
+// Lauch an Code_Aster computation and gets the result, based on a LMT::Mesh (and its displacements for boundary conditions)
 Vec<TM> calc_code_aster_into_LMTppMesh(Vec<TM> &m_ref, Vec<double> constrained_nodes, double pix2m, Vec < Vec < std::string > > Prop_Mat , double thickness){
     
     Vec<TM> Mesh_vector_output = m_ref;
@@ -405,9 +411,16 @@ Vec<TM> calc_code_aster_into_LMTppMesh(Vec<TM> &m_ref, Vec<double> constrained_n
     Write_comm_file(root_file, m_ref, Prop_Mat, constrained_nodes, pix2m);
     
     put_void_file_in(root_file + "result.txt");
+    std::cout << " " << std::endl;
+    std::cout << "LAUNCHING COMPUTATION WITH CODE_ASTER..." << std::endl;
     int res_sys = system(("/opt/aster/bin/as_run " + root_file + ".export > " + root_file + "result.txt").c_str()); // COMPUTATION
-
     load_aster_res_into_LMTppMesh(root_file, Mesh_vector_output, thickness);
+    if (res_sys == 0)
+	std::cout << "... COMPUTATION JUST ENDED, AND WELL" << std::endl;
+    else
+	std::cout << "... COMPUTATION ENDED BECAUSE OF A CRASH. PLEASE CHECK THE COMPUTATION REPORT " << std::endl;
+    std::cout << "  " << std::endl;
+    
     return Mesh_vector_output;
     
 }

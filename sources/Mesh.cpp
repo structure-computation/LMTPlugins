@@ -77,8 +77,6 @@ MP Mesh_vecs::save() const
     mesh[ "_pelected_elements" ] = MP::new_lst();
     
     // nodes
-    PRINT("hop (Mesh.cpp)");
-    PRINT(nodes.size());
     for( int i = 0; i < nodes.size(); ++i ) {
         MP pos = MP::new_lst( "Vec_3" );
         for( int d = 0; d < 3; ++d )
@@ -87,7 +85,6 @@ MP Mesh_vecs::save() const
         pnt[ "pos" ] = pos;
         mesh[ "points" ] << pnt;
     }
-    PRINT("hop (Mesh.cpp)");
     
     // elements
     TypedArray<int> *tr_con = new TypedArray<int>;
@@ -101,7 +98,6 @@ MP Mesh_vecs::save() const
                 te_con->_data << elements[n][i];
     }
     
-    PRINT("hop (Mesh.cpp)");
     for( int n = 0; n < skin_elements.size(); ++n )
         if ( skin_elements[ n ].size() == 3 )
             for( int i = 0; i < skin_elements[ n ].size(); ++i )

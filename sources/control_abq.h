@@ -16,6 +16,7 @@
 #include "FieldSet.h"
 #include "commandes_generales.h"
 
+// Writes 2D (of extruded 3D) input file for Abaqus, based on a Vec(LMT::Mesh)
 void Write2DINP (Vec<TM> &m, std::string root_dir, Vec<double> constrained_nodes, double pix2m, Vec < Vec < std::string > > Prop_Mat, double thickness){
     std::string nom_fic = ( root_dir + ".inp" );
     for (int z = 0; z <1; ++z) { // fausse boucle pour écrire l'inp
@@ -413,13 +414,24 @@ void Write2DINP (Vec<TM> &m, std::string root_dir, Vec<double> constrained_nodes
             //inp << "** STEP: Step-" << i+1  << ", inc=11000\n";
             inp << "** STEP: Step-" << i+1  << "\n";
             inp << "** \n";
-            inp << "*Step, NLGEOM, name=Step-" << i+1 << "\n";
-            //inp << "*Step, name=Step-" << i+1 << "\n";
-            inp << "*Static\n"; 
-	    inp << "0.01, 1., 0.0001, 0.1\n";
-	    //inp << "0.01, 1., 1e-05, 0.01\n";
-            inp << "** \n";
-            inp << "** BOUNDARY CONDITIONS\n";
+	    
+//             inp << "*Step, NLGEOM, name=Step-" << i+1 << "\n";
+//             //inp << "*Step, name=Step-" << i+1 << "\n";
+//             inp << "*Static\n"; 
+// 	    inp << "0.01, 1., 0.0001, 0.1\n";
+// 	    //inp << "0.01, 1., 1e-05, 0.01\n";
+//             inp << "** \n";
+//             inp << "** BOUNDARY CONDITIONS\n";
+	    
+	    inp << "*Step, NLGEOM=YES, name=Step-" << i+1 << ", inc=1000000\n";
+	    inp << "*Static\n";
+	    inp << "1., 1., 0.0000001, 1.\n";
+	    inp << "*CONTROLS, PARAMETERS=TIME INCREMENTATION\n";
+	    inp << ", , , , , , , 10000, , ,\n";
+	    inp << "0.5, , , , , , 2.5, \n";
+	    inp << "** \n";
+	    inp << "** BOUNDARY CONDITIONS\n";
+
 	    if (computation_type == "3Dex"){ 
 		int nbc=/*TM::dim*/2*i*constrained_nodes.size();
 		if (i>0){
@@ -516,22 +528,7 @@ void Write2DINP (Vec<TM> &m, std::string root_dir, Vec<double> constrained_nodes
     std::remove((root_dir +".msg").c_str());
 }
 
-
-   struct PutElementalField_from_abq {
-	template< class V, class E >
-	void operator()(  V &v, unsigned j , E& e, unsigned i) const {
-	    typedef typename E::Pvec Pvec;               
-	    
-	    if (4*i == j)
-	      e.epsilon[0] = v;
-	    if (4*i+1 == j)
-	      e.epsilon[1] = v;
-	    if (4*i+3 == j)
-	      e.epsilon[2] = v;
-	    
-	}
-    };
-
+// Loads a abq result from an odb file to a vec(LMT::Mesh). Doesn't create the mesh : supposed to be known (same and elements node numbers than the result : this part is commented in the beginning). 
 void load_abq_res_odb(std::string nom_fic, Vec<TM> &res){
   
     std::cout << " " << std::endl;
@@ -540,7 +537,6 @@ void load_abq_res_odb(std::string nom_fic, Vec<TM> &res){
     
     odb_initializeAPI();  // pour initialiser l'interface c++ abaqus il faut impérativement appeler cette fonction avant de faire appel à  d'autre fonctions
     odb_Odb& odb = openOdb( nom_fic.c_str() );// appel de la fonction openOdb qui permet d'ouvrir un fichier abaqus odb
-    //odb_Odb& odb = openOdb( "viewer_tutorial.odb" );// appel de la fonction openOdb qui permet d'ouvrir un fichier abaqus odb
     odb_Assembly& rootAssy = odb.rootAssembly();
     odb_InstanceRepositoryIT instIter( rootAssy.instances() );
     for ( instIter.first(); !instIter.isDone(); instIter.next() )
@@ -552,7 +548,7 @@ void load_abq_res_odb(std::string nom_fic, Vec<TM> &res){
     const odb_SequenceNode& nodeList = instance1.nodes();
     int nodeListSize = nodeList.size();
     
-            std::cout << nodeListSize << std::endl;
+    std::cout << nodeListSize << std::endl;
             
     Vec<int> face_nodes;
     //res[0].node_list.resize(nodeList.size());
@@ -580,7 +576,6 @@ void load_abq_res_odb(std::string nom_fic, Vec<TM> &res){
     int nstep = 0;
     for (stepIter.first(); !stepIter.isDone(); stepIter.next()){
         nstep +=1;
-        //std::cout << nstep << std::endl;
     }
     
     
@@ -724,7 +719,7 @@ void load_abq_res_odb(std::string nom_fic, Vec<TM> &res){
     
 }
 
-
+// Lauch an Abaqus computation and gets the result, based on a LMT::Mesh (and its displacements for boundary conditions)
 Vec<TM> calc_abq_into_LMTppMesh(Vec<TM> &m_ref, Vec<double> constrained_nodes, double pix2m, Vec < Vec < std::string > > Prop_Mat , double thickness){
      
     Vec<TM> Vecteur_de_maillages_output = m_ref;
