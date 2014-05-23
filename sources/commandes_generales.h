@@ -22,6 +22,14 @@ typedef TM::Pvec Pvec;
 typedef ImgInterp<double,2/*,ImgInterpOrder3_Kernel*/> I2;
 LMT::Vec<I2> images;
 
+struct GetEpsInVecs {
+    template<class TE>
+    void operator()( const TE &el ) {
+        Vec<double> val = el.epsilon[0];
+	e << val;
+    }
+    Vec< Vec<double> > e;
+};
 
 // Tests if a file exists
 bool exists( const std::string & file )
@@ -192,6 +200,14 @@ void write_mat (Mat<double> M, std::string filename){
     }
 }
 
+// Writes a Vec in a text file
+void write_vec (Vec<double> V, std::string filename){
+    std::ofstream vec (filename.c_str());
+    for (int ii = 0; ii < V.size(); ii++){
+        vec << double(V[ii]) << " " ;
+        vec << "\n";
+    }
+}
 // Compute the distance between a point and a segment (defined by its two extreme points).
 double calc_dist_segment( Vec <double > point, Vec < Vec < double > > segment){
   

@@ -1,7 +1,7 @@
 #ifndef MESH_H
 #define MESH_H
 
-#include "containers/vec.h"
+#include "LMT/include/containers/vec.h"
 #include <Soca/MP.h>
 
 

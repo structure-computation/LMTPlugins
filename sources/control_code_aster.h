@@ -152,6 +152,8 @@ void Write_comm_file (std::string root_file, Vec<TM> mesh, Vec < Vec < std::stri
       comm << "'C_PLAN',),\n";
     else if (computation_type == "2DPE")
       comm << "'D_PLAN',),\n";
+    if ((computation_type == "2DPS") and (thelaw == "Powerlaw"))
+      PRINT("!!!!!!!! CODE ASTER DOES NOT ACCEPT PLANE STRESS ELEMENTS WITH A 'POWER'-TYPE HARDENING LAW !!!!!!!!!!!!!!!!");
     comm << "                        ),\n";
     comm << "                );\n";
     comm << "\n";

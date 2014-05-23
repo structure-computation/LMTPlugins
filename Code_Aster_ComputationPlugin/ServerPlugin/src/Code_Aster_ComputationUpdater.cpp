@@ -31,9 +31,6 @@ bool Code_Aster_ComputationUpdater::run( MP mp ) {
     Vec<TM> Mesh_Vector_output = calc_code_aster_into_LMTppMesh(Mesh_Vector_input, constrained_nodes, pix2m, Prop_Mat, thickness); // Computation for a given set of parameter
     add_message( mp, ET_Info, "Calcul terminé" );    mp.flush();
 	    
-	    for (int num_mesh = 0; num_mesh < Mesh_Vector_output.size(); num_mesh++)
-		write_mesh_vtk( "/home/mathieu/aaa_test/aaa_test" + to_string(num_mesh) + ".vtu",Mesh_Vector_output[ num_mesh ]);
-	    
     put_result_in_MP(Mesh_Vector_output, mp, fs_output); // Sortie dans un FieldSet "calcul"
     add_message( mp, ET_Info, "Résultat renvoyé" );    mp.flush(); 
  
