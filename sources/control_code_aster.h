@@ -228,7 +228,7 @@ void Write_comm_file (std::string root_file, Vec<TM> mesh, Vec < Vec < std::stri
     // MEASURED BOUNDARY CONDITIONS
     for (int nn=0; nn<constrained_nodes.size(); nn++){
 	for (int nc=0; nc<TM::dim; nc++){
-	    comm << "dep_" << constrained_nodes[nn]+1 << "_" << "XYZ"[nc] << " = DEFI_FONCTION(NOM_PARA='INST' ,\n";
+	    comm << "dep" << constrained_nodes[nn]+1 << "" << "XYZ"[nc] << " = DEFI_FONCTION(NOM_PARA='INST' ,\n";
 	    comm << "				VALE = ( 0. , 0.,";
 	    for (int num_mesh = 0; num_mesh < mesh.size(); num_mesh++)
 		comm << "\n					 " << num_mesh+1  <<  ". , " << mesh[num_mesh].node_list[constrained_nodes[nn]].dep[nc]*pix2m << " ,";
@@ -245,7 +245,7 @@ void Write_comm_file (std::string root_file, Vec<TM> mesh, Vec < Vec < std::stri
     for (int nn=0; nn<constrained_nodes.size(); nn++){
 	comm << "\n				_F( NOEUD='N" << constrained_nodes[nn]+1 << "', ";
 	for (int nc=0; nc<TM::dim; nc++)
-	    comm << "D" << "XYZ"[nc] << " = dep_" << constrained_nodes[nn]+1 << "_" << "XYZ"[nc] << ", ";
+	    comm << "D" << "XYZ"[nc] << " = dep" << constrained_nodes[nn]+1 << "" << "XYZ"[nc] << ", ";
 	comm << "),";				
     }
     comm << "),);\n";
@@ -401,7 +401,6 @@ void load_aster_res_into_LMTppMesh(std::string root_file, Vec<TM> &mesh, double 
 Vec<TM> calc_code_aster_into_LMTppMesh(Vec<TM> &m_ref, Vec<double> constrained_nodes, double pix2m, Vec < Vec < std::string > > Prop_Mat , double thickness){
     
     Vec<TM> Mesh_vector_output = m_ref;
-    PRINT(m_ref[0].node_list.size());
     char* HomeDir;
     HomeDir = getenv ("HOME");
     std::string root_dir = std::string(HomeDir) + "/scratch";

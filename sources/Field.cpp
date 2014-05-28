@@ -86,7 +86,6 @@ void Field::save(MP fielditem) const
     
     for(int v = 0; v < values.size(); v++)
     {
-	PRINT(v);
         MP value = MP::new_obj( type_field );
         value[ "_mesh" ] = mesh->save();
         //qDebug() << value["_mesh"];

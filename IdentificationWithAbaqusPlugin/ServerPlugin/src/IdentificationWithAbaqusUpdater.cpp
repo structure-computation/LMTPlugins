@@ -33,7 +33,7 @@ bool IdentificationWithAbaqusUpdater::run( MP mpid ) {
     
     //////////////
     
-    std::string senstrac = "hor";
+    std::string senstrac = "nope";
     std::string method = "int";
 	
     double resolution = 1e-40;
@@ -120,7 +120,7 @@ bool IdentificationWithAbaqusUpdater::run( MP mpid ) {
 	Vec<double> dif = solve_with_max(M_tot, F_tot, max_level, resolution, relaxation);
 	update_properties(Prop_Mat, Prop_Mat_Backup, prop2id, dif, thelaw);
 	
-	if ( (norm_inf( dif ) < 1e-2) or (it+1 == iterations) ){
+	if ( (norm_inf( dif ) < 1e-3) or (it+1 == iterations) ){
 	   //it_report, M_d_report, M_f_report, F_d_report, F_f_report, calc_force_report, meas_force_report
 	    it_report = it;
 	    dif_report = dif;

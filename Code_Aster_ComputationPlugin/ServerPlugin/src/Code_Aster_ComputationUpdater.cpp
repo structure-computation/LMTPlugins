@@ -13,7 +13,7 @@
 
 bool Code_Aster_ComputationUpdater::run( MP mp ) {
     
-       //// Variables 
+    //// Variables 
     Vec<TM> Mesh_Vector_input;  
     Vec<int> constrained_nodes; 
     Vec<int> indices_bc_cn;
@@ -23,6 +23,7 @@ bool Code_Aster_ComputationUpdater::run( MP mp ) {
     FieldSet fs_output;
     Vec < Vec < std::string > > Prop_Mat; // FORMAT "GENERIQUE" LMT : vecteur de vecteurs string qui contiennent le nom ([0]) et la valeur ([1])
     Vec<Vec< std::string> > force_files;
+    Vec<Vec< double > > calc_force;
     //////////////
     
     extract_computation_parameters( param, Mesh_Vector_input, constrained_nodes, indices_bc_cn,  Prop_Mat, fs_output, force_files); // Lecture des paramètres du calcul
@@ -30,11 +31,15 @@ bool Code_Aster_ComputationUpdater::run( MP mp ) {
     add_message( mp, ET_Info, "Lancement du calcul" );    mp.flush();
     Vec<TM> Mesh_Vector_output = calc_code_aster_into_LMTppMesh(Mesh_Vector_input, constrained_nodes, pix2m, Prop_Mat, thickness); // Computation for a given set of parameter
     add_message( mp, ET_Info, "Calcul terminé" );    mp.flush();
-	    
-    put_result_in_MP(Mesh_Vector_output, mp, fs_output); // Sortie dans un FieldSet "calcul"
+    
+    extract_f_from_LMTppMesh (Mesh_Vector_output, constrained_nodes, indices_bc_cn, calc_force);
+    
+    PRINT(calc_force);
+    
+    put_result_in_MP(Mesh_Vector_output, mp, fs_output); mp.flush();   // Sortie dans un FieldSet "calcul"
     add_message( mp, ET_Info, "Résultat renvoyé" );    mp.flush(); 
  
-    sleep(1);
+    sleep(2);
     
 }
 

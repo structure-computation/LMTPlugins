@@ -19,7 +19,6 @@ void FieldSet::load(MP fieldsetitem)
         if(nb_times)
         {
             MP mesh_data = fieldsetitem["visualization.color_by.lst[0].data._data[0].field._mesh"];
-	    qDebug() << mesh_data.type();
             mesh = mesh_data;   /// voir Mesh.cpp
         }
         else
@@ -68,8 +67,6 @@ void FieldSet::save(MP fieldsetitem) const
         MP field = MP::new_obj("NamedParametrizedDrawable");
         fields[f].save(field);
 	MP tmp = field[ "data._data" ];
-	qDebug() << tmp;
-	PRINT(field[ "data._data" ].size());
         if(nb_fields_out) {
 	     fieldsetitem["visualization.color_by.lst"][0] = field; 
 	}

@@ -300,7 +300,6 @@ Vec <double> select_cn (Vec<TM> &meshes, MP ch, std::string &CL, int nbs, Vec <i
 			      if (dist < 0.001){
 				  close_to_the_border = 1 ;
 				  indice = nbc;
-				  
 			      }
 		      }
 		      if (close_to_the_border){
@@ -333,7 +332,7 @@ Vec <double> select_cn (Vec<TM> &meshes, MP ch, std::string &CL, int nbs, Vec <i
 }
 
 // Loads a MeshItem in a 2D LMTpp Mesh object
-TM load_MeshMP_into_2DLMTpp_Mesh(MP mesh){ 
+TM load_MeshMP_into_2DLMTpp_Mesh(MP mesh, std::string typeitem){ 
     TM dic_mesh;
     TypedArray<int> *indices_elem = dynamic_cast<TypedArray<int> *>( mesh[ "_elements[0].indices" ].model() );
     const unsigned nb_elems = indices_elem->size(1);
@@ -352,6 +351,7 @@ TM load_MeshMP_into_2DLMTpp_Mesh(MP mesh){
                 for( int nt = 0, ct = 0; nt < indices->size( 1 ); ++nt ) {
                     unsigned o[ 3 ];
                     for( int j = 0; j < 3; ++j ){
+
                         o[ j ] = qMin( indices->operator[]( ct++ ), (int)dic_mesh.node_list.size() -1 );
                     }
                     dic_mesh.add_element( Triangle(), DefaultBehavior(), o );
@@ -368,7 +368,7 @@ TM load_MeshMP_into_2DLMTpp_Mesh(MP mesh){
 Vec<TM> load_FieldSetItem_into_LMTpp_Mesh(FieldSet fs_input){
     Mesh_vecs maillage = fs_input.mesh;
     MP maillage_transfert = maillage.save();
-    TM dic_mesh = load_MeshMP_into_2DLMTpp_Mesh(maillage_transfert);
+    TM dic_mesh = load_MeshMP_into_2DLMTpp_Mesh(maillage_transfert, "FieldSetItem");
     Vec<TM> Mesh_vector_input;
     PRINT(fs_input.fields[0].values.size());
     Mesh_vector_input.resize(fs_input.fields[0].values.size()); 
@@ -409,6 +409,8 @@ void extract_fnod_from_LMTppMesh ( Vec<TM> res_ref, std::string senstrac , Vec <
 		fnodal << res_ref[num_mesh].node_list[constrained_nodes[n]].f_nodal[0];
 	    else if (senstrac == "ver")
 		fnodal << res_ref[num_mesh].node_list[constrained_nodes[n]].f_nodal[1];
+	    else if (senstrac == "nope")
+		fnodal << pow(pow(res_ref[num_mesh].node_list[constrained_nodes[n]].f_nodal[0],2) + pow(res_ref[num_mesh].node_list[constrained_nodes[n]].f_nodal[1],2), 0.5);
         }
         fnodaltot.push_back(fnodal);
     } 
@@ -416,6 +418,25 @@ void extract_fnod_from_LMTppMesh ( Vec<TM> res_ref, std::string senstrac , Vec <
     calc_force.push_back(fnodaltot);
 }
 
+void extract_f_from_LMTppMesh (Vec<TM> Mesh_Vector_output, Vec<int> constrained_nodes, Vec<int> indices_bc_cn, Vec <Vec <double> > &calc_force){
+  
+    Vec <Vec <Vec <double> > > calc_force_nodes;
+    extract_fnod_from_LMTppMesh( Mesh_Vector_output, "ver", calc_force_nodes, constrained_nodes );
+    
+    calc_force.resize(max(indices_bc_cn) + 1 - min(indices_bc_cn));
+    
+    for (int ncl = min(indices_bc_cn); ncl < max(indices_bc_cn)+1; ncl++){
+	calc_force[ncl].resize(Mesh_Vector_output.size());
+	for (int nim =0; nim<Mesh_Vector_output.size(); nim ++){
+	    calc_force[ncl][nim] =0;
+	    for (int nn =0; nn<calc_force_nodes[0][0].size(); nn++){
+		if (indices_bc_cn[nn] == ncl){
+		    calc_force[ncl][nim] += calc_force_nodes[0][nim][nn];
+		}
+	    }
+	}
+    }
+}
 // Loads images from a MP children
 void extract_images(MP mp, LMT::Vec<I2> &images){
  
@@ -589,11 +610,10 @@ void extract_computation_parameters( MP mp, Vec<TM> &Mesh_vector_input, Vec<int>
 	}
 	else if (( c.type() == "MeshItem" ) ){
 	    ex_field++;
-	    Mesh_vecs maillage; maillage.load(c["_mesh"]);
+	    Mesh_vecs maillage; maillage = c["_mesh"];
 	    MP maillage_transfert = maillage.save();
-	    TM mesh = load_MeshMP_into_2DLMTpp_Mesh(maillage_transfert);
+	    TM mesh = load_MeshMP_into_2DLMTpp_Mesh(maillage_transfert, "MeshItem");
 	    double n_timesteps = mp["n_timesteps"];
-	    PRINT(n_timesteps);
 	    fs_input_bckp.mesh = maillage;
 	    for (int ts = 0; ts < n_timesteps; ts++)
 		Mesh_vector_input << mesh;
@@ -930,6 +950,7 @@ void build_matrix_for_the_force_part(Vec<Mat<double, Sym<> ,SparseLine<> > > &VM
 			for (int nim =0; nim<n_im; nim ++){
 			    calc_force[nsf][nim] =0;
 			    for (int nn =0; nn<calc_force_nodes[0][0].size(); nn++){
+				
 				if (indices_bc_cn[nn] == ncl){
 				    calc_force[nsf][nim] += calc_force_nodes[nsf][nim][nn];
 				}
@@ -1169,7 +1190,6 @@ void put_result_in_MP (Vec<TM> meshes, MP &mp, FieldSet &fs_output){// SORTIE DA
  	for (int num_mesh = 0; num_mesh < meshes.size(); num_mesh++){
 	    dic.get_epsilon( meshes[num_mesh] );
 	    for( int d = 0; d < TM::dim; ++d ) {
-		// data
 		QVector<int> s; s << meshes[0].node_list.size();
 		TypedArray<double> *data = new TypedArray<double>( s );
 		for( int i = 0; i < meshes[0].node_list.size(); ++i ){
