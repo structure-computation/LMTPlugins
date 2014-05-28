@@ -5,13 +5,13 @@ class DicUncertaintyItem extends TreeItem_Computable
         
         # default values
         @_name.set name
-        @_ico.set "img/mesher.png"
-        @_viewable.set false        
+        #@_ico.set "img/mesher.png"
+        @_viewable.set true        
         @add_child new ImgSetItem
-        @add_child new SketchItem
         @add_child new DiscretizationItem
         
         @add_output new FieldSetCorreliItem
+        #@add_output new MeshItem
         
         @add_attr
            add_noise : false
@@ -33,21 +33,21 @@ class DicUncertaintyItem extends TreeItem_Computable
                 x_axis: 'D (pix)',
                 y_axis: 'Uncertainty'
 #    display_suppl_context_actions: ( context_action )  ->
+    display_suppl_context_actions: ( context_action )  ->
+        context_action.push new TreeAppModule_Mesher
+        context_action.push new TreeAppModule_Sketch
         
     accept_child: ( ch ) ->
         ch instanceof MaskItem or 
         ch instanceof DiscretizationItem or
         ch instanceof SketchItem or 
-        ch instanceof ImgSetItem
+        ch instanceof ImgSetItem or
+        ch instanceof Graph
 #         ch instanceof TransformItem
         
-#    sub_canvas_items: ->
-#        [ @_mesh ]
-#         if @nothing_to_do()
-#             [ @_mesh ]
-#         else
-#             []
-    
+    sub_canvas_items: ->
+        [ @_graph ]
+   
 #    draw: ( info ) ->
         
 #     z_index: ->

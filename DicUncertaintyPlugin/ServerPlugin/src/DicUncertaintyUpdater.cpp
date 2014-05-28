@@ -14,6 +14,7 @@
 #include <string.h>
 #include "dec_image.h"
 #include "make_fields.h"
+#include "soda_mesh_from_lmtpp_mesh.h"
 
 bool DicUncertaintyUpdater::run( MP mp ) {
     
@@ -25,8 +26,8 @@ bool DicUncertaintyUpdater::run( MP mp ) {
     typedef ImgInterp<double,dim/*,ImgInterpOrder3_Kernel*/> I2;
     typedef LMT::DicCPU<double,dim/*,false*/> DC;
     
-    MP mesh;
-    
+    MP mesh;// = mp[ "_output[1]" ];
+//     MP mesh = output[ "_mesh" ];
     TM dic_mesh;
     LMT::Vec<I2> images;
     Vec<int,dim> xmin (1e6,1e6);
@@ -34,7 +35,7 @@ bool DicUncertaintyUpdater::run( MP mp ) {
     // output
     MP output_field = mp[ "_output[ 0 ]" ];
     
-    QVector<MP> displacements = make_field( output_field, dic_mesh.dim, "Displacement" );
+    
     
     for( int i = 0; i < ch.size(); ++i ) {
         MP c = ch[ i ];
@@ -118,7 +119,6 @@ bool DicUncertaintyUpdater::run( MP mp ) {
         // Mesh generation from sketch
         if ( c.type() == "SketchItem" ) {
             mesh.reassign( c[ "mesh" ] );
-            PRINT(mesh[ "points" ].size());
             for( int i = 0, n = mesh[ "points" ].size(); i < n; ++i ) {
                 MP pos = mesh[ "points" ][ i ][ "pos" ];
                 xmin = min( xmin , Pvec (pos[0],pos[1]) );
@@ -128,6 +128,8 @@ bool DicUncertaintyUpdater::run( MP mp ) {
             PRINT(xmax);
             Pvec XD(20,20);
             make_rect( dic_mesh, Quad(), xmin-xmin, xmax-xmin, XD );
+            mesh.reassign( soda_mesh_from_lmtpp_mesh( dic_mesh ) );
+//             mesh.flush();
         }
     }
 
@@ -177,6 +179,7 @@ bool DicUncertaintyUpdater::run( MP mp ) {
  //     calcul du champ de deplacement obtenu par correlation
         dic.exec( images[1],images[j] , dic_mesh , dep_DM(), lum_DM() );
         // disp field
+        QVector<MP> displacements = make_field( output_field, dic_mesh.dim, "Displacement" );
         for( int d = 0; d < dic_mesh.dim; ++d ) {
             // data
             QVector<int> s; s << dic_mesh.node_list.size();
@@ -193,7 +196,7 @@ bool DicUncertaintyUpdater::run( MP mp ) {
             }
             
             // NodalField
-            add_field_in_Interpolated( displacements[ d ], mesh, data, j );
+            add_field_in_Interpolated( displacements[ d ], mesh, data, j-2 );
             if (d==0){
                 UncX[j-1] = standard_deviation(Ux);
                 ErrX[j-1] = mean(Ux) - Dimp[j-1];
