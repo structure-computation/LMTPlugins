@@ -7,7 +7,7 @@ class IdentificationWithCode_AsterItem extends TreeItem_Computable
            iterations : 10
            relaxation : 1
            offset : 0.01
-           id_done : 0
+           id_done : 0.0
         
         @_name.set name
         @_ico.set "img/IdentificationWithCode_Aster_bouton.png"

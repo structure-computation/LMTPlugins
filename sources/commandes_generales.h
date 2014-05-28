@@ -15,12 +15,21 @@
 #include <boost/graph/graph_concepts.hpp>
 #include "FieldSet.h"
 #include <time.h>
+#include "make_fields.h"
 
 typedef LMT::Mesh<Mesh_carac_pb_correlation_basic<double,2> > TM;
 typedef TM::Pvec Pvec;
 typedef ImgInterp<double,2/*,ImgInterpOrder3_Kernel*/> I2;
 LMT::Vec<I2> images;
 
+struct GetEpsInVecs {
+    template<class TE>
+    void operator()( const TE &el ) {
+        Vec<double> val = el.epsilon[0];
+	e << val;
+    }
+    Vec< Vec<double> > e;
+};
 
 // Tests if a file exists
 bool exists( const std::string & file )
@@ -191,6 +200,14 @@ void write_mat (Mat<double> M, std::string filename){
     }
 }
 
+// Writes a Vec in a text file
+void write_vec (Vec<double> V, std::string filename){
+    std::ofstream vec (filename.c_str());
+    for (int ii = 0; ii < V.size(); ii++){
+        vec << double(V[ii]) << " " ;
+        vec << "\n";
+    }
+}
 // Compute the distance between a point and a segment (defined by its two extreme points).
 double calc_dist_segment( Vec <double > point, Vec < Vec < double > > segment){
   
@@ -280,7 +297,7 @@ Vec <double> select_cn (Vec<TM> &meshes, MP ch, std::string &CL, int nbs, Vec <i
 		      for (int nbc = 0; nbc < coor_nds_bc.size(); nbc++){
 			      Vec < double > pos_nd = meshes[0].skin.node_list[ nds ].pos;
 			      double dist = calc_dist_segment( pos_nd, coor_nds_bc[nbc]);
-			      if (dist < 1){
+			      if (dist < 0.001){
 				  close_to_the_border = 1 ;
 				  indice = nbc;
 			      }
@@ -289,15 +306,16 @@ Vec <double> select_cn (Vec<TM> &meshes, MP ch, std::string &CL, int nbs, Vec <i
 			    constrained_nodes << meshes[0].skin.node_list[ nds ].number;
 			    indices_bc_cn << indice;
 			    for (int nbc = 0; nbc < bc_num.size(); nbc++){ // modification of the input (measured) mesh if the bc is taken from a file
-				  // nbc is the number of bc from text files
+			    // nbc is the number of bc from text files
 				  if (indice == bc_num[nbc]){
 				      double coef;
 				      if (units[nbc] == 0) coef=pix2m;
 				      else if (units[nbc] == 1) coef=1;
 				      if ((vdx[nbc].size() >= meshes.size()) and (vdy[nbc].size() >= meshes.size())){
 					  for (int num_mesh =0; num_mesh < meshes.size(); num_mesh++){
-					      meshes[num_mesh].node_list[ nds ].dep[0] = vdx[nbc][num_mesh]/coef;
-					      meshes[num_mesh].node_list[ nds ].dep[1] = vdy[nbc][num_mesh]/coef;
+					      meshes[num_mesh].node_list[ meshes[0].skin.node_list[ nds ].number ].dep[0] = vdx[nbc][num_mesh]/coef;
+					      meshes[num_mesh].node_list[ meshes[0].skin.node_list[ nds ].number ].dep[1] = vdy[nbc][num_mesh]/coef;
+					      meshes[num_mesh].node_list[ meshes[0].skin.node_list[ nds ].number ].is_on_skin = 1;
 					  }
 				      }
 				      else PRINT("NOT ENOUGH INFORMATION IN THE TEXTE FILE (BC" + to_string(nbc) +")");
@@ -306,7 +324,6 @@ Vec <double> select_cn (Vec<TM> &meshes, MP ch, std::string &CL, int nbs, Vec <i
 		      }
 		}
 	     }
-	     PRINT("end");
 	     if (CL=="nope"){
 		for( int i = 0; i < meshes[0].skin.node_list.size(); ++i )
 		    constrained_nodes << meshes[0].skin.node_list[ i ].number;
@@ -315,7 +332,7 @@ Vec <double> select_cn (Vec<TM> &meshes, MP ch, std::string &CL, int nbs, Vec <i
 }
 
 // Loads a MeshItem in a 2D LMTpp Mesh object
-TM load_into_2DLMTpp_Mesh(MP mesh){ 
+TM load_MeshMP_into_2DLMTpp_Mesh(MP mesh, std::string typeitem){ 
     TM dic_mesh;
     TypedArray<int> *indices_elem = dynamic_cast<TypedArray<int> *>( mesh[ "_elements[0].indices" ].model() );
     const unsigned nb_elems = indices_elem->size(1);
@@ -334,14 +351,15 @@ TM load_into_2DLMTpp_Mesh(MP mesh){
                 for( int nt = 0, ct = 0; nt < indices->size( 1 ); ++nt ) {
                     unsigned o[ 3 ];
                     for( int j = 0; j < 3; ++j ){
-                        o[ j ] = qMin( indices->operator[]( ct++ ), (int)dic_mesh.node_list.size() - 1 );
+
+                        o[ j ] = qMin( indices->operator[]( ct++ ), (int)dic_mesh.node_list.size() -1 );
                     }
                     dic_mesh.add_element( Triangle(), DefaultBehavior(), o );
                 }
             }
         }
     }
-    dic_mesh.remove_unused_nodes();
+    //dic_mesh.remove_unused_nodes();
     return dic_mesh;
 }
 
@@ -350,8 +368,9 @@ TM load_into_2DLMTpp_Mesh(MP mesh){
 Vec<TM> load_FieldSetItem_into_LMTpp_Mesh(FieldSet fs_input){
     Mesh_vecs maillage = fs_input.mesh;
     MP maillage_transfert = maillage.save();
-    TM dic_mesh = load_into_2DLMTpp_Mesh(maillage_transfert);
+    TM dic_mesh = load_MeshMP_into_2DLMTpp_Mesh(maillage_transfert, "FieldSetItem");
     Vec<TM> Mesh_vector_input;
+    PRINT(fs_input.fields[0].values.size());
     Mesh_vector_input.resize(fs_input.fields[0].values.size()); 
     for (int num_mesh = 0; num_mesh < Mesh_vector_input.size(); num_mesh++){
         Mesh_vector_input[num_mesh]=dic_mesh;
@@ -390,6 +409,8 @@ void extract_fnod_from_LMTppMesh ( Vec<TM> res_ref, std::string senstrac , Vec <
 		fnodal << res_ref[num_mesh].node_list[constrained_nodes[n]].f_nodal[0];
 	    else if (senstrac == "ver")
 		fnodal << res_ref[num_mesh].node_list[constrained_nodes[n]].f_nodal[1];
+	    else if (senstrac == "nope")
+		fnodal << pow(pow(res_ref[num_mesh].node_list[constrained_nodes[n]].f_nodal[0],2) + pow(res_ref[num_mesh].node_list[constrained_nodes[n]].f_nodal[1],2), 0.5);
         }
         fnodaltot.push_back(fnodal);
     } 
@@ -397,6 +418,25 @@ void extract_fnod_from_LMTppMesh ( Vec<TM> res_ref, std::string senstrac , Vec <
     calc_force.push_back(fnodaltot);
 }
 
+void extract_f_from_LMTppMesh (Vec<TM> Mesh_Vector_output, Vec<int> constrained_nodes, Vec<int> indices_bc_cn, Vec <Vec <double> > &calc_force){
+  
+    Vec <Vec <Vec <double> > > calc_force_nodes;
+    extract_fnod_from_LMTppMesh( Mesh_Vector_output, "ver", calc_force_nodes, constrained_nodes );
+    
+    calc_force.resize(max(indices_bc_cn) + 1 - min(indices_bc_cn));
+    
+    for (int ncl = min(indices_bc_cn); ncl < max(indices_bc_cn)+1; ncl++){
+	calc_force[ncl].resize(Mesh_Vector_output.size());
+	for (int nim =0; nim<Mesh_Vector_output.size(); nim ++){
+	    calc_force[ncl][nim] =0;
+	    for (int nn =0; nn<calc_force_nodes[0][0].size(); nn++){
+		if (indices_bc_cn[nn] == ncl){
+		    calc_force[ncl][nim] += calc_force_nodes[0][nim][nn];
+		}
+	    }
+	}
+    }
+}
 // Loads images from a MP children
 void extract_images(MP mp, LMT::Vec<I2> &images){
  
@@ -566,6 +606,17 @@ void extract_computation_parameters( MP mp, Vec<TM> &Mesh_vector_input, Vec<int>
 	    FieldSet fs_input(c); 
 	    fs_input_bckp.load(c);
 	    Mesh_vector_input = load_FieldSetItem_into_LMTpp_Mesh(fs_input);
+	    indices_bc_cn = select_cn (Mesh_vector_input,  ch,  CL, nbs, constrained_nodes, pix2m);
+	}
+	else if (( c.type() == "MeshItem" ) ){
+	    ex_field++;
+	    Mesh_vecs maillage; maillage = c["_mesh"];
+	    MP maillage_transfert = maillage.save();
+	    TM mesh = load_MeshMP_into_2DLMTpp_Mesh(maillage_transfert, "MeshItem");
+	    double n_timesteps = mp["n_timesteps"];
+	    fs_input_bckp.mesh = maillage;
+	    for (int ts = 0; ts < n_timesteps; ts++)
+		Mesh_vector_input << mesh;
 	    indices_bc_cn = select_cn (Mesh_vector_input,  ch,  CL, nbs, constrained_nodes, pix2m);
 	}
 	
@@ -899,6 +950,7 @@ void build_matrix_for_the_force_part(Vec<Mat<double, Sym<> ,SparseLine<> > > &VM
 			for (int nim =0; nim<n_im; nim ++){
 			    calc_force[nsf][nim] =0;
 			    for (int nn =0; nn<calc_force_nodes[0][0].size(); nn++){
+				
 				if (indices_bc_cn[nn] == ncl){
 				    calc_force[nsf][nim] += calc_force_nodes[nsf][nim][nn];
 				}
@@ -1050,18 +1102,114 @@ void push_back_material_parameters( MP &mp, Vec < Vec < std::string > > Prop_Mat
     
 }
 
+MP soda_mesh_from_lmtpp_mesh( const TM &m ) {
+    MP om = MP::new_obj( "Mesh" );
+    om[ "points" ] = MP::new_lst( "Lst_Point" );
+    om[ "_elements" ] = MP::new_lst();
+    om[ "_selected_points" ] = MP::new_lst();
+    om[ "_pelected_points" ] = MP::new_lst();
+    om[ "_selected_elements" ] = MP::new_lst();
+    om[ "_pelected_elements" ] = MP::new_lst();
+
+    // nodes
+    for( int i = 0; i < m.node_list.size(); ++i ) {
+        MP pos = MP::new_lst( "Vec_3" );
+        for( int d = 0; d < 3; ++d )
+            pos << m.node_list[ i ].pos[ d ];
+
+        MP pnt = MP::new_obj( "Point" );
+        pnt[ "pos" ] = pos;
+
+        om[ "points" ] << pnt;
+    }
+
+    // elements
+    TypedArray<int> *tr_con = new TypedArray<int>;
+    TypedArray<int> *te_con = new TypedArray<int>;
+    for( int n = 0; n < m.elem_list.size(); ++n ) {
+        if ( m.elem_list[ n ]->nb_nodes_virtual() == 3 )
+            for( int i = 0; i < m.elem_list[ n ]->nb_nodes_virtual(); ++i )
+                tr_con->_data << m.elem_list[ n ]->node_virtual( i )->number;
+        else if ( m.elem_list[ n ]->nb_nodes_virtual() == 4 )
+            for( int i = 0; i < m.elem_list[ n ]->nb_nodes_virtual(); ++i )
+                te_con->_data << m.elem_list[ n ]->node_virtual( i )->number;
+    }
+
+    for( int n = 0; n < m.skin.elem_list.size(); ++n )
+        if ( m.skin.elem_list[ n ]->nb_nodes_virtual() == 3 )
+            for( int i = 0; i < m.skin.elem_list[ n ]->nb_nodes_virtual(); ++i )
+                tr_con->_data << m.skin.elem_list[ n ]->node_virtual( i )->number;
+
+    // triangle
+    tr_con->_size.resize( 2 );
+    tr_con->_size[ 0 ] = 3;
+    tr_con->_size[ 1 ] = tr_con->_data.size() / 3;
+
+    MP triangles = MP::new_obj( "Element_TriangleList" );
+    triangles[ "indices" ] = tr_con;
+    om[ "_elements" ] << triangles;
+
+    // tetra
+    te_con->_size.resize( 2 );
+    te_con->_size[ 0 ] = 4;
+    te_con->_size[ 1 ] = te_con->_data.size() / 4;
+
+    MP tetrahedra = MP::new_obj( "Element_TetrahedraList" );
+    tetrahedra[ "indices" ] = te_con;
+    om[ "_elements" ] << tetrahedra;
+
+    return om;
+}
+
+struct GetEps {
+    template<class TE,class TD>
+    void operator()( const TE &e, int i, TD *data, int d ) const {
+        data->operator[]( i ) = e.epsilon[ 0 ][ d ];
+    }
+};
+
 // Send a vec(Mesh) with its displacements to a MP
 void put_result_in_MP (Vec<TM> meshes, MP &mp, FieldSet &fs_output){// SORTIE DANS UN FieldSet "calcul"
 
+    DicCPU<double, TM::dim> dic;
+    
     MP param = mp["_children[0]"];
+    MP ch = param["_children"];
     double pix2m = param[ "pix2m" ];
-    for (int num_mesh = 0; num_mesh < meshes.size(); num_mesh++){
-	for (int no = 0; no < meshes[num_mesh].node_list.size(); no++ ) {
-	    fs_output.fields[0].values[num_mesh].data[no] = meshes[num_mesh].node_list[no].dep[0]/pix2m;
-	    fs_output.fields[1].values[num_mesh].data[no] = meshes[num_mesh].node_list[no].dep[1]/pix2m;
-	} 
+    MP maillage_transfert;
+    if (fs_output.fields.size() == 0){
+	for( int ii = 0; ii < ch.size(); ++ii ) {
+	    MP c = ch[ ii ];
+	    if (( c.type() == "MeshItem" )){
+		maillage_transfert.reassign( c["_mesh"] );
+	    }
+	}
+	MP output_field = mp[ "_output[ 0 ]" ];
+	QVector<MP> displacements = make_field( output_field, TM::dim, "Displacement" );
+	    
+ 	for (int num_mesh = 0; num_mesh < meshes.size(); num_mesh++){
+	    dic.get_epsilon( meshes[num_mesh] );
+	    for( int d = 0; d < TM::dim; ++d ) {
+		QVector<int> s; s << meshes[0].node_list.size();
+		TypedArray<double> *data = new TypedArray<double>( s );
+		for( int i = 0; i < meshes[0].node_list.size(); ++i ){
+		    data->operator[]( i ) = meshes[num_mesh].node_list[ i ].dep[ d ];
+		}
+		
+		add_field_in_Interpolated( displacements[ d ], maillage_transfert, data, num_mesh + 1 );
+	    }
+	}
     }
-    fs_output.save(mp["_output[0]"]);
+    else {
+	for (int num_mesh = 0; num_mesh < meshes.size(); num_mesh++){
+	    for (int no = 0; no < meshes[num_mesh].node_list.size(); no++ ) {
+		for (int dim =0; dim < TM::dim; dim++){
+		    fs_output.fields[dim].values[num_mesh].data[no] = meshes[num_mesh].node_list[no].dep[dim]/pix2m;
+		}
+	    } 
+	}
+	fs_output.save(mp["_output[0]"]);
+    }
 }
 
 // During the computation of sensitivity fields, gives bak a Prop_Mat vector which is the reference one modified for the "sf"th parameter

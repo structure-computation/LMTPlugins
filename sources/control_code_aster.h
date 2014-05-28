@@ -152,6 +152,8 @@ void Write_comm_file (std::string root_file, Vec<TM> mesh, Vec < Vec < std::stri
       comm << "'C_PLAN',),\n";
     else if (computation_type == "2DPE")
       comm << "'D_PLAN',),\n";
+    if ((computation_type == "2DPS") and (thelaw == "Powerlaw"))
+      PRINT("!!!!!!!! CODE ASTER DOES NOT ACCEPT PLANE STRESS ELEMENTS WITH A 'POWER'-TYPE HARDENING LAW !!!!!!!!!!!!!!!!");
     comm << "                        ),\n";
     comm << "                );\n";
     comm << "\n";
@@ -226,7 +228,7 @@ void Write_comm_file (std::string root_file, Vec<TM> mesh, Vec < Vec < std::stri
     // MEASURED BOUNDARY CONDITIONS
     for (int nn=0; nn<constrained_nodes.size(); nn++){
 	for (int nc=0; nc<TM::dim; nc++){
-	    comm << "dep_" << constrained_nodes[nn]+1 << "_" << "XYZ"[nc] << " = DEFI_FONCTION(NOM_PARA='INST' ,\n";
+	    comm << "dep" << constrained_nodes[nn]+1 << "" << "XYZ"[nc] << " = DEFI_FONCTION(NOM_PARA='INST' ,\n";
 	    comm << "				VALE = ( 0. , 0.,";
 	    for (int num_mesh = 0; num_mesh < mesh.size(); num_mesh++)
 		comm << "\n					 " << num_mesh+1  <<  ". , " << mesh[num_mesh].node_list[constrained_nodes[nn]].dep[nc]*pix2m << " ,";
@@ -243,7 +245,7 @@ void Write_comm_file (std::string root_file, Vec<TM> mesh, Vec < Vec < std::stri
     for (int nn=0; nn<constrained_nodes.size(); nn++){
 	comm << "\n				_F( NOEUD='N" << constrained_nodes[nn]+1 << "', ";
 	for (int nc=0; nc<TM::dim; nc++)
-	    comm << "D" << "XYZ"[nc] << " = dep_" << constrained_nodes[nn]+1 << "_" << "XYZ"[nc] << ", ";
+	    comm << "D" << "XYZ"[nc] << " = dep" << constrained_nodes[nn]+1 << "" << "XYZ"[nc] << ", ";
 	comm << "),";				
     }
     comm << "),);\n";
@@ -259,7 +261,7 @@ void Write_comm_file (std::string root_file, Vec<TM> mesh, Vec < Vec < std::stri
     if (thelaw == "Elas_iso")
 	comm << "		    COMP_ELAS=_F(RELATION='ELAS', DEFORMATION='GROT_GDEP',),\n";
     else if (thelaw == "Powerlaw")
-	comm << "		    COMP_INCR=_F(RELATION='VMIS_ISOT_PUIS', DEFORMATION='GROT_GDEP',),\n";
+	comm << "		    COMP_INCR=_F(RELATION='VMIS_ISOT_PUIS', DEFORMATION='SIMO_MIEHE',),\n";
     comm << "                    INCREMENT = _F(LIST_INST = LINSTC,\n";
     comm << "                                   INST_FIN  = LTPS[NB_T-1],\n";
     comm << "                                  ),\n";

@@ -33,7 +33,7 @@ bool IdentificationWithCode_AsterUpdater::run( MP mpid ) {
     
     //////////////
     
-    std::string senstrac = "hor";
+    std::string senstrac = "nope";
     std::string method = "int";
 	
     double resolution = 1e-40;
@@ -98,6 +98,8 @@ bool IdentificationWithCode_AsterUpdater::run( MP mpid ) {
 	extract_dep_from_LMTppMesh( Mesh_Vector_output, comp_disp );
 	extract_fnod_from_LMTppMesh( Mesh_Vector_output, senstrac, calc_force_nodes, constrained_nodes );
 	
+    
+	
 	for (int p2id =0; p2id<prop2id.size(); p2id++){
 	    std::cout << " " << std::endl;
 	    PRINT(Prop_Mat[prop2id[p2id]][0]);
@@ -118,7 +120,7 @@ bool IdentificationWithCode_AsterUpdater::run( MP mpid ) {
 	Vec<double> dif = solve_with_max(M_tot, F_tot, max_level, resolution, relaxation);
 	update_properties(Prop_Mat, Prop_Mat_Backup, prop2id, dif, thelaw);
 	
-	if ( (norm_inf( dif ) < 1e-2) or (it+1 == iterations) ){
+	if ( (norm_inf( dif ) < 1e-3) or (it+1 == iterations) ){
 	   //it_report, M_d_report, M_f_report, F_d_report, F_f_report, calc_force_report, meas_force_report
 	    it_report = it;
 	    dif_report = dif;
@@ -143,7 +145,9 @@ bool IdentificationWithCode_AsterUpdater::run( MP mpid ) {
         
     }
     
-    mpid["id_done"] = id_ok;
+    qDebug() << mpid["id_done"];
+    mpid["id_done"] = double(0.3);
+    qDebug() << mpid["id_done"];
     //push_back_material_parameters(param, Prop_Mat); mpid.flush();
     
     std::string report_address = root_dir + "/report";
