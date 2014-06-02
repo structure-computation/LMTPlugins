@@ -14,7 +14,7 @@ class VirtualGaugeItem extends TreeItem_Computable
         
         @_computation_mode.set false
 #        @_add_output new MeshItem
-        
+                
     display_suppl_context_actions: ( context_action )  ->
         
     accept_child: ( ch ) ->

@@ -234,13 +234,13 @@ double calc_dist_segment( Vec <double > point, Vec < Vec < double > > segment){
 
 // Selection of the nodes where boundary conditions are applied in a computation. 
 // If segments have been selected, returns a vector containing the number of the segment associated with the node (else the Vector will be empty)
-Vec <double> select_cn (Vec<TM> &meshes, MP ch, std::string &CL, int nbs, Vec <int> &constrained_nodes, double pix2m){
+Vec <double> select_cn (Vec<TM> &meshes, MP ch, std::string &CL, int nbs, Vec <int> &constrained_nodes, double pix2m, std::string &mode){
 
 	    int numbc=0;
 	    Vec<int> indices_bc_cn, bc_num, units;
 	    Vec< Vec< double > > vdx, vdy;
 	    if (CL=="picked"){
-	      
+		
 		MP bs = ch[ nbs ];
 		MP bs2 = bs[ 2 ]; // va chercher la liste dans le bsitem
 		Vec < Vec < Vec < double > > >  coor_nds_bc;
@@ -319,20 +319,23 @@ Vec <double> select_cn (Vec<TM> &meshes, MP ch, std::string &CL, int nbs, Vec <i
 					  }
 				      }
 				      else PRINT("NOT ENOUGH INFORMATION IN THE TEXTE FILE (BC" + to_string(nbc) +")");
+				      mode = "no_info_error";
 				  }
 			    }
 		      }
 		}
-	     }
-	     if (CL=="nope"){
+	     } 
+	     if ((CL == "nope") and (mode != "fromfield")) CL = "dummy";
+	     if (CL == "nope"){
 		for( int i = 0; i < meshes[0].skin.node_list.size(); ++i )
 		    constrained_nodes << meshes[0].skin.node_list[ i ].number;
+		indices_bc_cn << 0;
 	     }
 	     return indices_bc_cn;
 }
 
 // Loads a MeshItem in a 2D LMTpp Mesh object
-TM load_MeshMP_into_2DLMTpp_Mesh(MP mesh, std::string typeitem){ 
+TM load_MeshMP_into_2DLMTpp_Mesh(MP mesh){ 
     TM dic_mesh;
     TypedArray<int> *indices_elem = dynamic_cast<TypedArray<int> *>( mesh[ "_elements[0].indices" ].model() );
     const unsigned nb_elems = indices_elem->size(1);
@@ -368,7 +371,7 @@ TM load_MeshMP_into_2DLMTpp_Mesh(MP mesh, std::string typeitem){
 Vec<TM> load_FieldSetItem_into_LMTpp_Mesh(FieldSet fs_input){
     Mesh_vecs maillage = fs_input.mesh;
     MP maillage_transfert = maillage.save();
-    TM dic_mesh = load_MeshMP_into_2DLMTpp_Mesh(maillage_transfert, "FieldSetItem");
+    TM dic_mesh = load_MeshMP_into_2DLMTpp_Mesh(maillage_transfert);
     Vec<TM> Mesh_vector_input;
     PRINT(fs_input.fields[0].values.size());
     Mesh_vector_input.resize(fs_input.fields[0].values.size()); 
@@ -578,16 +581,17 @@ void extract_id_properties( MP mp, Vec < Vec < std::string > > Prop_Mat, Vec<int
 }
 
 // Extracts the computation properties in a computation Item (e.g. AbaqusDataItm or Code_Aster_DataItem) : mesh, boundary conditions, material...
-void extract_computation_parameters( MP mp, Vec<TM> &Mesh_vector_input, Vec<int> &constrained_nodes,  Vec<int> &indices_bc_cn, Vec < Vec < std::string > > &Prop_Mat, FieldSet &fs_input_bckp, Vec<Vec<std::string> > &force_files){
+void extract_computation_parameters( MP mpc, Vec<TM> &Mesh_vector_input, Vec<int> &constrained_nodes,  Vec<int> &indices_bc_cn, Vec < Vec < std::string > > &Prop_Mat, FieldSet &fs_input_bckp, Vec<Vec<std::string> > &force_files, int &ex_field){
     
+  
+    MP mp = mpc["_children[0]"];
     MP ch = mp[ "_children" ]; 
     double pix2m = mp[ "pix2m" ];
     double Young, Poisson, loi, rapport, sigma_0, n, ct, sign, sigma_y, a ;
-    std::string param_file, umatname, computation_type;
+    std::string param_file, umatname, computation_type, mode;
     int umat_ndepvar, umat_nparam, umat_nparamid, nparam, nparamid;
     MP mat;
     ct = mp["computation_type.num"];
-    int ex_field =0; 
     
     // CHARGEMENT DU CHAMP D'ENTREE ET DES PROPRIETES MATERIAU
     std::string CL = "nope";
@@ -606,18 +610,25 @@ void extract_computation_parameters( MP mp, Vec<TM> &Mesh_vector_input, Vec<int>
 	    FieldSet fs_input(c); 
 	    fs_input_bckp.load(c);
 	    Mesh_vector_input = load_FieldSetItem_into_LMTpp_Mesh(fs_input);
-	    indices_bc_cn = select_cn (Mesh_vector_input,  ch,  CL, nbs, constrained_nodes, pix2m);
+	    mode = "fromfield";
+	    indices_bc_cn = select_cn (Mesh_vector_input,  ch,  CL, nbs, constrained_nodes, pix2m, mode);
 	}
 	else if (( c.type() == "MeshItem" ) ){
 	    ex_field++;
 	    Mesh_vecs maillage; maillage = c["_mesh"];
 	    MP maillage_transfert = maillage.save();
-	    TM mesh = load_MeshMP_into_2DLMTpp_Mesh(maillage_transfert, "MeshItem");
+	    TM mesh = load_MeshMP_into_2DLMTpp_Mesh(maillage_transfert);
 	    double n_timesteps = mp["n_timesteps"];
 	    fs_input_bckp.mesh = maillage;
 	    for (int ts = 0; ts < n_timesteps; ts++)
 		Mesh_vector_input << mesh;
-	    indices_bc_cn = select_cn (Mesh_vector_input,  ch,  CL, nbs, constrained_nodes, pix2m);
+	    mode = "fromtxt";
+	    indices_bc_cn = select_cn (Mesh_vector_input,  ch,  CL, nbs, constrained_nodes, pix2m, mode);
+	    if (mode == "no_info_error"){
+		indices_bc_cn.resize(0);
+		ex_field = -1;
+		break;
+	    }
 	}
 	
 	if ( c.type() == "MaterialABQItem" ) {
@@ -835,27 +846,23 @@ void extract_computation_parameters( MP mp, Vec<TM> &Mesh_vector_input, Vec<int>
     else{
 	Prop_Mat[Prop_Mat.size()-1] << "0";
     }
+
+	MP bs = ch[ nbs ];
+	MP chil = bs[ "_children" ]; 
+	force_files.resize(chil.size());
+	for( int ii = 0; ii < chil.size(); ++ii ) {
+	    MP c = chil[ ii ];
+	    QString Qforce_file = c["force"]; 
+	    force_files[ii] << Qforce_file.toStdString();
+	    sign = c["force_sign.num"];
+	    if (sign == 0)
+	      force_files[ii] << "+";
+	    else if (sign == 1)
+	      force_files[ii] << "-";
+	    else if (sign == 2)
+	      force_files[ii] << "0";
+	}
     
-    if (ex_field == 0)
-	PRINT("NO INPUT FIELD OR MESH");
-    if (ex_field > 1)
-	PRINT("MORE THAN 1 INPUT FIELD, POSSIBLE CONFUSION");
-    
-    MP bs = ch[ nbs ];
-    MP chil = bs[ "_children" ]; 
-    force_files.resize(chil.size());
-    for( int ii = 0; ii < chil.size(); ++ii ) {
-	MP c = chil[ ii ];
-	QString Qforce_file = c["force"]; 
-	force_files[ii] << Qforce_file.toStdString();
-	sign = c["force_sign.num"];
-	if (sign == 0)
-	   force_files[ii] << "+";
-	else if (sign == 1)
-	   force_files[ii] << "-";
-	else if (sign == 2)
-	   force_files[ii] << "0";
-    }
     
 }
 
@@ -1188,6 +1195,7 @@ void put_result_in_MP (Vec<TM> meshes, MP &mp, FieldSet &fs_output){// SORTIE DA
 	QVector<MP> displacements = make_field( output_field, TM::dim, "Displacement" );
 	    
  	for (int num_mesh = 0; num_mesh < meshes.size(); num_mesh++){
+	    qDebug() << displacements;
 	    dic.get_epsilon( meshes[num_mesh] );
 	    for( int d = 0; d < TM::dim; ++d ) {
 		QVector<int> s; s << meshes[0].node_list.size();

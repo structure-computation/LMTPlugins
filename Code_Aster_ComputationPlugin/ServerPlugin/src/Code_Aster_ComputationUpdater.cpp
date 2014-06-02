@@ -21,25 +21,49 @@ bool Code_Aster_ComputationUpdater::run( MP mp ) {
     double pix2m = param[ "pix2m" ];
     double thickness = param[ "thickness" ];
     FieldSet fs_output;
+    int ex_field =0;
     Vec < Vec < std::string > > Prop_Mat; // FORMAT "GENERIQUE" LMT : vecteur de vecteurs string qui contiennent le nom ([0]) et la valeur ([1])
     Vec<Vec< std::string> > force_files;
     Vec<Vec< double > > calc_force;
     //////////////
     
-    extract_computation_parameters( param, Mesh_Vector_input, constrained_nodes, indices_bc_cn,  Prop_Mat, fs_output, force_files); // Lecture des paramètres du calcul
-	    
-    add_message( mp, ET_Info, "Lancement du calcul" );    mp.flush();
-    Vec<TM> Mesh_Vector_output = calc_code_aster_into_LMTppMesh(Mesh_Vector_input, constrained_nodes, pix2m, Prop_Mat, thickness); // Computation for a given set of parameter
-    add_message( mp, ET_Info, "Calcul terminé" );    mp.flush();
+    extract_computation_parameters( mp, Mesh_Vector_input, constrained_nodes, indices_bc_cn,  Prop_Mat, fs_output, force_files, ex_field); // Lecture des paramètres du calcul
     
-    extract_f_from_LMTppMesh (Mesh_Vector_output, constrained_nodes, indices_bc_cn, calc_force);
+    if (ex_field == 0){
+	add_message( mp, ET_Info, "No input field or mesh !" );    mp.flush(); 
+	PRINT("No input field or mesh !");
+    }
+    else if (ex_field > 1){
+	add_message( mp, ET_Info, "More than one input field or mesh. Possible confusion ! Doing nothing." );    mp.flush(); 
+	PRINT("MORE THAN 1 INPUT FIELD, POSSIBLE CONFUSION");
+	Mesh_Vector_input.resize(0);
+    }
+    else if (ex_field == -1){
+	add_message( mp, ET_Info, "Not enough information (steps) in the txt files for the boundary conditions. Doing nothing." );    mp.flush(); 
+	Mesh_Vector_input.resize(0);
+    }
+    else if ( indices_bc_cn.size() == 0){
+	add_message( mp, ET_Info, "No boundary condition defined, by field or text file. Doing nothing." );    mp.flush(); 
+	Mesh_Vector_input.resize(0);
+    }
+    if (Mesh_Vector_input.size() == 0) {
+	add_message( mp, ET_Info, "There was a problem with the model edition. Check your computation conditions." );    mp.flush(); 
+    }
+    else {
     
-    PRINT(calc_force);
+	add_message( mp, ET_Info, "Lancement du calcul" );    mp.flush();
+	Vec<TM> Mesh_Vector_output = calc_code_aster_into_LMTppMesh(Mesh_Vector_input, constrained_nodes, pix2m, Prop_Mat, thickness); // Computation for a given set of parameter
+	add_message( mp, ET_Info, "Calcul terminé" );    mp.flush();
+	
+	extract_f_from_LMTppMesh (Mesh_Vector_output, constrained_nodes, indices_bc_cn, calc_force);
+	
+	PRINT(calc_force);
+	
+	put_result_in_MP(Mesh_Vector_output, mp, fs_output); mp.flush();   // Sortie dans un FieldSet "calcul"
+	add_message( mp, ET_Info, "Résultat renvoyé" );    mp.flush(); 
     
-    put_result_in_MP(Mesh_Vector_output, mp, fs_output); mp.flush();   // Sortie dans un FieldSet "calcul"
-    add_message( mp, ET_Info, "Résultat renvoyé" );    mp.flush(); 
- 
-    sleep(2);
+	sleep(2);
+    }
     
 }
 
