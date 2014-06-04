@@ -10,6 +10,7 @@
 #include "dic/correlation/ImgInterp.h"
 #include "dic/correlation/DicCPU.h"
 #include "LMT/include/mesh/mesh.h"
+#include "LMT/include/mesh/element.h"
 #include "dic/correlation/mesh_carac_correlation.h"
 #include <iostream>
 #include <boost/graph/graph_concepts.hpp>
@@ -232,6 +233,65 @@ double calc_dist_segment( Vec <double > point, Vec < Vec < double > > segment){
     return mini;
 }
 
+struct FillImgWhenInsideElement {
+    template<class TE,class Img,typename Type,typename Type2> bool operator()( const TE &e, Img &img , Type code, Type2 min) const {
+        typename TE::Pvec xmin = e.node( 0 )->pos, xmax = xmin;
+        for(int i=1;i<TE::nb_nodes;++i) xmin = LMT::min( xmin, e.node( i )->pos );
+        for(int i=1;i<TE::nb_nodes;++i) xmax = LMT::max( xmax, e.node( i )->pos );
+        xmin = LMT::max( xmin, 0         );
+        xmax = LMT::min( xmax, img.sizes );
+	        //
+        Vec<Vec<typename TE::T,TE::dim>,TE::nb_nodes> pos_nodes;
+        for(unsigned i=0;i<TE::nb_nodes;++i)
+            pos_nodes[i] = e.pos(i);
+        Vec<typename TE::T,TE::nb_var_inter> var_inter;
+	
+        for( Rectilinear_iterator<typename TE::T,TE::dim> iter( xmin, xmax ); iter; ++iter ) {
+            get_var_inter( e, iter.pos, var_inter, 1e-2 );
+	    if ( not( var_inter_is_inside( typename TE::NE(), var_inter, 1e-2 ) ) )
+		continue;
+	    if( code == 0){
+		img.tex_int( iter.pos ) = 0;
+	    }
+	    if( code == 1){
+		img.tex_int( iter.pos ) = e.node( 0 )->dep[0]-min;
+	    }
+	    if( code == 2){
+		img.tex_int( iter.pos ) = e.node( 0 )->dep[1]-min;
+	    }
+	    if( code == 3){
+		img.tex_int( iter.pos ) = e.node( 0 )->dep[2]-min;
+	    }
+	    if( code == 11){
+		img.tex_int( iter.pos ) = e.epsilon[0][0]-min;
+	    }
+	    if( code == 12){
+		img.tex_int( iter.pos ) = e.epsilon[0][1]-min;
+	    }
+	    if( code == 13){
+		img.tex_int( iter.pos ) = e.epsilon[0][2]-min;
+	    }
+        }
+    }
+};
+
+// Checks if a point is inside a 2D LMTpp mesh
+// bool is_inside_mesh(TM mesh, Pvec pos){
+// 
+//     bool rep=0;
+//     int nnds = mesh.elem_list[0]->nb_nodes_virtual();
+//     for (int el =0; el < mesh.elem_list.size(); el++){
+// 	Vec<Vec<double,TM::dim> > pos_nodes; pos_nodes.resize(nnds);
+// 	for (int no = 0; no< nnds; no++)
+// 	    pos_nodes[no] = mesh.elem_list[el]->node( no )->pos ;
+//         Vec<double,TM::dim> var_inter;
+// 	if (  get_var_inter_algebric(mesh.elem_list[el], pos_nodes, pos, var_inter )  ) rep=1;
+//     }
+//     
+//     return rep;
+//   
+// }
+
 // Selection of the nodes where boundary conditions are applied in a computation. 
 // If segments have been selected, returns a vector containing the number of the segment associated with the node (else the Vector will be empty)
 Vec <double> select_cn (Vec<TM> &meshes, MP ch, std::string &CL, int nbs, Vec <int> &constrained_nodes, double pix2m, std::string &mode){
@@ -373,7 +433,7 @@ Vec<TM> load_FieldSetItem_into_LMTpp_Mesh(FieldSet fs_input){
     MP maillage_transfert = maillage.save();
     TM dic_mesh = load_MeshMP_into_2DLMTpp_Mesh(maillage_transfert);
     Vec<TM> Mesh_vector_input;
-    PRINT(fs_input.fields[0].values.size());
+   // PRINT(fs_input.fields[0].values.size());
     Mesh_vector_input.resize(fs_input.fields[0].values.size()); 
     for (int num_mesh = 0; num_mesh < Mesh_vector_input.size(); num_mesh++){
         Mesh_vector_input[num_mesh]=dic_mesh;

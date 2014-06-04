@@ -4,9 +4,11 @@ class FieldExportItem extends TreeItem_Computable
         super()
         
         @add_attr
-           Format : new Choice( 0, [ "txt", "vtk" ] ) 
+           Format : new Choice( 0, [ "txt", "vtk", "images" ] ) 
            Adresse : "/media/mathieu/Data/resultats_test/"
            Nom : "resultat"
+           Displacements      : true
+           Strains            : true
            
         @_name.set name
         @_ico.set "img/FieldExport_bouton.png"
@@ -19,7 +21,8 @@ class FieldExportItem extends TreeItem_Computable
         
     accept_child: ( ch ) ->
         ch instanceof FieldSetCorreliItem or
-        ch instanceof FieldSetItem 
+        ch instanceof FieldSetItem or
+        ch instanceof ImgItem
         
     sub_canvas_items: ->
         [  ]

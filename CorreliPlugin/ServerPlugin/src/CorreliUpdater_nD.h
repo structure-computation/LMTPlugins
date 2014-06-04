@@ -315,7 +315,9 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
 	PRINT("Starting with image :" + to_string(j));
 	PRINT(dic_mesh.node_list[0].dep);
         dic.exec( images[ 0 ], images[ j ], dic_mesh, dep_DM(), lum_DM() );
+	std::cout << " " << std::endl;
 	PRINT("Image " + to_string(j) + " treated");
+	std::cout << " " << std::endl;
 	PRINT(dic_mesh.node_list[0].dep);
 
         I2 residual_img, residual_adv_img;
