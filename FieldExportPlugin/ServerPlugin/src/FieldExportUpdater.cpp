@@ -12,13 +12,11 @@ typedef LMT::Mesh<Mesh_carac_pb_correlation_basic<double,2> > TM;
 
 bool FieldExportUpdater::run( MP mp ) {
     
-  
     MP ch = mp[ "_children" ];
     MP c, i;
     int nb_fields=0;
     int nb_imgs=0;
 
-    
     for (int nch=0; nch< ch.size(); nch++){
 	//QString s= "_children[" + QString::fromStdString(to_string(0)) + "]";
 	MP chi = ch[ nch ];
@@ -159,18 +157,14 @@ bool FieldExportUpdater::run( MP mp ) {
 		    }
 		}
 		
-		
 		for (int num_mesh = 0; num_mesh < Mesh_Vector.size(); num_mesh++){
 		  
 		    if (save_disp){
 			Pvec tmxmin, tmxmax;
 			get_min_max( Mesh_Vector[ num_mesh ].node_list, ExtractDM<dep_DM>(), tmxmin, tmxmax );
 			apply( Mesh_Vector[num_mesh].elem_list, FillImgWhenInsideElement(), image , 1, tmxmin[0]);
-			ref_image.reverse_y();
 			image.save(rac_disp+"_" + to_string(num_mesh) + "_x.png",true);
-			//ref_image.reverse_y();
 			apply( Mesh_Vector[num_mesh].elem_list, FillImgWhenInsideElement(), image , 2, tmxmin[1]);
-			//ref_image.reverse_y();
 			image.save(rac_disp+"_" + to_string(num_mesh) + "_y.png",true);
 		    }
 		    if (save_eps){
@@ -180,22 +174,16 @@ bool FieldExportUpdater::run( MP mp ) {
 			for (int k = 0; k < Mesh_Vector[0].elem_list.size(); k++){
 			    if (ge.e[k][0] < min1) min1 = ge.e[k][0];
 			    if (ge.e[k][1] < min2) min2 = ge.e[k][1];
-			    if (ge.e[k][2] < min1) min12 = ge.e[k][2];
+			    if (ge.e[k][2] < min12) min12 = ge.e[k][2];
 			}
 			apply( Mesh_Vector[num_mesh].elem_list, FillImgWhenInsideElement(), image , 11, min1);
-			ref_image.reverse_y();
 			image.save(rac_eps+"_" + to_string(num_mesh) + "_x.png",true);
-			ref_image.reverse_y();
 			apply( Mesh_Vector[num_mesh].elem_list, FillImgWhenInsideElement(), image , 12, min2);
-			ref_image.reverse_y();
 			image.save(rac_eps+"_" + to_string(num_mesh) + "_y.png",true);
-			ref_image.reverse_y();
 			apply( Mesh_Vector[num_mesh].elem_list, FillImgWhenInsideElement(), image , 13, min12);
-			ref_image.reverse_y();
 			image.save(rac_eps+"_" + to_string(num_mesh) + "_xy.png",true);
 		    }
 		}
-		
 		add_message( mp, ET_Info, "Résultat écrit" );
 	    }
 	}
@@ -206,6 +194,3 @@ bool FieldExportUpdater::run( MP mp ) {
     return 0;
     
 }
-
-
-

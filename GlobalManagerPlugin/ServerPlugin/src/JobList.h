@@ -292,6 +292,7 @@ class Job : public QObject {
 //         model[ "_finish_state" ]       = false;
 //         model[ "_stop_state" ]         = false;
 //         model.flush();
+	//qDebug() << "thread->quit() ";
         thread->quit();
     };
 };  
@@ -301,7 +302,7 @@ class JobList : public QObject{
   
 public slots: 
     void kill_jobs(){
-//         qDebug() << "kill_jobs " ;
+       // qDebug() << "kill_jobs " ;
         bool find_kill = true;
         while(find_kill){
             find_kill = false;

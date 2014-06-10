@@ -10,7 +10,7 @@ int main( int argc, char **argv ) {
     quint64 model_id = atoi(argv[1]);   
     sc.reg_type( "AbaqusComputationItem" );
     MP mp = sc.load_ptr(model_id);
-    qDebug() << "###############   launch AbaqusComputationItem ###############" ;
+    qDebug() << "###############   test launch AbaqusComputationItem ###############" ;
     AbaqusComputationUpdater updater;
     updater.sc = &sc;
     updater.exec( mp );

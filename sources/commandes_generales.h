@@ -10,6 +10,7 @@
 #include "dic/correlation/ImgInterp.h"
 #include "dic/correlation/DicCPU.h"
 #include "LMT/include/mesh/mesh.h"
+#include "LMT/include/mesh/interpolation.h"
 #include "LMT/include/mesh/element.h"
 #include "dic/correlation/mesh_carac_correlation.h"
 #include <iostream>
@@ -253,14 +254,17 @@ struct FillImgWhenInsideElement {
 	    if( code == 0){
 		img.tex_int( iter.pos ) = 0;
 	    }
-	    if( code == 1){
-		img.tex_int( iter.pos ) = e.node( 0 )->dep[0]-min;
-	    }
-	    if( code == 2){
-		img.tex_int( iter.pos ) = e.node( 0 )->dep[1]-min;
-	    }
-	    if( code == 3){
-		img.tex_int( iter.pos ) = e.node( 0 )->dep[2]-min;
+	    else if (code<4){
+		TM mesh;
+		unsigned o[ 3 ];
+		for (int no=0; no<3; no++){
+		    mesh.add_node( e.node( no )->pos );
+		    mesh.node_list[no].dep = e.node( no )->dep;
+		    o[ no ]=no;
+		}
+		mesh.add_element( Triangle(), DefaultBehavior(), o );
+		Pvec dep_int = interpolation( mesh, dep_DM(), iter.pos );
+		img.tex_int( iter.pos ) = dep_int[code-1]-min;
 	    }
 	    if( code == 11){
 		img.tex_int( iter.pos ) = e.epsilon[0][0]-min;
