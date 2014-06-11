@@ -126,7 +126,7 @@ bool FieldExportUpdater::run( MP mp ) {
 	    } 
 	    add_message( mp, ET_Info, "Résultat écrit" );
 	}
-	else if (format == 2){// IMAGE
+	else if ((format == 2) or (format == 3)){// IMAGE (image or ascii)
 	    for (int num_mesh = 0; num_mesh < Mesh_Vector.size(); num_mesh++)
 		dic.get_epsilon( Mesh_Vector[num_mesh] );
 	    if (nb_imgs == 0){
@@ -163,9 +163,17 @@ bool FieldExportUpdater::run( MP mp ) {
 			Pvec tmxmin, tmxmax;
 			get_min_max( Mesh_Vector[ num_mesh ].node_list, ExtractDM<dep_DM>(), tmxmin, tmxmax );
 			apply( Mesh_Vector[num_mesh].elem_list, FillImgWhenInsideElement(), image , 1, tmxmin[0]);
-			image.save(rac_disp+"_" + to_string(num_mesh) + "_x.png",true);
+			if (format==2) image.save(rac_disp+"_" + to_string(num_mesh) + "_x.png",true);
+			else if (format == 3){
+			    Mat< double > mat = image_to_mat(image);
+			    write_mat(mat, rac_disp+"_" + to_string(num_mesh) + "_x.txt" );
+			}
 			apply( Mesh_Vector[num_mesh].elem_list, FillImgWhenInsideElement(), image , 2, tmxmin[1]);
-			image.save(rac_disp+"_" + to_string(num_mesh) + "_y.png",true);
+			if (format==2) image.save(rac_disp+"_" + to_string(num_mesh) + "_y.png",true);
+			else if (format == 3){
+			    Mat< double > mat = image_to_mat(image);
+			    write_mat(mat, rac_disp+"_" + to_string(num_mesh) + "_y.txt" );
+			}
 		    }
 		    if (save_eps){
 			GetEpsInVecs ge;
@@ -177,11 +185,23 @@ bool FieldExportUpdater::run( MP mp ) {
 			    if (ge.e[k][2] < min12) min12 = ge.e[k][2];
 			}
 			apply( Mesh_Vector[num_mesh].elem_list, FillImgWhenInsideElement(), image , 11, min1);
-			image.save(rac_eps+"_" + to_string(num_mesh) + "_x.png",true);
+			if (format==2) image.save(rac_eps+"_" + to_string(num_mesh) + "_x.png",true);
+			else if (format == 3){
+			    Mat< double > mat = image_to_mat(image);
+			    write_mat(mat, rac_eps+"_" + to_string(num_mesh) + "_x.txt" );
+			}
 			apply( Mesh_Vector[num_mesh].elem_list, FillImgWhenInsideElement(), image , 12, min2);
-			image.save(rac_eps+"_" + to_string(num_mesh) + "_y.png",true);
+			if (format==2) image.save(rac_eps+"_" + to_string(num_mesh) + "_y.png",true);
+			else if (format == 3){
+			    Mat< double > mat = image_to_mat(image);
+			    write_mat(mat, rac_eps+"_" + to_string(num_mesh) + "_y.txt" );
+			}
 			apply( Mesh_Vector[num_mesh].elem_list, FillImgWhenInsideElement(), image , 13, min12);
-			image.save(rac_eps+"_" + to_string(num_mesh) + "_xy.png",true);
+			if (format==2) image.save(rac_eps+"_" + to_string(num_mesh) + "_xy.png",true);
+			else if (format == 3){
+			    Mat< double > mat = image_to_mat(image);
+			    write_mat(mat, rac_eps+"_" + to_string(num_mesh) + "_xy.txt" );
+			}
 		    }
 		}
 		add_message( mp, ET_Info, "Résultat écrit" );

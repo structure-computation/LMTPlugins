@@ -191,6 +191,25 @@ Vec<Vec<double> >  load_vecvec(std::string filename){
     return res;
 }
 
+Mat<double> image_to_mat ( I2 image){
+  
+      Mat<double> mat;
+      mat.resize(image.sizes[0],image.sizes[1]);
+      
+ 		for (int ii =0; ii<image.sizes[0]; ii++){
+ 		    for (int jj =0; jj<image.sizes[1]; jj++){
+			if (image.tex_int(ii,jj) == 0)
+			    mat(ii,jj)=std::numeric_limits<double>::quiet_NaN();
+			else 
+			    mat(ii,jj)=image.tex_int(ii,jj);
+			
+		    }
+		}
+      
+      return mat;
+      
+}
+
 // Writes a Mat in a text file
 void write_mat (Mat<double> M, std::string filename){
     std::ofstream mat (filename.c_str());
