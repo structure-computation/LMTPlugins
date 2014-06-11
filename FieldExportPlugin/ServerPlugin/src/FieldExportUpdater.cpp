@@ -117,20 +117,20 @@ bool FieldExportUpdater::run( MP mp ) {
 		    }
 		}
 	    }
-	    add_message( mp, ET_Info, "Résultat écrit" );
+	    add_message( mp, ET_Info, "Result written" );
 	}
 	else if (format == 1){// VTU
 	    for (int num_mesh = 0; num_mesh < Mesh_Vector.size(); num_mesh++){
 	      dic.get_epsilon( Mesh_Vector[num_mesh] );
 	      write_mesh_vtk( racine_fic + "im" + to_string(num_mesh+1) + ".vtu",Mesh_Vector[ num_mesh ]);
 	    } 
-	    add_message( mp, ET_Info, "Résultat écrit" );
+	    add_message( mp, ET_Info, "Result written" );
 	}
 	else if ((format == 2) or (format == 3)){// IMAGE (image or ascii)
 	    for (int num_mesh = 0; num_mesh < Mesh_Vector.size(); num_mesh++)
 		dic.get_epsilon( Mesh_Vector[num_mesh] );
 	    if (nb_imgs == 0){
-		add_message( mp, ET_Info, "Image edition needs a reference image to fix the size of the edited one." );    mp.flush(); 
+		add_message( mp, ET_Info, "This option needs a reference image to fix the size of the edited result." );    mp.flush(); 
 		PRINT("No input image !");
 	    }
 	    else if (nb_imgs > 1){
@@ -204,7 +204,7 @@ bool FieldExportUpdater::run( MP mp ) {
 			}
 		    }
 		}
-		add_message( mp, ET_Info, "Résultat écrit" );
+		add_message( mp, ET_Info, "Result written" );
 	    }
 	}
 	

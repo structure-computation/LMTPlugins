@@ -178,7 +178,7 @@ bool IdentificationWithCode_AsterUpdater::run( MP mpid ) {
 	write_identification_report (report_address, Mesh_Vector_output, Prop_Mat, it_report, iterations, M_d_report, M_f_report, F_d_report, F_f_report, calc_force_report, meas_force_report, prop2id, ponderation_efforts, dif_report);
 
 	put_result_in_MP(Mesh_Vector_output, mpid, fs_output); // Sortie dans un FieldSet "calcul"
-	add_message( mpid, ET_Info, "Résultat renvoyé" );    mpid.flush();
+	add_message( mpid, ET_Info, "Result transmitted" );    mpid.flush();
 	
 	return 1;
     }

@@ -51,16 +51,16 @@ bool Code_Aster_ComputationUpdater::run( MP mp ) {
     }
     else {
     
-	add_message( mp, ET_Info, "Lancement du calcul" );    mp.flush();
+	add_message( mp, ET_Info, "Computation launched" );    mp.flush();
 	Vec<TM> Mesh_Vector_output = calc_code_aster_into_LMTppMesh(Mesh_Vector_input, constrained_nodes, pix2m, Prop_Mat, thickness); // Computation for a given set of parameter
-	add_message( mp, ET_Info, "Calcul terminé" );    mp.flush();
+	add_message( mp, ET_Info, "Computation just ended" );    mp.flush();
 	
 	extract_f_from_LMTppMesh (Mesh_Vector_output, constrained_nodes, indices_bc_cn, calc_force);
 	
 	PRINT(calc_force);
 	
 	put_result_in_MP(Mesh_Vector_output, mp, fs_output); mp.flush();   // Sortie dans un FieldSet "calcul"
-	add_message( mp, ET_Info, "Résultat renvoyé" );    mp.flush(); 
+	add_message( mp, ET_Info, "Result transmitted" );    mp.flush(); 
     
 	sleep(2);
     }
