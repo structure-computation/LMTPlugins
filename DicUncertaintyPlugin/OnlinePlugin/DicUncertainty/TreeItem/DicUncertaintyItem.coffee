@@ -6,11 +6,11 @@ class DicUncertaintyItem extends TreeItem_Computable
         # default values
         @_name.set name
         #@_ico.set "img/mesher.png"
-        @_viewable.set true        
+        @_viewable.set false        
         @add_child new ImgSetItem
         @add_child new DiscretizationItem
         
-        @add_output new FieldSetCorreliItem
+        #@add_output new FieldSetCorreliItem
         #@add_output new MeshItem
         
         @add_attr
@@ -21,6 +21,9 @@ class DicUncertaintyItem extends TreeItem_Computable
            min_value : 0
            max_value : 1
            step : 0.5
+           _v1           : new Vec
+           _v2           : new Vec
+           _v3           : new Vec
            _graph : new Graph 
                 marker: 'dot',
                 marker_color: "#f00"
@@ -32,6 +35,7 @@ class DicUncertaintyItem extends TreeItem_Computable
                 legend_y_division: 10,
                 x_axis: 'D (pix)',
                 y_axis: 'Uncertainty'
+    
 #    display_suppl_context_actions: ( context_action )  ->
     display_suppl_context_actions: ( context_action )  ->
         context_action.push new TreeAppModule_Mesher
@@ -42,18 +46,24 @@ class DicUncertaintyItem extends TreeItem_Computable
         ch instanceof DiscretizationItem or
         ch instanceof SketchItem or 
         ch instanceof ImgSetItem or
-        ch instanceof Graph
+        ch instanceof Graph or
+        ch instanceof Vec
 #         ch instanceof TransformItem
         
     sub_canvas_items: ->
         [ @_graph ]
    
-#    draw: ( info ) ->
-        
+    draw: ( info ) ->
+        draw_point = info.sel_item[ @model_id ]
+        if @_graph.points.length && draw_point
+            for pm in @_graph.points
+                pm.draw info
+#         if @graph.points.size > 0
+#             @graph.draw()
 #     z_index: ->
 #         @_mesh.z_index()
         
 #    disp_only_in_model_editor: ->
 #         @mesh
 
-    
+        

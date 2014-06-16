@@ -33,7 +33,7 @@ bool DicUncertaintyUpdater::run( MP mp ) {
     Vec<int,dim> xmin (1e6,1e6);
     Vec<int,dim> xmax (-1e6,-1e6);
     // output
-    MP output_field = mp[ "_output[ 0 ]" ];
+    //MP output_field = mp[ "_output[ 0 ]" ];
     
     
     
@@ -179,7 +179,7 @@ bool DicUncertaintyUpdater::run( MP mp ) {
  //     calcul du champ de deplacement obtenu par correlation
         dic.exec( images[1],images[j] , dic_mesh , dep_DM(), lum_DM() );
         // disp field
-        QVector<MP> displacements = make_field( output_field, dic_mesh.dim, "Displacement" );
+        //QVector<MP> displacements = make_field( output_field, dic_mesh.dim, "Displacement" );
         for( int d = 0; d < dic_mesh.dim; ++d ) {
             // data
             QVector<int> s; s << dic_mesh.node_list.size();
@@ -196,7 +196,7 @@ bool DicUncertaintyUpdater::run( MP mp ) {
             }
             
             // NodalField
-            add_field_in_Interpolated( displacements[ d ], mesh, data, j-2 );
+            //add_field_in_Interpolated( displacements[ d ], mesh, data, j-2 );
             if (d==0){
                 UncX[j-1] = standard_deviation(Ux);
                 ErrX[j-1] = mean(Ux) - Dimp[j-1];
@@ -216,10 +216,18 @@ bool DicUncertaintyUpdater::run( MP mp ) {
     PRINT(ErrX);
     PRINT(UncY);
     PRINT(ErrY);
+    MP pos = MP::new_lst( "Vec" );
+    for( int i = 0; i < UncX.size(); ++i ) {
+        pos << Dimp[ i ];
+        pos << UncX[ i ];
+        pos << 0;
+        mp[ "_graph.points" ] << pos;
+    }
+    mp.flush();
     // Calculate difference between results and imposed displacement or strain
 
     // Plot graphs
-
+    
 }
 
 
