@@ -355,12 +355,12 @@ Vec <double> select_cn (Vec<TM> &meshes, MP ch, std::string &CL, int nbs, Vec <i
 			    bool dummy; // do nothing
 			else if (choice == 1){ // disps drom files
 			    bc_num << numbc;
-			    QString Qdx = BCType["Displacement_X"]; 
+			    QString Qdx = BCType["Data_X"]; 
 			    std::string dxfile ;
 			    dxfile = Qdx.toStdString();
 			    Vec <double> dx = load_res(dxfile);
 			    vdx.push_back(dx);
-			    QString Qdy = BCType["Displacement_Y"]; 
+			    QString Qdy = BCType["Data_Y"]; 
 			    std::string dyfile ;
 			    dyfile = Qdy.toStdString();
 			    Vec <double> dy = load_res(dyfile);
