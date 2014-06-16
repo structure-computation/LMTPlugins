@@ -86,6 +86,11 @@ class Launcher : public QObject {
               commande = "../DicUncertaintyPlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " + temp_str ;
               output = std::system(commande.c_str());
           }
+          else if(mp.type() == "StepReaderToNurbsItem" ){
+              commande = "../StepReaderToNurbsPlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " +
+temp_str ;
+              output = std::system(commande.c_str());
+          }
           
           qDebug() << "----------------- output : " << output;
           if(output){
