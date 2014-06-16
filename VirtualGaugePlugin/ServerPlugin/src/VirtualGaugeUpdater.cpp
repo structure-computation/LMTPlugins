@@ -43,15 +43,15 @@ bool VirtualGaugeUpdater::run( MP mp ) {
     }
     else {
 	int format = mp["Format.num"];
-	QString adresse = mp["Adresse"];std::string stdadresse = adresse.toStdString();
-	QString nom = mp["Nom"];std::string stdnom = nom.toStdString();
+	QString address = mp["Address"];std::string stdaddress = address.toStdString();
+	QString name = mp["Name"];std::string stdname = name.toStdString();
 	std::string racine_fic;
-	if (stdadresse[stdadresse.size()-1] == '/')
-	    racine_fic = stdadresse + stdnom + "_";
+	if (stdaddress[stdaddress.size()-1] == '/')
+	    racine_fic = stdaddress + stdname + "_";
 	else
-	    racine_fic = stdadresse + "/" + stdnom + "_";
-	if ( exists(stdadresse) == 0 )
-	    create_dir(stdadresse);
+	    racine_fic = stdaddress + "/" + stdname + "_";
+	if ( exists(stdaddress) == 0 )
+	    create_dir(stdaddress);
 	
 	for (int num_mesh=0; num_mesh < Mesh_Vector_input.size(); num_mesh++){
 	    Vec<Vec<double> > dep_tmp; dep_tmp.resize(TM::dim);

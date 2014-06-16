@@ -17,8 +17,7 @@ bool FieldExportUpdater::run( MP mp ) {
     int nb_fields=0;
     int nb_imgs=0;
 
-    for (int nch=0; nch< ch.size(); nch++){
-	//QString s= "_children[" + QString::fromStdString(to_string(0)) + "]";
+    for (int nch=0; nch< ch.size(); nch++){// Reading all available data
 	MP chi = ch[ nch ];
 	if (( chi.type() == "FieldSetItem" ) or ( chi.type() == "FieldSetCorreliItem" )){
 	    QString s= "_children[" + QString::fromStdString(to_string(nch)) + "]";
@@ -40,23 +39,23 @@ bool FieldExportUpdater::run( MP mp ) {
 	add_message( mp, ET_Info, "More than one input field or mesh. Possible confusion ! Doing nothing." );    mp.flush(); 
 	PRINT("MORE THAN 1 INPUT FIELD, POSSIBLE CONFUSION");
     }
-    else if (nb_fields == 1){
+    else if (nb_fields == 1){// Actually doing something
     
 	Vec<TM> Mesh_Vector = load_FieldSetItem_into_LMTpp_Mesh(c);
 	DicCPU<double, TM::dim> dic; // For the computation of the strain
 	
 	int format = mp["Format.num"];
-	QString adresse = mp["Adresse"];std::string stdadresse = adresse.toStdString();
-	QString nom = mp["Nom"];std::string stdnom = nom.toStdString();
+	QString address = mp["Address"];std::string stdaddress = address.toStdString();
+	QString name = mp["Name"];std::string stdname = name.toStdString();
 	
 	std::string racine_fic;
-	if (stdadresse[stdadresse.size()-1] == '/')
-	    racine_fic = stdadresse + stdnom + "_";
+	if (stdaddress[stdaddress.size()-1] == '/')
+	    racine_fic = stdaddress + stdname + "_";
 	else
-	    racine_fic = stdadresse + "/" + stdnom + "_";
+	    racine_fic = stdaddress + "/" + stdname + "_";
 	
-	if ( exists(stdadresse) == 0)
-	    create_dir(stdadresse);
+	if ( exists(stdaddress) == 0)
+	    create_dir(stdaddress);
 	
 	int save_disp = mp["Displacements"];
 	int save_eps = mp["Strains"];

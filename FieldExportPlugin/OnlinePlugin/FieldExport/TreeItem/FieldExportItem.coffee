@@ -5,8 +5,8 @@ class FieldExportItem extends TreeItem_Computable
         
         @add_attr
            Format : new Choice( 0, [ "txt", "vtk", "images", "ASCII pix-to-pix" ] ) 
-           Adresse : "/media/mathieu/Data/resultats_test/"
-           Nom : "resultat"
+           Address : "/media/mathieu/Data/resultats_test/"
+           Name : "resultat"
            Displacements      : true
            Strains            : true
            

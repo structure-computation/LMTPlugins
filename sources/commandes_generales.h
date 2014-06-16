@@ -191,23 +191,19 @@ Vec<Vec<double> >  load_vecvec(std::string filename){
     return res;
 }
 
-Mat<double> image_to_mat ( I2 image){
-  
+// Writes a I2 image in a Mat, with NaNs instead of zeros
+Mat<double> image_to_mat ( I2 image ){
       Mat<double> mat;
       mat.resize(image.sizes[0],image.sizes[1]);
-      
- 		for (int ii =0; ii<image.sizes[0]; ii++){
- 		    for (int jj =0; jj<image.sizes[1]; jj++){
-			if (image.tex_int(ii,jj) == 0)
-			    mat(ii,jj)=std::numeric_limits<double>::quiet_NaN();
-			else 
-			    mat(ii,jj)=image.tex_int(ii,jj);
-			
-		    }
-		}
-      
+      for (int ii =0; ii<image.sizes[0]; ii++){
+	  for (int jj =0; jj<image.sizes[1]; jj++){
+	      if (image.tex_int(ii,jj) == 0)
+		  mat(ii,jj)=std::numeric_limits<double>::quiet_NaN();
+	      else 
+		  mat(ii,jj)=image.tex_int(ii,jj);
+	  }
+      }
       return mat;
-      
 }
 
 // Writes a Mat in a text file
@@ -670,7 +666,7 @@ void extract_computation_parameters( MP mpc, Vec<TM> &Mesh_vector_input, Vec<int
     MP mp = mpc["_children[0]"];
     MP ch = mp[ "_children" ]; 
     double pix2m = mp[ "pix2m" ];
-    double Young, Poisson, loi, rapport, sigma_0, n, ct, sign, sigma_y, a ;
+    double Young, Poisson, loi, elas_ratio, sigma_0, n, ct, sign, sigma_y, a ;
     std::string param_file, umatname, computation_type, mode;
     int umat_ndepvar, umat_nparam, umat_nparamid, nparam, nparamid;
     MP mat;
@@ -716,11 +712,11 @@ void extract_computation_parameters( MP mpc, Vec<TM> &Mesh_vector_input, Vec<int
 	
 	if ( c.type() == "MaterialABQItem" ) {
 	    mat=c;
-	    loi = c["Comportement.num"];
+	    loi = c["Law_type.num"];
 	    Young = c["Young[0]"];
 	    Poisson = c["Poisson[0]"];
 	    if (loi == 1) // Elas_ortho
-		rapport = c["rapport[0]"];
+		elas_ratio = c["elas_ratio[0]"];
 	    else if (loi == 2){ // Ramberg_Osgood
 		sigma_0 = c["sigma_0[0]"];
 		n = c["n[0]"];
@@ -855,8 +851,8 @@ void extract_computation_parameters( MP mpc, Vec<TM> &Mesh_vector_input, Vec<int
 		Prop_Mat[2] << "Poisson";
 		Prop_Mat[2] << LMT::to_string(Poisson); 
 		if (loi == 1){
-		    Prop_Mat[3] << "rapport";
-		    Prop_Mat[3] << LMT::to_string(rapport);
+		    Prop_Mat[3] << "elas_ratio";
+		    Prop_Mat[3] << LMT::to_string(elas_ratio);
 		}
 		else if (loi == 2){
 		    Prop_Mat[3] << "sigma_0";
@@ -869,7 +865,7 @@ void extract_computation_parameters( MP mpc, Vec<TM> &Mesh_vector_input, Vec<int
 	}
 	else if ( c.type() == "Material_Code_Aster_Item" ) {
 	    mat=c;
-	    loi = c["Comportement.num"];
+	    loi = c["Law_type.num"];
 	    Young = c["Young[0]"];
 	    Poisson = c["Poisson[0]"];
 	    if (ct == 0)
@@ -1162,7 +1158,7 @@ void push_back_material_parameters( MP &mp, Vec < Vec < std::string > > Prop_Mat
 	    }
 	    if ((thelaw == "Elas_ortho")){
 		put_string_in_double(Prop_Mat[3][1], prop);
-		c["rapport[0]"]=prop;
+		c["elas_ratio[0]"]=prop;
 	    }
 	    if ((thelaw == "RO")){
 		put_string_in_double(Prop_Mat[3][1], prop);

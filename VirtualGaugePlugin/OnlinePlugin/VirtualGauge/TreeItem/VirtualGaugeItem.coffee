@@ -5,8 +5,8 @@ class VirtualGaugeItem extends TreeItem_Computable
         
         @add_attr
            Format : new Choice( 0, [ "txt" ] ) 
-           Adresse : "/media/mathieu/Data/resultats_test/"
-           Nom : "resultat"
+           Adress : "/media/mathieu/Data/resultats_test/"
+           Name : "resultat"
            
         @_name.set name
         @_ico.set "img/mesher.png"
