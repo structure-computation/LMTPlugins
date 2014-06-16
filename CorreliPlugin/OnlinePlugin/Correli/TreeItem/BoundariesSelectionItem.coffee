@@ -1,8 +1,9 @@
 #
 class BoundariesSelectionItem extends TreeItem
-    constructor: ( ) ->
+    constructor: ( name = "BoundariesSelection" ) ->
         super()
         
+        @_name.set name
         @_viewable.set true
 
     z_index: ->

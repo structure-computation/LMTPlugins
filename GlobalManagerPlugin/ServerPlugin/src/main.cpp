@@ -10,10 +10,10 @@ int main( int argc, char **argv ) {
     if ( not sc.connected() ) return 1;
 
     // type d'item observé
-    //sc.reg_type( "AbaqusComputationItem" ); 
-    //sc.reg_type( "Code_Aster_ComputationItem" ); 
-    //sc.reg_type( "IdentificationWithAbaqusItem" );
-    //sc.reg_type( "IdentificationWithCode_AsterItem" );
+    sc.reg_type( "AbaqusComputationItem" ); 
+    sc.reg_type( "Code_Aster_ComputationItem" ); 
+    sc.reg_type( "IdentificationWithAbaqusItem" );
+    sc.reg_type( "IdentificationWithCode_AsterItem" );
     sc.reg_type( "CorrelationItem" );
     sc.reg_type( "DicUncertaintyItem" );
     sc.reg_type( "FieldExportItem" );
