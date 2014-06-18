@@ -4,6 +4,7 @@ class TreeAppApplication_FieldExport extends TreeAppApplication
          
         @name = 'FieldExport'
         @powered_with    = 'LMT'
+        @publication_link = "http://www.eikosim.com/PluginsManuals/FieldExportPlugin.pdf"
         
         _ina = ( app ) =>
             app.data.focus.get() != app.selected_canvas_inst()?[ 0 ]?.cm.view_id

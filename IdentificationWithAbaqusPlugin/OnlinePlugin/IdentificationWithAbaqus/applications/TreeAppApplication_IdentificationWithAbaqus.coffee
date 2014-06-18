@@ -4,6 +4,7 @@ class TreeAppApplication_IdentificationWithAbaqus extends TreeAppApplication
          
         @name = 'Identification With Abaqus'
         @powered_with    = 'LMT'
+        @publication_link = "http://www.eikosim.com/PluginsManuals/IdentificationWithAbaqusPlugin.pdf"
         
         _ina = ( app ) =>
             app.data.focus.get() != app.selected_canvas_inst()?[ 0 ]?.cm.view_id

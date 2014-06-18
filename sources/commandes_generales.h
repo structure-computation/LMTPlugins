@@ -481,17 +481,17 @@ void  extract_dep_from_LMTppMesh ( Vec<TM> res, Vec < Vec <Vec < double > > > &d
 
 
 // Adds a vec(vec(double)) containing the nodal forces (at some constrained_nodes) from a vec(mesh) to a vector of vec(vec(double))
-void extract_fnod_from_LMTppMesh ( Vec<TM> res_ref, std::string senstrac , Vec < Vec <Vec<double> > > &calc_force , Vec<int> constrained_nodes){
+void extract_fnod_from_LMTppMesh ( Vec<TM> res_ref, int senstrac , Vec < Vec <Vec<double> > > &calc_force , Vec<int> constrained_nodes){
 
     Vec <Vec<double> > fnodaltot;
     for( int num_mesh = 0; num_mesh < res_ref.size(); ++num_mesh ) {
 	Vec<double> fnodal;
         for( int n = 0; n < constrained_nodes.size(); ++n ){
-	    if (senstrac == "hor")
+	    if (senstrac == 1)
 		fnodal << res_ref[num_mesh].node_list[constrained_nodes[n]].f_nodal[0];
-	    else if (senstrac == "ver")
+	    else if (senstrac == 2)
 		fnodal << res_ref[num_mesh].node_list[constrained_nodes[n]].f_nodal[1];
-	    else if (senstrac == "nope")
+	    else if (senstrac == 0)
 		fnodal << pow(pow(res_ref[num_mesh].node_list[constrained_nodes[n]].f_nodal[0],2) + pow(res_ref[num_mesh].node_list[constrained_nodes[n]].f_nodal[1],2), 0.5);
         }
         fnodaltot.push_back(fnodal);
@@ -503,7 +503,7 @@ void extract_fnod_from_LMTppMesh ( Vec<TM> res_ref, std::string senstrac , Vec <
 void extract_f_from_LMTppMesh (Vec<TM> Mesh_Vector_output, Vec<int> constrained_nodes, Vec<int> indices_bc_cn, Vec <Vec <double> > &calc_force){
   
     Vec <Vec <Vec <double> > > calc_force_nodes;
-    extract_fnod_from_LMTppMesh( Mesh_Vector_output, "ver", calc_force_nodes, constrained_nodes );
+    extract_fnod_from_LMTppMesh( Mesh_Vector_output, 0 , calc_force_nodes, constrained_nodes );
     
     calc_force.resize(max(indices_bc_cn) + 1 - min(indices_bc_cn));
     
@@ -656,13 +656,11 @@ void extract_id_properties( MP mp, Vec < Vec < std::string > > Prop_Mat, Vec<int
 	}
     }
   
-  
 }
 
 // Extracts the computation properties in a computation Item (e.g. AbaqusDataItm or Code_Aster_DataItem) : mesh, boundary conditions, material...
 void extract_computation_parameters( MP mpc, Vec<TM> &Mesh_vector_input, Vec<int> &constrained_nodes,  Vec<int> &indices_bc_cn, Vec < Vec < std::string > > &Prop_Mat, FieldSet &fs_input_bckp, Vec<Vec<std::string> > &force_files, int &ex_field){
     
-  
     MP mp = mpc["_children[0]"];
     MP ch = mp[ "_children" ]; 
     double pix2m = mp[ "pix2m" ];
@@ -684,6 +682,7 @@ void extract_computation_parameters( MP mpc, Vec<TM> &Mesh_vector_input, Vec<int
     }
     for( int ii = 0; ii < ch.size(); ++ii ) {
 	MP c = ch[ ii ];
+	qDebug() << c.type();
 	if (( c.type() == "FieldSetItem" ) or ( c.type() == "FieldSetCorreliItem" )){
 	    ex_field++;
 	    FieldSet fs_input(c); 
@@ -1015,7 +1014,7 @@ void build_matrix_for_the_kinematic_part(Mat<double,Sym<>,SparseLine<> > &M_red,
 	
 }
 // build_matrix(to be inverted for ID)_for_the_force_part, for all the boundary conditions segments selected
-void build_matrix_for_the_force_part(Vec<Mat<double, Sym<> ,SparseLine<> > > &VMF, Vec <Vec<double> > &VFF, Vec<Vec< std::string> > force_files, Vec <Vec<double> > calc_force, Vec <Vec <Vec <double> > > calc_force_nodes, Vec<int> indices_bc_cn, double n_im, double n_prop, Vec <Vec <Vec <double> > > comp_disp, double pix2m, double offset, std::string method){
+void build_matrix_for_the_force_part(Vec<Mat<double, Sym<> ,SparseLine<> > > &VMF, Vec <Vec<double> > &VFF, Vec<Vec< std::string> > force_files, Vec <Vec<double> > calc_force, Vec <Vec <Vec <double> > > calc_force_nodes, Vec<int> indices_bc_cn, double n_im, double n_prop, Vec <Vec <Vec <double> > > comp_disp, double pix2m, double offset, std::string method, int senstrac){
 		
 		Vec<double> meas_force, res_f;
 		
@@ -1024,10 +1023,15 @@ void build_matrix_for_the_force_part(Vec<Mat<double, Sym<> ,SparseLine<> > > &VM
 		    meas_force = load_res(force_files[ncl][0]);
 		    meas_force.resize(calc_force_nodes[0].size());
 		    calc_force.resize(calc_force_nodes.size());
-		    if (force_files[ncl][1] == "-")
-			meas_force = - meas_force;
-		    else if (force_files[ncl][1] == "0")
-			meas_force *= 0;
+		    
+		    if (senstrac>0){
+			if (force_files[ncl][1] == "-")
+			    meas_force = - meas_force;
+			else if (force_files[ncl][1] == "0")
+			    meas_force *= 0;
+		    }
+		    else meas_force=abs(meas_force);
+		    
 		    Mat<double,Sym<>,SparseLine<> > MF_red( n_prop );
 		    Vec<double> FF_red; FF_red.resize( n_prop, 0 );
 		    calc_force_nodes.resize(comp_disp.size());
@@ -1045,6 +1049,7 @@ void build_matrix_for_the_force_part(Vec<Mat<double, Sym<> ,SparseLine<> > > &VM
 		    }
 		    
 		    res_f=meas_force-calc_force[0];
+		    if (force_files[ncl][1] == "0" and senstrac>0) res_f=meas_force;
 		    PRINT(meas_force);
 		    PRINT(calc_force[0]);
 		    PRINT(res_f);

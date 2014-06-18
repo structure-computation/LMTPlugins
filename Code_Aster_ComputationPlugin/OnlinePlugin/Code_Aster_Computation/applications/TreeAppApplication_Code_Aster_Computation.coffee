@@ -4,6 +4,7 @@ class TreeAppApplication_Code_Aster_Computation extends TreeAppApplication
          
         @name = 'Code_Aster_Computation'
         @powered_with    = 'LMT'
+        @publication_link = "http://www.eikosim.com/PluginsManuals/Code_Aster_ComputationPlugin.pdf"
         
         _ina = ( app ) =>
             app.data.focus.get() != app.selected_canvas_inst()?[ 0 ]?.cm.view_id

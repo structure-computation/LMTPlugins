@@ -4,6 +4,7 @@ class TreeAppApplication_IdentificationWithCode_Aster extends TreeAppApplication
          
         @name = 'IdentificationWithCode_Aster'
         @powered_with    = 'LMT'
+        @publication_link = "http://www.eikosim.com/PluginsManuals/IdentificationWithCode_AsterPlugin.pdf"
         
         _ina = ( app ) =>
             app.data.focus.get() != app.selected_canvas_inst()?[ 0 ]?.cm.view_id

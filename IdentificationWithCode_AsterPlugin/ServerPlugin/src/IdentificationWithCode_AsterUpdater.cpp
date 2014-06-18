@@ -31,10 +31,11 @@ bool IdentificationWithCode_AsterUpdater::run( MP mpid ) {
     Vec<int> prop2id;
     bool id_ok = 0;
     Vec<I2> images;
+	bool UF =1;
     
     //////////////
     
-    std::string senstrac = "nope";
+    int senstrac = mpid["traction_direction"];
     std::string method = "int";
 	
     double resolution = 1e-40;
@@ -53,7 +54,9 @@ bool IdentificationWithCode_AsterUpdater::run( MP mpid ) {
 	PRINT("NO IMAGE DETECTED - USE OF FEMU INSTEAD OF INTEGRATED-DIC");
     }
     
-    extract_computation_parameters( param, Mesh_Vector_input, constrained_nodes, indices_bc_cn,  Prop_Mat, fs_output, force_files, ex_field); // Lecture des paramètres du calcul
+    extract_computation_parameters( mpid, Mesh_Vector_input, constrained_nodes, indices_bc_cn,  Prop_Mat, fs_output, force_files, ex_field); // Lecture des paramètres du calcul
+    
+    
     
     if (ex_field == 0){
 	add_message( mpid, ET_Info, "No input field or mesh !" );    mpid.flush(); 
@@ -84,7 +87,6 @@ bool IdentificationWithCode_AsterUpdater::run( MP mpid ) {
 	//////////////
 	
 	std::string thelaw = Prop_Mat[0][1];
-	bool UF =1;
 	if (thelaw == "Elas_iso"){
 	    UF = 0;
 	}
@@ -138,7 +140,7 @@ bool IdentificationWithCode_AsterUpdater::run( MP mpid ) {
 	    }
 	    
 	    build_matrix_for_the_kinematic_part(M_red, F_red, Mesh_Vector_input, Mesh_Vector_output, images, comp_disp, pix2m, offset, method);
-	    if (UF) build_matrix_for_the_force_part(VMF, VFF, force_files, calc_force, calc_force_nodes, indices_bc_cn, Mesh_Vector_output.size(), prop2id.size(), comp_disp, pix2m, offset, method);
+	    if (UF) build_matrix_for_the_force_part(VMF, VFF, force_files, calc_force, calc_force_nodes, indices_bc_cn, Mesh_Vector_output.size(), prop2id.size(), comp_disp, pix2m, offset, method, senstrac);
 	    assemble_global_matrix (M_tot, F_tot, M_red, F_red, VMF, VFF, UF, indices_bc_cn, ponderation_efforts, w);
 	    
 	    Vec<double> dif = solve_with_max(M_tot, F_tot, max_level, resolution, relaxation);

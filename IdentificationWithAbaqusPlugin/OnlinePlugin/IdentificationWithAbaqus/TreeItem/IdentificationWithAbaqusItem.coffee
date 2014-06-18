@@ -8,6 +8,7 @@ class IdentificationWithAbaqusItem extends TreeItem_Computable
            relaxation : 1
            offset : 0.01
            id_done : 0
+           traction_direction : new Choice( 0, [ "none", "X", "Y"] )
         
         @_name.set name
         @_ico.set "img/IdentificationWithAbaqus_bouton.png"

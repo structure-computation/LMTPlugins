@@ -744,16 +744,16 @@ Vec<TM> calc_abq_into_LMTppMesh(Vec<TM> &m_ref, Vec<double> constrained_nodes, d
         std::string umatname = Prop_Mat[Prop_Mat.size()-2][1];
         //system(("abaqus interactive job=" + root_dir + ".inp user=" + umatname + ".f double > res_s.txt").c_str() );
         std::cout << "/media/mathieu/Data/Abaqus/exec/abq6112.exe interactive job=" << root_dir << ".inp scratch=" << scratch << " user=" << umatname << " double" << std::endl;
-         system(("/media/mathieu/Data/Abaqus/exec/abq6112.exe interactive job=" + root_dir + ".inp scratch=" + scratch + " user=" + umatname + " double").c_str() );
+         int vide = system(("/media/mathieu/Data/Abaqus/exec/abq6112.exe interactive job=" + root_dir + ".inp scratch=" + scratch + " user=" + umatname + " double").c_str() );
     }
     else if (thelaw == "dpc"){
         //system(("abaqus interactive job=" + root_dir + ".inp user=elasticity_variation_epsvol.f double > res_s.txt").c_str() );
-        system(("/media/mathieu/Data/Abaqus/exec/abq6112.exe interactive job=" + root_dir + ".inp user=elasticity_variation_epsvol.f double").c_str() );
+        int vide = system(("/media/mathieu/Data/Abaqus/exec/abq6112.exe interactive job=" + root_dir + ".inp user=elasticity_variation_epsvol.f double").c_str() );
     }
     else{
         //system(("abaqus interactive job=" + root_dir + ".inp cpus=6 double > res_s.txt").c_str() );
         std::cout << "/media/mathieu/Data/Abaqus/exec/abq6112.exe interactive job=" << root_dir << ".inp cpus=8 scratch=" << scratch << std::endl;
-        system(("/media/mathieu/Data/Abaqus/exec/abq6112.exe interactive job=" + root_dir + ".inp cpus=8 scratch=" + scratch).c_str() );
+        int vide = system(("/media/mathieu/Data/Abaqus/exec/abq6112.exe interactive job=" + root_dir + ".inp cpus=8 scratch=" + scratch).c_str() );
     }
     
     std::string nom_fic = root_dir + ".odb";

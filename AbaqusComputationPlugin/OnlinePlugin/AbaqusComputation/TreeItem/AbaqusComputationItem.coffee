@@ -4,6 +4,7 @@ class AbaqusComputationItem extends TreeItem_Computable
         super()
         
         @_name.set name
+        @publication_link = "http://www.eikosim.com/PluginsManuals/AbaqusComputationPlugin.pdf"
         @_ico.set "img/AbaqusComputation_bouton.png"
         @_viewable.set false
         

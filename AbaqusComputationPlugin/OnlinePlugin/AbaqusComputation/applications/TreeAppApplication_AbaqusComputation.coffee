@@ -4,6 +4,7 @@ class TreeAppApplication_AbaqusComputation extends TreeAppApplication
          
         @name = 'AbaqusComputation'
         @powered_with    = 'LMT'
+        @publication_link = "http://www.eikosim.com/PluginsManuals/AbaqusComputationPlugin.pdf"
         
         _ina = ( app ) =>
             app.data.focus.get() != app.selected_canvas_inst()?[ 0 ]?.cm.view_id
