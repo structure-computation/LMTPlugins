@@ -4,6 +4,7 @@ class TreeAppApplication_Correlation extends TreeAppApplication
                 
         @name = 'Image correlation'
         @powered_with    = 'LMT Cachan'
+        @publication_link = "http://www.eikosim.com/PluginsManuals/CorreliPlugin.pdf"
             
         @actions.push
             ico: "img/correli_bouton.png"  #"img/correlation.png"
