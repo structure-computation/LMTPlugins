@@ -8,10 +8,10 @@ class CorrelationItem extends TreeItem_Computable
         @_name.set "Correlation"
         @_ico.set "img/correlation_19.png"
         @_viewable.set false
-        @add_child new PhysicsItem
+        #@add_child new PhysicsItem
         @add_child new ImgSetItem
-        @add_child new MaskItem
         @add_child new DiscretizationItem
+        @add_child new MaskItem
         
         @add_output new FieldSetCorreliItem
         
