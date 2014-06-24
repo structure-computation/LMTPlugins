@@ -27,7 +27,7 @@ class CorrelationItem extends TreeItem_Computable
                 # <math>\delta \infty</math> mod: [ 1e-5, new Choice( 0, [ "||&#8710;u||2", "||&#8710;u||&#x221E;"] ) ]
 
                 # con: 1e-5
-                multi_res       : new ConstrainedVal( 0, { min: 0, max: 10, div: 10 } )
+                multi_res       : new ConstrainedVal( 0, { min: 0, max: 5, div: 5 } )
                 nb_iter_max     : 100
                 lambda_bulk     : 0
         #        max_displacement: -1
