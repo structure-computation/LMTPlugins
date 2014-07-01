@@ -173,6 +173,9 @@ bool IdentificationWithAbaqusUpdater::run( MP mpid ) {
 	    }
 	    
 	}
+// 	for (int num_mesh = 0; num_mesh < Mesh_Vector_input.size(); num_mesh++){
+// 	      write_mesh_vtk( root_dir + "/im" + to_string(num_mesh+1) + ".vtu",Mesh_Vector_output[ num_mesh ]);
+// 	 }
 	
 	mpid["id_done"] = id_ok;
 	push_back_material_parameters(param, Prop_Mat); mpid.flush();

@@ -376,7 +376,7 @@ Vec <double> select_cn (Vec<TM> &meshes, MP ch, std::string &CL, int nbs, Vec <i
 		      for (int nbc = 0; nbc < coor_nds_bc.size(); nbc++){
 			      Vec < double > pos_nd = meshes[0].skin.node_list[ nds ].pos;
 			      double dist = calc_dist_segment( pos_nd, coor_nds_bc[nbc]);
-			      if (dist < 0.001){
+			      if (dist < 0.01){
 				  close_to_the_border = 1 ;
 				  indice = nbc;
 			      }
@@ -415,7 +415,7 @@ Vec <double> select_cn (Vec<TM> &meshes, MP ch, std::string &CL, int nbs, Vec <i
 
 // Loads a MeshItem in a 2D LMTpp Mesh object
 TM load_MeshMP_into_2DLMTpp_Mesh(MP mesh){ 
-    TM dic_mesh;
+    TM Mesh;
     TypedArray<int> *indices_elem = dynamic_cast<TypedArray<int> *>( mesh[ "_elements[0].indices" ].model() );
     const unsigned nb_elems = indices_elem->size(1);
     
@@ -423,7 +423,7 @@ TM load_MeshMP_into_2DLMTpp_Mesh(MP mesh){
     
     for( int i = 0, n = mesh[ "points" ].size(); i < n; ++i ) {
         MP pos = mesh[ "points" ][ i ][ "pos" ];
-        dic_mesh.add_node( Pvec( pos[ 0 ], pos[ 1 ], pos[ 2 ] ) );
+        Mesh.add_node( Pvec( pos[ 0 ], pos[ 1 ], pos[ 2 ] ) );
     }
     for( int nel = 0, mel = nb_elems; nel < mel; ++nel ) {
         MP el = mesh[ "_elements" ][ nel ];
@@ -434,15 +434,15 @@ TM load_MeshMP_into_2DLMTpp_Mesh(MP mesh){
                     unsigned o[ 3 ];
                     for( int j = 0; j < 3; ++j ){
 
-                        o[ j ] = qMin( indices->operator[]( ct++ ), (int)dic_mesh.node_list.size() -1 );
+                        o[ j ] = qMin( indices->operator[]( ct++ ), (int)Mesh.node_list.size() -1 );
                     }
-                    dic_mesh.add_element( Triangle(), DefaultBehavior(), o );
+                    Mesh.add_element( Triangle(), DefaultBehavior(), o );
                 }
             }
         }
     }
-    //dic_mesh.remove_unused_nodes();
-    return dic_mesh;
+    Mesh.remove_unused_nodes();
+    return Mesh;
 }
 
 
@@ -450,12 +450,12 @@ TM load_MeshMP_into_2DLMTpp_Mesh(MP mesh){
 Vec<TM> load_FieldSetItem_into_LMTpp_Mesh(FieldSet fs_input){
     Mesh_vecs maillage = fs_input.mesh;
     MP maillage_transfert = maillage.save();
-    TM dic_mesh = load_MeshMP_into_2DLMTpp_Mesh(maillage_transfert);
+    TM Mesh = load_MeshMP_into_2DLMTpp_Mesh(maillage_transfert);
     Vec<TM> Mesh_vector_input;
    // PRINT(fs_input.fields[0].values.size());
     Mesh_vector_input.resize(fs_input.fields[0].values.size()); 
     for (int num_mesh = 0; num_mesh < Mesh_vector_input.size(); num_mesh++){
-        Mesh_vector_input[num_mesh]=dic_mesh;
+        Mesh_vector_input[num_mesh]=Mesh;
         for (int no = 0; no < Mesh_vector_input[num_mesh].node_list.size(); no++ ) {
             Mesh_vector_input[num_mesh].node_list[no].dep[0] = fs_input.fields[0].values[num_mesh].data[no];
             Mesh_vector_input[num_mesh].node_list[no].dep[1] = fs_input.fields[1].values[num_mesh].data[no];
@@ -1040,7 +1040,6 @@ void build_matrix_for_the_force_part(Vec<Mat<double, Sym<> ,SparseLine<> > > &VM
 			for (int nim =0; nim<n_im; nim ++){
 			    calc_force[nsf][nim] =0;
 			    for (int nn =0; nn<calc_force_nodes[0][0].size(); nn++){
-				
 				if (indices_bc_cn[nn] == ncl){
 				    calc_force[nsf][nim] += calc_force_nodes[nsf][nim][nn];
 				}
