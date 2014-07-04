@@ -425,11 +425,11 @@ void Write2DINP (Vec<TM> &m, std::string root_dir, Vec<double> constrained_nodes
 	    
 	    inp << "*Step, NLGEOM=YES, name=Step-" << i+1 << ", inc=1000000\n";
 	    inp << "*Static\n";
-	    inp << "1., 1., 0.0001, 1.\n";
-	    //inp << "1., 1., 0.0000001, 1.\n";
-	    //inp << "*CONTROLS, PARAMETERS=TIME INCREMENTATION\n";
-	  //  inp << ", , , , , , , 10000, , ,\n";
-	 //   inp << "0.5, , , , , , 2.5, \n";
+	   // inp << "1., 1., 0.0001, 1.\n";
+	    inp << "1., 1., 0.0000001, 1.\n";
+	    inp << "*CONTROLS, PARAMETERS=TIME INCREMENTATION\n";
+	    inp << ", , , , , , , 10000, , ,\n";
+	    inp << "0.5, , , , , , 2.5, \n";
 	    inp << "** \n";
 	    inp << "** BOUNDARY CONDITIONS\n";
 

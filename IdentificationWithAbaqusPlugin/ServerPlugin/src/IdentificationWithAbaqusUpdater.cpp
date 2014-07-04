@@ -136,6 +136,9 @@ bool IdentificationWithAbaqusUpdater::run( MP mpid ) {
 		std::cout << " " << std::endl;
 	    }
 	    for (int sf = 0; sf < prop2id.size(); sf++){
+                std::cout << " " << std::endl;
+                std::cout << "Computation for sensitivity field number " << sf+1 << " out of " << prop2id.size() << ", global iteration number "<< it << std::endl;
+                std::cout << " " << std::endl;
 		Prop_Mat = update_material_parameters(Prop_Mat_Backup, prop2id, sf, offset);
 		Vec<TM> SF = calc_abq_into_LMTppMesh(Mesh_Vector_input, constrained_nodes, pix2m, Prop_Mat, thickness); // Modified fields computations
 		extract_dep_from_LMTppMesh( SF, comp_disp );
