@@ -57,14 +57,15 @@ class CorrelationItem extends TreeItem_Computable
     #                 re
             
     accept_child: ( ch ) ->
-        ch instanceof MaskItem or 
-        ch instanceof DiscretizationItem or
-        ch instanceof SketchItem or 
-        ch instanceof ImgSetItem or
-        ch instanceof ImgDirectorySetItem or
-        ch instanceof TransformItem or
-        ch instanceof PhysicsItem or
-        ch instanceof BoundariesSelectionItem
+        false
+#         ch instanceof MaskItem or 
+#         ch instanceof DiscretizationItem or
+#         ch instanceof SketchItem or 
+#         ch instanceof ImgSetItem or
+#         ch instanceof ImgDirectorySetItem or
+#         ch instanceof TransformItem or
+#         ch instanceof PhysicsItem or
+#         ch instanceof BoundariesSelectionItem
         
     #sub_canvas_items: ->
     #    res = [@visualization]
