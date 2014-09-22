@@ -12,6 +12,7 @@ class CorrelationItem extends TreeItem_Computable
         @add_child new ImgSetItem
         @add_child new DiscretizationItem
         @add_child new MaskItem
+        @add_child new ImgDirectorySetItem
         
         @add_output new FieldSetCorreliItem
         
@@ -60,6 +61,7 @@ class CorrelationItem extends TreeItem_Computable
         ch instanceof DiscretizationItem or
         ch instanceof SketchItem or 
         ch instanceof ImgSetItem or
+        ch instanceof ImgDirectorySetItem or
         ch instanceof TransformItem or
         ch instanceof PhysicsItem or
         ch instanceof BoundariesSelectionItem

@@ -630,26 +630,26 @@ void load_abq_res_odb(std::string nom_fic, Vec<TM> &res){
             const odb_FieldValue valRF = reac_forces[i];
             const float* const U = valU.data(numComp);
             const float* const RF = valRF.data(numComp);
-	    bool face;
+            bool face;
             if ( instanceType == odb_Enum::THREE_D ) {
-		const odb_Node node      = nodeList[ i ];
-		const float* const coord = node.coordinates();
-		if (coord[2] == 0) face = 1;
-		else face = 0;
-		for (int comp=0; comp < numComp; comp++) {
-		    if (face)
-			res[num_step].node_list[i].dep[comp] = U[comp];
-		    double noeud = i;
-		    int num_layer = floor(noeud/face_nodes.size());
-		    res[num_step].node_list[i-num_layer*face_nodes.size()].f_nodal[comp] += RF[comp];
-		}
-	    }
-	    else{
-		for (int comp=0; comp < numComp; comp++) {
-		    res[num_step].node_list[i].dep[comp] = U[comp];
-		    res[num_step].node_list[i].f_nodal[comp] += RF[comp];
-		}
-	    }
+                const odb_Node node      = nodeList[ i ];
+                const float* const coord = node.coordinates();
+                if (coord[2] == 0) face = 1;
+                else face = 0;
+                for (int comp=0; comp < numComp; comp++) {
+                    if (face)
+                        res[num_step].node_list[i].dep[comp] = U[comp];
+                    double noeud = i;
+                    int num_layer = floor(noeud/face_nodes.size());
+                    res[num_step].node_list[i-num_layer*face_nodes.size()].f_nodal[comp] += RF[comp];
+                }
+            }
+                else{
+                    for (int comp=0; comp < numComp; comp++) {
+                        res[num_step].node_list[i].dep[comp] = U[comp];
+                        res[num_step].node_list[i].f_nodal[comp] += RF[comp];
+                    }
+                }
         }
         
 //         // ELEMENT VALUE

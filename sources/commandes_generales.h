@@ -24,6 +24,15 @@ typedef TM::Pvec Pvec;
 typedef ImgInterp<double,2/*,ImgInterpOrder3_Kernel*/> I2;
 LMT::Vec<I2> images;
 
+int get_proc_number( ){
+    system ("grep 'model name' /proc/cpuinfo | wc -l > procnum.txt");
+    std::ifstream fichier("procnum.txt");
+    std::string res;
+    std::getline(fichier, res);
+    int procnum=atoi(res.c_str());
+    return procnum;
+}
+
 struct GetEpsInVecs {
     template<class TE>
     void operator()( const TE &el ) {
@@ -433,7 +442,6 @@ TM load_MeshMP_into_2DLMTpp_Mesh(MP mesh){
                 for( int nt = 0, ct = 0; nt < indices->size( 1 ); ++nt ) {
                     unsigned o[ 3 ];
                     for( int j = 0; j < 3; ++j ){
-
                         o[ j ] = qMin( indices->operator[]( ct++ ), (int)Mesh.node_list.size() -1 );
                     }
                     Mesh.add_element( Triangle(), DefaultBehavior(), o );
@@ -995,7 +1003,7 @@ void build_matrix_for_the_kinematic_part(Mat<double,Sym<>,SparseLine<> > &M_red,
 		Vec<double> deplcal;
 		for( int n = 0; n < Mesh_Vector_output[ num_mesh ].node_list.size(); ++n ) {
 		    for( int d = 0; d < TM::dim; ++d ) {
-			deplcal << Mesh_Vector_output[ num_mesh ].node_list[ n ].dep[ d ];
+                deplcal << Mesh_Vector_output[ num_mesh ].node_list[ n ].dep[ d ];
 		    }
 		}
 		
@@ -1004,7 +1012,7 @@ void build_matrix_for_the_kinematic_part(Mat<double,Sym<>,SparseLine<> > &M_red,
 		
 		for( int r = 0; r < F_red.size(); ++r ) {
 		    for( int c = 0; c <= r; ++c ){
-			M_red( r, c ) += dot( der[ r ], der[ c ] );
+                M_red( r, c ) += dot( der[ r ], der[ c ] );
 		    }
 		    F_red[ r ] += dot( der[ r ], (depmes - deplcal)/pix2m );
 		}

@@ -23,7 +23,6 @@ bool TestUpdater::run( MP mp ) {
     for( int i = 0; i < ch.size(); ++i ) {
         MP c = ch[ i ];
         MP file = c["_file"];
-
         quint64 ptr = file[ "_ptr" ];
         QString name = file[ "name" ];
 
