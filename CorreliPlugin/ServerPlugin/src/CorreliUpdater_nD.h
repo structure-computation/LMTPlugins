@@ -195,7 +195,7 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
             for( int j = 0; j < ch.size(); ++j ) {
             //for( int j = 0; j < 3; ++j ) {
                 I2 *img = images.new_elem();
-                MP c = ch[ i ];
+                MP c = ch[ j ];
                 MP file = c["_file"];
                 quint64 ptr = file[ "_ptr" ];
                 QString name = file[ "name" ];
@@ -205,9 +205,7 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
                     if ( not rem ) {
                         // read
                         QString name = data;
-                        qDebug() << name;
                         try {
-                            qDebug() << name;
                             img->load( name.toAscii().data() );
                             img->reverse_y();
                         } catch ( std::string msg ) {

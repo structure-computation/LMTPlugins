@@ -246,7 +246,7 @@ class Job : public QObject {
         
         run_state();
         
-        qDebug() << "launcher_exists : " << launcher_exists << ", thread_exists : " << thread_exists << ", run : " << run << ", stop : " << stop;
+       // qDebug() << "launcher_exists : " << launcher_exists << ", thread_exists : " << thread_exists << ", run : " << run << ", stop : " << stop;
         if(launcher_exists and thread_exists and run){
             qDebug() << "job lance model------------------------- : " << model_id;
             mp[ "_ready_state" ]        = false;

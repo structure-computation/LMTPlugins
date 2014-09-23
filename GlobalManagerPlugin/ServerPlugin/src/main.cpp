@@ -52,7 +52,7 @@ int main( int argc, char **argv ) {
 //             qDebug() << "i_job : " << i_job ;
             if(i_job >= 0){
 //                 qDebug() << "recu 1 ";
-                qDebug() << "job_list.jobs.size() : " << job_list.jobs.size();
+                //qDebug() << "job_list.jobs.size() : " << job_list.jobs.size();
                 Job *current_job;
                 current_job = job_list.jobs[i_job];
                 current_job->putLauncherInAThread(mp);
