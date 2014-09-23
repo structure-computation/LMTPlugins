@@ -148,74 +148,74 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
         MP c = ch[ i ];
         qDebug() <<  c.type() ;
         if ( c.type() == "ImgSetItem" ) {
-	      for( int j = 0; j < c[ "_children" ].size(); ++j ) {
-		    MP im = c[ "_children" ][ j ];
-		    if ( im.type() == "ImgItem" ) {
-			I2 *img = images.new_elem();
-			QString name = im[ "img.src" ];
-			if ( im[ "img.src" ].type() != "Path" )
-			    name = "../CorreliOnline/html/" + name;
+            for( int j = 0; j < c[ "_children" ].size(); ++j ) {
+                MP im = c[ "_children" ][ j ];
+                if ( im.type() == "ImgItem" ) {
+                    I2 *img = images.new_elem();
+                    QString name = im[ "img.src" ];
+                    if ( im[ "img.src" ].type() != "Path" )
+                        name = "../CorreliOnline/html/" + name;
 
-			try {
-			    img->load( name.toAscii().data() );
-			    img->reverse_y();
-			} catch ( std::string msg ) {
-			    updater->add_message( mp, Updater::ET_Error, "Img " + name + " does not exist" );
-			    return false;
-			}
-		    } else if ( im.type() == "RawVolume" ) {
-			I2 *img = images.new_elem();
-			MP ms( im[ "img_size" ] );
-			Vec<int,3> S( ms[ 0 ], ms[ 1 ], ms[ 2 ] );
-			PRINT( S );
+                    try {
+                        img->load( name.toAscii().data() );
+                        img->reverse_y();
+                    } catch ( std::string msg ) {
+                        updater->add_message( mp, Updater::ET_Error, "Img " + name + " does not exist" );
+                        return false;
+                    }
+                } else if ( im.type() == "RawVolume" ) {
+                    I2 *img = images.new_elem();
+                    MP ms( im[ "img_size" ] );
+                    Vec<int,3> S( ms[ 0 ], ms[ 1 ], ms[ 2 ] );
+                    PRINT( S );
 
-			MP volume = im[ "_children" ][ 0 ];
-			qDebug() << volume;
-			MP data = updater->sc->load_ptr( volume[ "_ptr" ] );
-			qDebug() << data;
+                    MP volume = im[ "_children" ][ 0 ];
+                    qDebug() << volume;
+                    MP data = updater->sc->load_ptr( volume[ "_ptr" ] );
+                    qDebug() << data;
 
-			QString name = data;
-			PRINT( name.toAscii().data() );
+                QString name = data;
+                    PRINT( name.toAscii().data() );
 
-			try {
-			    typedef unsigned char PI8;
-			    img->template load_binary<PI8>( name.toAscii().data(), S );
-			} catch ( std::string msg ) {
-			    updater->add_message( mp, Updater::ET_Error, "Img " + name + " does not exist" );
-			    return false;
-			}
-			PRINT( name.toAscii().data() );
-		    }
-          }
+                    try {
+                        typedef unsigned char PI8;
+                        img->template load_binary<PI8>( name.toAscii().data(), S );
+                    } catch ( std::string msg ) {
+                        updater->add_message( mp, Updater::ET_Error, "Img " + name + " does not exist" );
+                        return false;
+                    }
+            PRINT( name.toAscii().data() );
+                }
+            }
         }
         else if ( c.type() == "ImgDirectorySetItem"){
-      
+            qDebug() << c.type();
             MP ch = c[ "_children" ];
             
             for( int j = 0; j < ch.size(); ++j ) {
+            //for( int j = 0; j < 3; ++j ) {
                 I2 *img = images.new_elem();
                 MP c = ch[ i ];
                 MP file = c["_file"];
                 quint64 ptr = file[ "_ptr" ];
                 QString name = file[ "name" ];
-                    MP data = updater->sc->load_ptr( ptr );
-                    if ( data.ok() and data.type() == "Path" ) {
-                        int rem = file[ "_info.remaining" ];
-                        if ( not rem ) {
-                            // read
-                            QString name = data;
-                            PRINT( name.toAscii().data() );
-
-                            try {
-                                img->load( name.toAscii().data() );
-                                img->reverse_y();
-                            } catch ( std::string msg ) {
-                                updater->add_message( mp, Updater::ET_Error, "Img " + name + " does not exist" );
-                                return false;
-                            }
+                MP data = updater->sc->load_ptr( ptr );
+                if ( data.ok() and data.type() == "Path" ) {
+                    int rem = file[ "_info.remaining" ];
+                    if ( not rem ) {
+                        // read
+                        QString name = data;
+                        qDebug() << name;
+                        try {
+                            qDebug() << name;
+                            img->load( name.toAscii().data() );
+                            img->reverse_y();
+                        } catch ( std::string msg ) {
+                            updater->add_message( mp, Updater::ET_Error, "Img " + name + " does not exist" );
+                            return false;
                         }
                     }
-                 
+                }
             }  
         }
         if ( c.type() == "DiscretizationItem" ) {
@@ -340,15 +340,15 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
         dic.rotation_in_rigid_body = false;
     for( int j = 1; j < images.size(); ++j ) {
         double bef = time_of_day_in_sec();
-	//if (j == 1)
-	dic.exec_rigid_body( images[ 0 ], images[ j ], dic_mesh, dep_DM(), lum_DM() );
-	PRINT("Starting with image :" + to_string(j));
-	PRINT(dic_mesh.node_list[0].dep);
+    //if (j == 1)
+    dic.exec_rigid_body( images[ 0 ], images[ j ], dic_mesh, dep_DM(), lum_DM() );
+    PRINT("Starting with image :" + to_string(j));
+    PRINT(dic_mesh.node_list[0].dep);
         dic.exec( images[ 0 ], images[ j ], dic_mesh, dep_DM(), lum_DM() );
-	std::cout << " " << std::endl;
-	PRINT("Image " + to_string(j) + " treated");
-	std::cout << " " << std::endl;
-	PRINT(dic_mesh.node_list[0].dep);
+    std::cout << " " << std::endl;
+    PRINT("Image " + to_string(j) + " treated");
+    std::cout << " " << std::endl;
+    PRINT(dic_mesh.node_list[0].dep);
 
         I2 residual_img, residual_adv_img;
         if ( dim == 2 ) {
@@ -428,8 +428,8 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
         QString intermediate_time = QString("%1").arg( aft - bef );
         QString iter = QString("%1").arg( j );
         updater->add_message( mp, Updater::ET_Info, "Correlation " + iter + " done in " + intermediate_time + "s" );
-	delay = 0.1;
-	sleep(delay);
+    delay = 0.1;
+    sleep(delay);
         mp.flush();
     }
 
