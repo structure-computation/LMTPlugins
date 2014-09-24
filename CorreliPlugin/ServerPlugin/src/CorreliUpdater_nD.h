@@ -351,8 +351,10 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
     // standard dic
     dic_mesh.update_skin();
     
-    Vec<Vec<Pvec> > dep; dep.resize(tot_num_im - 1 );
-    Vec<TM2> mesh_vec; mesh_vec.resize(tot_num_im - 1 );
+    // For integrated
+  //  Vec<Vec<Pvec> > dep; dep.resize(tot_num_im - 1 );
+  //  Vec<TM2> mesh_vec; mesh_vec.resize(tot_num_im - 1 );
+    
     double t0 = time_of_day_in_sec();
     int delay;
     if ( dim == 3 )
@@ -396,10 +398,10 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
             }
         }
 
-        for( int i = 0; i < dic_mesh.node_list.size(); ++i )
-            dep[ j - 1 ] << dic_mesh.node_list[ i ].dep;
+   //     for( int i = 0; i < dic_mesh.node_list.size(); ++i )
+  //          dep[ j - 1 ] << dic_mesh.node_list[ i ].dep;
 
-        mesh_vec[ j - 1 ] = dic_mesh;
+  //      mesh_vec[ j - 1 ] = dic_mesh;
 
         // crack ?
         double crack_eps_threshold = mp[ "parameters.crack_eps_threshold" ];
@@ -474,8 +476,8 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
         QString intermediate_time = QString("%1").arg( aft - bef );
         QString iter = QString("%1").arg( j );
         updater->add_message( mp, Updater::ET_Info, "Correlation " + iter + " done in " + intermediate_time + "s" );
-    delay = 0.1;
-    sleep(delay);
+        delay = 0.1;
+        sleep(delay);
         mp.flush();
     }
 
