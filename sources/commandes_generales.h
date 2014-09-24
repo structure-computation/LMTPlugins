@@ -25,7 +25,7 @@ typedef ImgInterp<double,2/*,ImgInterpOrder3_Kernel*/> I2;
 LMT::Vec<I2> images;
 
 int get_proc_number( ){
-    system ("grep 'model name' /proc/cpuinfo | wc -l > procnum.txt");
+    int dummy = system ("grep 'model name' /proc/cpuinfo | wc -l > procnum.txt");
     std::ifstream fichier("procnum.txt");
     std::string res;
     std::getline(fichier, res);
@@ -449,7 +449,7 @@ TM load_MeshMP_into_2DLMTpp_Mesh(MP mesh){
             }
         }
     }
-    Mesh.remove_unused_nodes();
+    //Mesh.remove_unused_nodes();
     return Mesh;
 }
 

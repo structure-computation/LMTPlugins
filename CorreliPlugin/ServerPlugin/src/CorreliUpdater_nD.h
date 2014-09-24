@@ -14,6 +14,7 @@
 
 #include <correlation/crack_cut.h>
 #include <errno.h>
+#include <vector>
 
 
 struct GetEps {
@@ -139,7 +140,11 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
     LMT::Vec<I2> images;
     TF2 form( dic_mesh );
     TB2 bord( dic_mesh );
-
+    
+    int size_alternative_loading = 20; // number of pictures over which the images are loaded one by one after each DIC step
+    std::vector<QString> vec_names;
+    int tot_num_im; //total number of images
+    
     // load data
     MP mesh;
     MP ch = mp[ "_children" ];
@@ -148,6 +153,8 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
         MP c = ch[ i ];
         qDebug() <<  c.type() ;
         if ( c.type() == "ImgSetItem" ) {
+            tot_num_im = c[ "_children" ].size();
+            vec_names.resize(tot_num_im);
             for( int j = 0; j < c[ "_children" ].size(); ++j ) {
                 MP im = c[ "_children" ][ j ];
                 if ( im.type() == "ImgItem" ) {
@@ -155,13 +162,18 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
                     QString name = im[ "img.src" ];
                     if ( im[ "img.src" ].type() != "Path" )
                         name = "../CorreliOnline/html/" + name;
-
-                    try {
-                        img->load( name.toAscii().data() );
-                        img->reverse_y();
-                    } catch ( std::string msg ) {
-                        updater->add_message( mp, Updater::ET_Error, "Img " + name + " does not exist" );
-                        return false;
+                    
+                    if ((tot_num_im > size_alternative_loading) and (j>0))
+                        vec_names[i] = name;
+                    else {
+                        vec_names[i] = name;
+                        try {
+                            img->load( name.toAscii().data() );
+                            img->reverse_y();
+                        } catch ( std::string msg ) {
+                            updater->add_message( mp, Updater::ET_Error, "Img " + name + " does not exist" );
+                            return false;
+                        }
                     }
                 } else if ( im.type() == "RawVolume" ) {
                     I2 *img = images.new_elem();
@@ -191,6 +203,8 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
         else if ( c.type() == "ImgDirectorySetItem"){
             qDebug() << c.type();
             MP ch = c[ "_children" ];
+            tot_num_im = ch.size();
+            vec_names.resize(tot_num_im);
             
             for( int j = 0; j < ch.size(); ++j ) {
             //for( int j = 0; j < 3; ++j ) {
@@ -205,12 +219,18 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
                     if ( not rem ) {
                         // read
                         QString name = data;
-                        try {
-                            img->load( name.toAscii().data() );
-                            img->reverse_y();
-                        } catch ( std::string msg ) {
-                            updater->add_message( mp, Updater::ET_Error, "Img " + name + " does not exist" );
-                            return false;
+                        
+                        if ((tot_num_im > size_alternative_loading) and (j>0))
+                            vec_names[j] = name;
+                        else {
+                            vec_names[j] = name;
+                            try {
+                                img->load( name.toAscii().data() );
+                                img->reverse_y();
+                            } catch ( std::string msg ) {
+                                updater->add_message( mp, Updater::ET_Error, "Img " + name + " does not exist" );
+                                return false;
+                            }
                         }
                     }
                 }
@@ -330,28 +350,50 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
 
     // standard dic
     dic_mesh.update_skin();
-    Vec<Vec<Pvec> > dep; dep.resize( images.size() - 1 );
-    Vec<TM2> mesh_vec; mesh_vec.resize( images.size() - 1 );
+    
+    Vec<Vec<Pvec> > dep; dep.resize(tot_num_im - 1 );
+    Vec<TM2> mesh_vec; mesh_vec.resize(tot_num_im - 1 );
     double t0 = time_of_day_in_sec();
     int delay;
     if ( dim == 3 )
         dic.rotation_in_rigid_body = false;
-    for( int j = 1; j < images.size(); ++j ) {
+    for( int j = 1; j <tot_num_im; ++j ) {
         double bef = time_of_day_in_sec();
-    //if (j == 1)
-    dic.exec_rigid_body( images[ 0 ], images[ j ], dic_mesh, dep_DM(), lum_DM() );
-    PRINT("Starting with image :" + to_string(j));
-    PRINT(dic_mesh.node_list[0].dep);
-        dic.exec( images[ 0 ], images[ j ], dic_mesh, dep_DM(), lum_DM() );
-    std::cout << " " << std::endl;
-    PRINT("Image " + to_string(j) + " treated");
-    std::cout << " " << std::endl;
-    PRINT(dic_mesh.node_list[0].dep);
+        //if (j == 1)
+        std::cout << vec_names.size() << std::endl;
+        if (tot_num_im > size_alternative_loading){
+            images.resize(1);
+            images.resize(2);
+            images[1].load(vec_names[j].toAscii().data() );
+            images[1].reverse_y();
+            dic.exec_rigid_body( images[ 0 ], images[ 1 ], dic_mesh, dep_DM(), lum_DM() );
+        }
+        else 
+            dic.exec_rigid_body( images[ 0 ], images[ j ], dic_mesh, dep_DM(), lum_DM() );
+        
+        PRINT("Starting with image :" + to_string(j));
+        PRINT(dic_mesh.node_list[0].dep);
+        
+        if (tot_num_im > size_alternative_loading)
+            dic.exec( images[ 0 ], images[ 1 ], dic_mesh, dep_DM(), lum_DM() );
+        else 
+            dic.exec( images[ 0 ], images[ j ], dic_mesh, dep_DM(), lum_DM() );
+        
+        std::cout << " " << std::endl;
+        PRINT("Image " + to_string(j) + " treated");
+        std::cout << " " << std::endl;
+        PRINT(dic_mesh.node_list[0].dep);
 
         I2 residual_img, residual_adv_img;
         if ( dim == 2 ) {
-            dic.get_residual_adv_img( images[ 0 ], images[ j ], dic_mesh, dep_DM(), lum_DM(), residual_adv_img );
-            dic.get_residual_img    ( images[ 0 ], images[ j ], dic_mesh, dep_DM(), lum_DM(), residual_img     );
+            if (tot_num_im > size_alternative_loading){
+                dic.get_residual_adv_img( images[ 0 ], images[ 1 ], dic_mesh, dep_DM(), lum_DM(), residual_adv_img );
+                dic.get_residual_img    ( images[ 0 ], images[ 1 ], dic_mesh, dep_DM(), lum_DM(), residual_img     );
+            }
+            else{
+                dic.get_residual_adv_img( images[ 0 ], images[ j ], dic_mesh, dep_DM(), lum_DM(), residual_adv_img );
+                dic.get_residual_img    ( images[ 0 ], images[ 1 ], dic_mesh, dep_DM(), lum_DM(), residual_img     );
+            }
         }
 
         for( int i = 0; i < dic_mesh.node_list.size(); ++i )
@@ -366,7 +408,10 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
                 dic_mesh.node_list[ o ].dep_sv = dic_mesh.node_list[ o ].dep;
 
             dic.default_lambda *= 1.1;
-            dic.exec( images[ 0 ], images[ j ], dic_mesh, dep_DM(), lum_DM() );
+            if (tot_num_im > size_alternative_loading)
+                dic.exec( images[ 0 ], images[ 1 ], dic_mesh, dep_DM(), lum_DM() );
+            else 
+                dic.exec( images[ 0 ], images[ j ], dic_mesh, dep_DM(), lum_DM() );
 
             for( int o = 0; o < dic_mesh.node_list.size(); ++o )
                 dic_mesh.node_list[ o ].dep_sv -= dic_mesh.node_list[ o ].dep;
@@ -381,7 +426,10 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
                 dic_mesh.node_list[ o ].dep = rb_guess;
 
             dic.default_lambda /= 1.1;
-            dic.exec( images[ 0 ], images[ j ], dic_mesh, dep_DM(), lum_DM() );
+            if (tot_num_im > size_alternative_loading)
+                dic.exec( images[ 0 ], images[ 1 ], dic_mesh, dep_DM(), lum_DM() );
+            else 
+                dic.exec( images[ 0 ], images[ j ], dic_mesh, dep_DM(), lum_DM() );
 
             dic_mesh.update_skin();
             mesh.reassign( soda_mesh_from_lmtpp_mesh( dic_mesh ) );
@@ -434,7 +482,7 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
     double t1 = time_of_day_in_sec();
     QString global_time = QString("%1").arg( t1 - t0 - delay );
 
-    QString num_pic = QString("%1").arg( images.size() );
+    QString num_pic = QString("%1").arg(tot_num_im );
     updater->add_message( mp, Updater::ET_Success, "Correlation of " + num_pic + " pictures computed in " + global_time + "s" );
 
     // save history curves
@@ -448,8 +496,8 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
     //    display( mesh_vec[ 0 ] );
 
     // identification ?
-    if ( int( mp[ "parameters.ident" ] ) and ( contrained_lines.size() or dic_mesh.dim == 3 ) )
-        integrated_dic( mp, mesh, dic, mesh_vec, images, dep, contrained_lines );
+    //if ( int( mp[ "parameters.ident" ] ) and ( contrained_lines.size() or dic_mesh.dim == 3 ) )
+      //  integrated_dic( mp, mesh, dic, mesh_vec, images, dep, contrained_lines );
 
     return true;
 }
