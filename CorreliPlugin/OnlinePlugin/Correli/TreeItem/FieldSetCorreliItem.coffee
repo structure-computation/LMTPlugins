@@ -22,6 +22,13 @@ class FieldSetCorreliItem extends TreeItem
             _residual_int_adv     : new NamedParametrizedDrawable( "Residual int adv", new InterpolatedField )
             _residual_int         : new NamedParametrizedDrawable( "Residual int"    , new InterpolatedField )
         
+    display_suppl_context_actions: ( context_action )  ->
+        context_action.push
+            txt: "info"
+            ico: "img/info.png"
+            fun: ( evt, app ) =>
+                for data in @visualization.color_by.lst[0].data._data
+                    console.log data.pos.get()
    
     accept_child: ( ch ) ->
         false

@@ -68,6 +68,8 @@ void add_field_in_Interpolated( MP interpolated_field, MP mesh, MP data, double 
     pos_v[ "axe_value" ] = time;
     pos_v[ "axe_name" ] = "time";
     disp[ "pos" ] << pos_v;
+    
+//     qDebug() << "disp[ 'pos' ] : " << disp[ "pos" ];
 
     interpolated_field[ "_data" ] << disp;
 }

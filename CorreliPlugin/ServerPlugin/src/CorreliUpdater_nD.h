@@ -145,6 +145,15 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
     std::vector<QString> vec_names;
     int tot_num_im; //total number of images
     
+    //test
+    MP test00 = mp[ "_output[ 0 ].visualization.color_by.lst" ][ 0 ];
+    qDebug() << "output_field : " << test00; 
+//     for( int ii = 0; ii < test00["data._data"].size() ; ++ii ) {
+//         MP test1 = test00["data._data"][ii];
+//         qDebug() << "output_field : " << test1["pos"];  
+//     }
+
+    
     // load data
     MP mesh;
     MP ch = mp[ "_children" ];
@@ -449,7 +458,7 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
                 data->operator[]( i ) = dic_mesh.node_list[ i ].dep[ d ];
 
             // NodalField
-            add_field_in_Interpolated( displacements[ d ], mesh, data, j );
+            add_field_in_Interpolated( displacements[ d ], mesh, data, j-1 );
         }
 
         // epsilon field
@@ -461,13 +470,13 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
             apply_wi( dic_mesh.elem_list, GetEps(), data, d );
 
             // NodalField
-            add_field_in_Interpolated( epsilon[ d ], mesh, data, j, "ElementaryField" );
+            add_field_in_Interpolated( epsilon[ d ], mesh, data, j-1, "ElementaryField" );
         }
 
         // residual
         if ( dim == 2 ) {
-            _save_img( output_field[ "_residual_adv" ], residual_adv_img.to_QImage( true ), j );
-            _save_img( output_field[ "_residual"     ], residual_img    .to_QImage( true ), j );
+            _save_img( output_field[ "_residual_adv" ], residual_adv_img.to_QImage( true ), j-1 );
+            _save_img( output_field[ "_residual"     ], residual_img    .to_QImage( true ), j-1 );
         }
 
         // display
@@ -476,10 +485,30 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
         QString intermediate_time = QString("%1").arg( aft - bef );
         QString iter = QString("%1").arg( j );
         updater->add_message( mp, Updater::ET_Info, "Correlation " + iter + " done in " + intermediate_time + "s" );
-        delay = 0.1;
-        sleep(delay);
-        mp.flush();
+        
+//         MP test0 = mp[ "_output[ 0 ].visualization.color_by.lst" ][ 0 ];
+// //         qDebug() << "output_field : " << test0["data"];
+// //         qDebug() << "output_field : " << test0["data._data.pos.pos"];
+//         for( int ii = 0; ii < test0["data._data"].size() ; ++ii ) {
+//            MP test1 = test0["data._data"][ii];
+//            qDebug() << "output_field : " << test1["pos"]; 
+//           
+//         }
+        
+//         mp.flush();
+//         delay = 0.1;
+//         sleep(delay);
+        
+        
     }
+    
+    MP test0 = mp[ "_output[ 0 ].visualization.color_by.lst" ][ 0 ];
+    qDebug() << "output_field : " << test0; 
+//     for( int ii = 0; ii < test0["data._data"].size() ; ++ii ) {
+//         MP test1 = test0["data._data"][ii];
+//         qDebug() << "output_field : " << test1["pos"]; 
+//       
+//     }
 
     double t1 = time_of_day_in_sec();
     QString global_time = QString("%1").arg( t1 - t0 - delay );
@@ -495,6 +524,8 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
     for( int i = 0; i < dic.history_norm_2_dU             .size(); ++i ) output_field[ "_norm_2_history"   ] << dic.history_norm_2_dU             [ i ];
     for( int i = 0; i < dic.history_dimensionless_residual.size(); ++i ) output_field[ "_residual_history" ] << dic.history_dimensionless_residual[ i ];
 
+    
+    mp.flush();
     //    display( mesh_vec[ 0 ] );
 
     // identification ?
