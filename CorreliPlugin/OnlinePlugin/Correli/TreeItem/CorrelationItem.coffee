@@ -69,8 +69,8 @@ class CorrelationItem extends TreeItem_Computable
 #             res.push @visualization
     #    return res
         
-    #cosmetic_attribute: ( name ) ->
-    #    super( name ) or ( name in [ "visualization", "_residual", "_residual_adv", "_residual_int", "_residual_int_adv", "_norm_i_history", "_norm_2_history", "_residual_history" ] )
+    cosmetic_attribute: ( name ) ->
+       super( name ) or ( name in [ "_output","visualization", "_residual", "_residual_adv", "_residual_int", "_residual_int_adv", "_norm_i_history", "_norm_2_history", "_residual_history" ] )
         
     
     #information: ( div ) ->
