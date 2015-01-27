@@ -82,8 +82,6 @@ void Field::save(MP fielditem) const
         type_field = "NodalField";
     //type_field = "NodalField";
     
-    qDebug() << type_field;
-    
     for(int v = 0; v < values.size(); v++)
     {
         MP value = MP::new_obj( type_field );
@@ -107,7 +105,6 @@ void Field::save(MP fielditem) const
         disp[ "pos" ] << pos_v;
         
         interpolated_field[ "_data" ] << disp;
-	//qDebug() << interpolated_field[ "_data" ];
     }
 }
 

@@ -143,7 +143,7 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
     
     int size_alternative_loading = 20; // number of pictures over which the images are loaded one by one after each DIC step
     std::vector<QString> vec_names;
-    int tot_num_im; //total number of images
+    int tot_num_im=0; //total number of images
     
     // load data
     MP mesh;
@@ -153,7 +153,7 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
         MP c = ch[ i ];
         qDebug() <<  c.type() ;
         if ( c.type() == "ImgSetItem" ) {
-            tot_num_im = c[ "_children" ].size();
+            tot_num_im += c[ "_children" ].size();
             vec_names.resize(tot_num_im);
             for( int j = 0; j < c[ "_children" ].size(); ++j ) {
                 MP im = c[ "_children" ][ j ];
@@ -186,7 +186,7 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
                     MP data = updater->sc->load_ptr( volume[ "_ptr" ] );
                     qDebug() << data;
 
-                QString name = data;
+                    QString name = data;
                     PRINT( name.toAscii().data() );
 
                     try {
@@ -196,14 +196,13 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
                         updater->add_message( mp, Updater::ET_Error, "Img " + name + " does not exist" );
                         return false;
                     }
-            PRINT( name.toAscii().data() );
+                    PRINT( name.toAscii().data() );
                 }
             }
         }
         else if ( c.type() == "ImgDirectorySetItem"){
-            qDebug() << c.type();
             MP ch = c[ "_children" ];
-            tot_num_im = ch.size();
+            tot_num_im += ch.size();
             vec_names.resize(tot_num_im);
             
             for( int j = 0; j < ch.size(); ++j ) {
@@ -294,7 +293,8 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
         }
     }
 
-
+      PRINT(images.size());
+      PRINT(tot_num_im);
     // regularization
     if ( double r = mp[ "parameters.lambda_bulk" ] ) {
         dic.form_reg = &form;
