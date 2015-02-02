@@ -378,22 +378,22 @@ void load_aster_res_into_LMTppMesh(std::string root_file, Vec<TM> &mesh, double 
     
     Vec<int> num_nodes;
     for (int nc=0; nc<TM::dim; nc++){
-	num_nodes = clear_result_file(root_file + "_D" + "XYZ"[nc] + ".resu");
-	Vec<Vec<double> > result_file = load_vecvec(root_file + "_D" + "XYZ"[nc] + ".resu");
-	for (int num_mesh=0; num_mesh<mesh.size(); num_mesh++){
-	    for (int nn=0; nn<num_nodes.size(); nn++){
-		mesh[num_mesh].node_list[num_nodes[nn]-1].dep[nc] = result_file[num_mesh][nn+1];
-	    }
-	}
+        num_nodes = clear_result_file(root_file + "_D" + "XYZ"[nc] + ".resu");
+        Vec<Vec<double> > result_file = load_vecvec(root_file + "_D" + "XYZ"[nc] + ".resu");
+        for (int num_mesh=0; num_mesh<mesh.size(); num_mesh++){
+            for (int nn=0; nn<num_nodes.size(); nn++){
+                mesh[num_mesh].node_list[num_nodes[nn]-1].dep[nc] = result_file[num_mesh][nn+1];
+            }
+        }
     }
     for (int nc=0; nc<TM::dim; nc++){
-	num_nodes = clear_result_file(root_file + "_F" + "XYZ"[nc] + ".resu");
-	Vec<Vec<double> > result_file = load_vecvec(root_file + "_F" + "XYZ"[nc] + ".resu");
-	for (int num_mesh=0; num_mesh<mesh.size(); num_mesh++){
-	    for (int nn=0; nn<num_nodes.size(); nn++){
-		mesh[num_mesh].node_list[num_nodes[nn]-1].f_nodal[nc] = thickness*result_file[num_mesh][nn+1];
-	    }
-	}
+        num_nodes = clear_result_file(root_file + "_F" + "XYZ"[nc] + ".resu");
+        Vec<Vec<double> > result_file = load_vecvec(root_file + "_F" + "XYZ"[nc] + ".resu");
+        for (int num_mesh=0; num_mesh<mesh.size(); num_mesh++){
+            for (int nn=0; nn<num_nodes.size(); nn++){
+                mesh[num_mesh].node_list[num_nodes[nn]-1].f_nodal[nc] = thickness*result_file[num_mesh][nn+1];
+            }
+        }
     }
 }
     

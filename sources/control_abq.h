@@ -23,16 +23,13 @@ void Write2DINP (Vec<TM> &m, std::string root_dir, Vec<double> constrained_nodes
         
         //////////////////////////////////////////////////////////////////////////////////////////////////////////
         std::string thelaw;
-        double elastic_modulus, poisson_ratio, rapport, sigma_0, n, nparam;
-	int n_el;
-	
-	
+        double elastic_modulus, poisson_ratio, rapport, sigma_0, n, nparam, friction_angle , flowstress_ratio , dilation_angle, eps_0, time_order, pl_multiplier, eq_stress_order;
+        int n_el;
 	
         std::string computation_type = Prop_Mat[Prop_Mat.size()-1][0]; 
-	std::string n_el_str = Prop_Mat[Prop_Mat.size()-1][1];
-	std::istringstream iss(n_el_str);
-	iss >> n_el;
-	
+        std::string n_el_str = Prop_Mat[Prop_Mat.size()-1][1];
+        std::istringstream iss(n_el_str);
+        iss >> n_el;
 		
         for (int ii=0; ii< Prop_Mat.size(); ii++){
             if (Prop_Mat[ii][0] == "thelaw"){
@@ -65,271 +62,313 @@ void Write2DINP (Vec<TM> &m, std::string root_dir, Vec<double> constrained_nodes
                 std::istringstream iss(texte);
                 iss >> n;      
             }
+            else if (Prop_Mat[ii][0] == "eps_0"){
+                std::string texte = Prop_Mat[ii][1];
+                std::istringstream iss(texte);
+                iss >> eps_0;      
+            }
+            else if (Prop_Mat[ii][0] == "friction_angle"){
+                std::string texte = Prop_Mat[ii][1];
+                std::istringstream iss(texte);
+                iss >> friction_angle;      
+            }
+            else if (Prop_Mat[ii][0] == "flowstress_ratio"){
+                std::string texte = Prop_Mat[ii][1];
+                std::istringstream iss(texte);
+                iss >> flowstress_ratio;      
+            }
+            else if (Prop_Mat[ii][0] == "dilation_angle"){
+                std::string texte = Prop_Mat[ii][1];
+                std::istringstream iss(texte);
+                iss >> dilation_angle;      
+            }
+            else if (Prop_Mat[ii][0] == "pl_multiplier"){
+                std::string texte = Prop_Mat[ii][1];
+                std::istringstream iss(texte);
+                iss >> pl_multiplier;      
+            }
+            else if (Prop_Mat[ii][0] == "eq_stress_order"){
+                std::string texte = Prop_Mat[ii][1];
+                std::istringstream iss(texte);
+                iss >> eq_stress_order;      
+            }
+            else if (Prop_Mat[ii][0] == "time_order"){
+                std::string texte = Prop_Mat[ii][1];
+                std::istringstream iss(texte);
+                iss >> time_order;      
+            }
         }
         
         if (exists(nom_fic)) remove(nom_fic.c_str());
         int vide = system(("touch " + nom_fic).c_str());
         std::ofstream inp( nom_fic.c_str() , std::ios::app);
-	Vec<std::string> eps; eps << "0.";
-	int neps = 50;
-	double maxeps=0.5;
-	if (thelaw == "Equation"){
-	    for (int numeps = 1; numeps<neps; numeps++){
-		eps << LMT::to_string(numeps*(maxeps/neps));
-	    }
-	  
-	    inp << "*Parameter\n";
-	    std::istringstream iss(Prop_Mat[3][1]);
-	    iss >> nparam;
-	    for (int npa=0; npa<nparam; npa++){
-		inp << Prop_Mat[2+2+nparam+npa][1] << "=" << Prop_Mat[2+2+npa][1] << "\n";
-	    }
-	    for (int numeps = 0; numeps<neps; numeps++){
-		inp << "eps" << numeps << "=" << eps[numeps] << "\n";
-	    }
-	    for (int numeps = 0; numeps<neps; numeps++){
-		//inp << "sig" << numeps << "=" << Prop_Mat[2+2+nparam][1] << "*(" << Prop_Mat[2+2+nparam+1][1] << "+eps" << numeps << ")**" << Prop_Mat[2+2+nparam+2][1] << "\n"; // SWIFT
-		//inp << "sig" << numeps << "=" << Prop_Mat[2+2+nparam][1] << "+" << Prop_Mat[2+2+nparam+1][1] << "*eps" << numeps << "**" << Prop_Mat[2+2+nparam+2][1] << "\n"; // POWER LAW
-		std::string eq = Prop_Mat[Prop_Mat.size()-2][1]; 
-		std::string subs = "varsigma";
-		Vec<std::size_t> fs = find_str_in_str(eq, subs);
-		std::string sube = "varepsilonp";
-		Vec<std::size_t> fe = find_str_in_str(eq, sube);
-		inp << eq.substr(0,fs[0]);
-		inp << "sig" << numeps; 
-		inp << eq.substr(fs[0]+subs.size(),fe[0]-(fs[0]+subs.size()));
-		inp << "eps" << numeps;
-		inp << eq.substr(fe[0]+sube.size(),eq.size()) << "\n";
-	    }
-	  
-	}
-	else if (thelaw == "UMAT_Lem_diccit"){  
-	    for (int numeps = 1; numeps<neps; numeps++){
-		eps << LMT::to_string(numeps*(maxeps/neps));
-	    }
-	    inp << "*Parameter\n";
-	    inp << "E=" << Prop_Mat[3][1] << "\n";
-	    inp << "Nu=" << Prop_Mat[4][1] << "\n";
-	    inp << "B=" << Prop_Mat[5][1] << "\n";
-	    inp << "C=" << Prop_Mat[6][1] << "\n";
-	    inp << "n=" << Prop_Mat[7][1] << "\n";
-	    inp << "s=" << Prop_Mat[8][1] << "\n";
-	    inp << "S=" << Prop_Mat[9][1] << "\n";
-	    inp << "pth=" << Prop_Mat[10][1] << "\n";
-	    inp << "Dcr=" << Prop_Mat[11][1] << "\n";
-	    inp << "mDam=" << Prop_Mat[12][1] << "\n";
-	    inp << "eDam=" << Prop_Mat[13][1] << "\n";
-	  
-	    for (int numeps = 0; numeps<neps; numeps++){
-		inp << "eps" << numeps << "=" << eps[numeps] << "\n";
-	    }
-	    for (int numeps = 0; numeps<neps; numeps++){
-		inp << "sig" << numeps << "=B*(C+eps" << numeps << ")**n\n"; // SWIFT
-	    }
-	    inp << "G=E/(2.*(1+Nu))\n";
-	    inp << "Hourg=0.005*G\n";
-	}
-	
-        inp << "*Heading\n";
-        inp << "** Job name: test_florent Model name: Model-1\n";
-        inp << "*Preprint, echo=NO, model=NO, history=NO, contact=NO\n";
-        inp << "**\n";
-        inp << "** PARTS\n";
-        inp << "**\n";
-        inp << "*Part, name=Part\n";
-        inp << "*Node\n";
-        if (computation_type == "3Dex"){
-	    for (int layer_number =0; layer_number < (n_el+1); layer_number++){
-		for (int i = 0; i < m[0].node_list.size() ; ++i){//liste des noeuds avec leur position dans l'espace
-		    inp << "     " << layer_number*m[0].node_list.size() + i + 1 << ", " << m[0].node_list[i].pos[ 0 ]*pix2m << ", " << m[0].node_list[i].pos[ 1 ]*pix2m << ", " << layer_number*(thickness/n_el)<< "\n";                 
-		}
-	    }	
-	}
-	else{
-	    for (int i = 0; i < m[0].node_list.size() ; ++i){//liste des noeuds avec leur position dans le plan
-		inp << "     " << i + 1 << ", " << m[0].node_list[i].pos[ 0 ]*pix2m << ", " << m[0].node_list[i].pos[ 1 ]*pix2m << "\n";
-	    }
-	}
-        inp << "*Element, type=";
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////
-        if (m[0].elem_list[0]->nb_nodes_virtual() == 3){
-            if (computation_type == "2DPS") inp << "CPS3";
-            else if (computation_type == "2DPE") inp << "CPE3";
-            else if (computation_type == "3Dex") inp << "C3D6";
-        }
-        else if (m[0].elem_list[0]->nb_nodes_virtual() == 4){
-            if (computation_type == "2DPS") inp << "CPS4";
-            else if (computation_type == "2DPE") inp << "CPE4";
-            else if (computation_type == "3Dex") inp << "C4D8";
-        }
-
-        inp << "\n";
-	if (computation_type == "3Dex"){
-	    for (int layer_number =0; layer_number < (n_el); layer_number++){
-	      for (int i = 0; i < m[0].elem_list.size(); ++i){//liste des noeuds avec leur position dans l'espace
-		  inp << "     " << m[0].elem_list.size()*layer_number + i + 1 ;
-		  for (int jj=0; jj<m[0].elem_list[0]->nb_nodes_virtual(); jj++)
-		      inp   << ", "  << m[0].elem_list[i]->node_virtual(jj)->number + 1 + layer_number*m[0].node_list.size() ;
-		  for (int jj=0; jj<m[0].elem_list[0]->nb_nodes_virtual(); jj++)
-		      inp   << ", "  << m[0].elem_list[i]->node_virtual(jj)->number + 1 + (layer_number+1)*m[0].node_list.size() ;
-		  inp << "\n";
-	      }
-	    }
-	}
-	else{
-	    for (int i = 0; i < m[0].elem_list.size(); ++i){//liste des noeuds avec leur position dans l'espace
-		inp << "     " << i + 1 ;
-		for (int jj=0; jj<m[0].elem_list[0]->nb_nodes_virtual(); jj++)
-		    inp   << ", "  << m[0].elem_list[i]->node_virtual(jj)->number + 1 ;
-		inp << "\n";
-	    }
-	}
-        inp << "*Nset, nset=_PickedSet5, internal, generate\n";
-	if (computation_type == "3Dex") 
-	    inp << " 1, " << (n_el+1)*m[0].node_list.size() << ", 1\n"; 
-	else
-	    inp << " 1, " << m[0].node_list.size() << ", 1\n";
-        inp << "*Elset, elset=_PickedSet5, internal, generate\n";
-	if (computation_type == "3Dex") 
-	    inp << " 1, " << n_el*m[0].elem_list.size() << ", 1\n";
-	else
-	    inp << " 1, " << m[0].elem_list.size() << ", 1\n";
-        inp << "*Orientation, name=Ori-1\n";
-        inp << "          1.,           0.,           0.,           0.,           1.,           0.\n";
-        inp << "1, 0.\n";
-        inp << "** Section: Section-1-_PICKEDSET5\n";
-        inp << "*Solid Section, elset=_PICKEDSET5, orientation=Ori-1, material=";
-        
-        if (thelaw == "Elas_iso"){
-            inp << "MATERIAL-1\n";
-        }
-        if (thelaw == "Elas_ortho"){
-            inp << "MATERIAL-1\n";
-        }
-        else if (thelaw == "RO"){
-            inp << "MATERIAL-1\n";
-        }
-        else if (thelaw == "Equation"){
-            inp << "MATERIAL-1\n";
-        }
-        else if ((thelaw == "UMAT") or (thelaw == "UMAT_Lem_diccit")){
-                   inp << Prop_Mat[0][1] << "\n";
-        }
-        else if (thelaw == "dpc"){
-            //////////////////////////////////////////////////////////////////////////////////////////////////////////
-            inp << "MATERIAL-cg\n";
-        }
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////
-        inp << thickness << "\n";
-        inp << "*End Part\n";
-        inp << "**  \n";
-        inp << "** ASSEMBLY\n";
-        inp << "**\n";
-        inp << "*Assembly, name=Assembly\n";
-        inp << "**  \n";
-        inp << "*Instance, name=Part-1-1, part=Part\n";
-        inp << "*End Instance\n";
-        inp << "**  \n";
-        for (int i = 0; i < (n_el+1)*m[0].node_list.size() ; ++i){//liste des sets de noeuds
-            inp << "*Nset, nset=N_1_" << i+1 << ", instance=Part-1-1\n";
-            inp << " " << i + 1 << ",\n";
-        }
-        inp << "*End Assembly\n";
-        inp << "** \n";
-        inp << "** MATERIALS\n";
-        inp << "** \n";
-        
-        if (thelaw == "Elas_iso"){
-            inp << "*Material, name=MATERIAL-1\n";
-            inp << "*Elastic\n";
-            inp << "" << elastic_modulus << ", " << poisson_ratio << "\n";
-        }
-        else if (thelaw == "Elas_ortho"){
-            inp << "*Material, name=MATERIAL-1\n";
-            inp << "*Elastic, TYPE=ENGINEERING CONSTANTS\n";
-            inp << "" << elastic_modulus << ", " << elastic_modulus*rapport << ", " << elastic_modulus*rapport << ", " << poisson_ratio << ", " << poisson_ratio << ", " << poisson_ratio << ", " << elastic_modulus/(2 + 2* poisson_ratio) << ", " <<  elastic_modulus*rapport/(2 + 2* poisson_ratio) << "\n";
-            inp << elastic_modulus*rapport/(2 + 2*poisson_ratio) << ",\n";
-        }
-        else if (thelaw == "RO"){
-            inp << "*Material, name=MATERIAL-1\n";
-            inp << "*Deformation Plasticity\n";
-            double ys = 0.02; // Par défaut
-            inp << "" << elastic_modulus << ", " << poisson_ratio << ", " << sigma_0 << ", " << n << ", " << ys << "\n";
-        }
-        else if (thelaw == "UMAT"){
-            inp << "*Material, name=";
-            inp << Prop_Mat[0][1];
-            inp << "\n";
-            inp << "*Depvar\n";
-	    std::istringstream iss(Prop_Mat[1][1]);
-	    iss >> nparam;
-            inp << "    " << Prop_Mat[1+1+nparam][1] << ",\n";
-            inp << "*User Material, constants=";
-            inp << nparam;
-            inp << "\n";
-            int npl=0;
-            for (int np=1; np<nparam; np++){
-               npl++;
-               if (npl>7){
-                   inp << "\n";
-                   npl=1;
-               }
-               inp << Prop_Mat[1+np][1] << ", ";
+        Vec<std::string> eps; eps << "0.";
+        int neps = 50;
+        double maxeps=0.5;
+        if (thelaw == "Equation"){
+            for (int numeps = 1; numeps<neps; numeps++){
+                eps << LMT::to_string(numeps*(maxeps/neps));
             }
-            inp << Prop_Mat[1+nparam][1] << "\n";
-            
+          
+            inp << "*Parameter\n";
+            std::istringstream iss(Prop_Mat[3][1]);
+            iss >> nparam;
+            for (int npa=0; npa<nparam; npa++){
+                inp << Prop_Mat[2+2+nparam+npa][1] << "=" << Prop_Mat[2+2+npa][1] << "\n";
+            }
+            for (int numeps = 0; numeps<neps; numeps++){
+                inp << "eps" << numeps << "=" << eps[numeps] << "\n";
+            }
+            for (int numeps = 0; numeps<neps; numeps++){
+                //inp << "sig" << numeps << "=" << Prop_Mat[2+2+nparam][1] << "*(" << Prop_Mat[2+2+nparam+1][1] << "+eps" << numeps << ")**" << Prop_Mat[2+2+nparam+2][1] << "\n"; // SWIFT
+                //inp << "sig" << numeps << "=" << Prop_Mat[2+2+nparam][1] << "+" << Prop_Mat[2+2+nparam+1][1] << "*eps" << numeps << "**" << Prop_Mat[2+2+nparam+2][1] << "\n"; // POWER LAW
+                std::string eq = Prop_Mat[Prop_Mat.size()-2][1]; 
+                std::string subs = "varsigma";
+                Vec<std::size_t> fs = find_str_in_str(eq, subs);
+                std::string sube = "varepsilonp";
+                Vec<std::size_t> fe = find_str_in_str(eq, sube);
+                inp << eq.substr(0,fs[0]);
+                inp << "sig" << numeps; 
+                inp << eq.substr(fs[0]+subs.size(),fe[0]-(fs[0]+subs.size()));
+                inp << "eps" << numeps;
+                inp << eq.substr(fe[0]+sube.size(),eq.size()) << "\n";
+            }
+          
         }
-        else if (thelaw == "Equation"){
-            inp << "*Material, name=MATERIAL-1\n";
-            inp << "*Elastic\n";
-            inp << "" << elastic_modulus << ", " << poisson_ratio << "\n";
-            inp << "*Plastic\n";
-	    for (int numeps = 0; numeps<neps; numeps++){
-		inp << "<sig" << numeps << ">,  " << eps[numeps] << "\n";
-	    }
+        else if (thelaw == "UMAT_Lem_diccit"){  
+            for (int numeps = 1; numeps<neps; numeps++){
+                eps << LMT::to_string(numeps*(maxeps/neps));
+            }
+            inp << "*Parameter\n";
+            inp << "E=" << Prop_Mat[3][1] << "\n";
+            inp << "Nu=" << Prop_Mat[4][1] << "\n";
+            inp << "B=" << Prop_Mat[5][1] << "\n";
+            inp << "C=" << Prop_Mat[6][1] << "\n";
+            inp << "n=" << Prop_Mat[7][1] << "\n";
+            inp << "s=" << Prop_Mat[8][1] << "\n";
+            inp << "S=" << Prop_Mat[9][1] << "\n";
+            inp << "pth=" << Prop_Mat[10][1] << "\n";
+            inp << "Dcr=" << Prop_Mat[11][1] << "\n";
+            inp << "mDam=" << Prop_Mat[12][1] << "\n";
+            inp << "eDam=" << Prop_Mat[13][1] << "\n";
+          
+            for (int numeps = 0; numeps<neps; numeps++){
+            inp << "eps" << numeps << "=" << eps[numeps] << "\n";
+            }
+            for (int numeps = 0; numeps<neps; numeps++){
+            inp << "sig" << numeps << "=B*(C+eps" << numeps << ")**n\n"; // SWIFT
+            }
+            inp << "G=E/(2.*(1+Nu))\n";
+            inp << "Hourg=0.005*G\n";
         }
-        else if (thelaw == "UMAT_Lem_diccit"){
-            inp << "*Material, name=";
-            inp << Prop_Mat[0][1];
+        
+            inp << "*Heading\n";
+            inp << "** Job name: test_florent Model name: Model-1\n";
+            inp << "*Preprint, echo=NO, model=NO, history=NO, contact=NO\n";
+            inp << "**\n";
+            inp << "** PARTS\n";
+            inp << "**\n";
+            inp << "*Part, name=Part\n";
+            inp << "*Node\n";
+            if (computation_type == "3Dex"){
+            for (int layer_number =0; layer_number < (n_el+1); layer_number++){
+            for (int i = 0; i < m[0].node_list.size() ; ++i){//liste des noeuds avec leur position dans l'espace
+                inp << "     " << layer_number*m[0].node_list.size() + i + 1 << ", " << m[0].node_list[i].pos[ 0 ]*pix2m << ", " << m[0].node_list[i].pos[ 1 ]*pix2m << ", " << layer_number*(thickness/n_el)<< "\n";                 
+            }
+            }	
+        }
+        else{
+            for (int i = 0; i < m[0].node_list.size() ; ++i){//liste des noeuds avec leur position dans le plan
+            inp << "     " << i + 1 << ", " << m[0].node_list[i].pos[ 0 ]*pix2m << ", " << m[0].node_list[i].pos[ 1 ]*pix2m << "\n";
+            }
+        }
+            inp << "*Element, type=";
+            //////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+            //////////////////////////////////////////////////////////////////////////////////////////////////////////
+            if (m[0].elem_list[0]->nb_nodes_virtual() == 3){
+                if (computation_type == "2DPS") inp << "CPS3";
+                else if (computation_type == "2DPE") inp << "CPE3";
+                else if (computation_type == "3Dex") inp << "C3D6";
+            }
+            else if (m[0].elem_list[0]->nb_nodes_virtual() == 4){
+                if (computation_type == "2DPS") inp << "CPS4";
+                else if (computation_type == "2DPE") inp << "CPE4";
+                else if (computation_type == "3Dex") inp << "C4D8";
+            }
+
             inp << "\n";
-            inp << "*Depvar\n";
-	    std::istringstream iss(Prop_Mat[1][1]);
-	    iss >> nparam;
-            inp << "    " << Prop_Mat[1+1+nparam][1] << ",\n";
-            inp << "    	 1,EpsE11\n";
-            inp << "    	 2,EpsE22\n";
-            inp << "    	 3,EpsE33\n";
-            inp << "    	 4,EpsE12\n";
-            inp << "    	 5,EpsE13\n";
-            inp << "    	 6,EpsE23\n";
-            inp << "    	 7,EpsP11\n";
-            inp << "    	 8,EpsP22\n";
-            inp << "    	 9,EpsP33\n";
-            inp << "    	 10,EpsP12\n";
-            inp << "    	 11,EpsP13\n";
-            inp << "    	 12,EpsP23\n";
-            inp << "    	 13,p\n";
-            inp << "    	 14,r\n";
-            inp << "    	 15,gR\n";
-            inp << "    	 16,D \n";
-            inp << "    	 17,EpsCr\n";
-            inp << "    	 18,Tx\n";
-            inp << "*DENSITY\n";
-            inp << "2.7e-9\n";
-            inp << "*User Material, constants=66\n";
-            inp << "<E>,        <Nu>,     <sig0>,     <eps0>,  <sig1>,     <eps1>,    <sig2>,     <eps2>, \n";
-            inp << "<sig3>,    <eps3>, <sig4>,    <eps4>,   <sig5>,     <eps5>,    <sig6>,     <eps6>,   \n";
-            inp << "<sig7>,    <eps7>,  <sig8>,    <eps8>,   <sig9>,     <eps9>,    <sig10>,     <eps10>,   \n";
-            inp << "<sig11>,    <eps11>, <sig12>,    <eps12>,   <sig13>,     <eps13>,    <sig14>,     <eps14>,   \n";
-            inp << "<sig15>,    <eps15>, <sig16>,    <eps16>,   <sig17>,     <eps17>,    <sig18>,     <eps18>,   \n";
-            inp << "<sig19>,    <eps19>, <sig20>,    <eps20>,   <sig21>,     <eps21>,    <sig22>,     <eps22>,   \n";
-            inp << "<sig23>,    <eps23>, <sig24>,    <eps24>,   <sig25>,     <eps25>,    <sig26>,     <eps26>,   \n";
-            inp << "<sig27>,    <eps27>, <sig28>,    <eps28>,   <sig29>,     <eps29>,    <pth>,       <s>,       \n";
-            inp << "<S>,        <Dcr>, <mDam>,     <eDam>\n";
-	  
-	}
+        if (computation_type == "3Dex"){
+            for (int layer_number =0; layer_number < (n_el); layer_number++){
+              for (int i = 0; i < m[0].elem_list.size(); ++i){//liste des noeuds avec leur position dans l'espace
+              inp << "     " << m[0].elem_list.size()*layer_number + i + 1 ;
+              for (int jj=0; jj<m[0].elem_list[0]->nb_nodes_virtual(); jj++)
+                  inp   << ", "  << m[0].elem_list[i]->node_virtual(jj)->number + 1 + layer_number*m[0].node_list.size() ;
+              for (int jj=0; jj<m[0].elem_list[0]->nb_nodes_virtual(); jj++)
+                  inp   << ", "  << m[0].elem_list[i]->node_virtual(jj)->number + 1 + (layer_number+1)*m[0].node_list.size() ;
+              inp << "\n";
+              }
+            }
+        }
+        else{
+            for (int i = 0; i < m[0].elem_list.size(); ++i){//liste des noeuds avec leur position dans l'espace
+            inp << "     " << i + 1 ;
+            for (int jj=0; jj<m[0].elem_list[0]->nb_nodes_virtual(); jj++)
+                inp   << ", "  << m[0].elem_list[i]->node_virtual(jj)->number + 1 ;
+            inp << "\n";
+            }
+        }
+            inp << "*Nset, nset=_PickedSet5, internal, generate\n";
+        if (computation_type == "3Dex") 
+            inp << " 1, " << (n_el+1)*m[0].node_list.size() << ", 1\n"; 
+        else
+            inp << " 1, " << m[0].node_list.size() << ", 1\n";
+            inp << "*Elset, elset=_PickedSet5, internal, generate\n";
+        if (computation_type == "3Dex") 
+            inp << " 1, " << n_el*m[0].elem_list.size() << ", 1\n";
+        else
+            inp << " 1, " << m[0].elem_list.size() << ", 1\n";
+            inp << "*Orientation, name=Ori-1\n";
+            inp << "          1.,           0.,           0.,           0.,           1.,           0.\n";
+            inp << "1, 0.\n";
+            inp << "** Section: Section-1-_PICKEDSET5\n";
+            inp << "*Solid Section, elset=_PICKEDSET5, orientation=Ori-1, material=";
+            
+            if ((thelaw == "UMAT") or (thelaw == "UMAT_Lem_diccit")){
+                inp << Prop_Mat[0][1] << "\n";
+            }
+            else if (thelaw == "dpc"){
+                //////////////////////////////////////////////////////////////////////////////////////////////////////////
+                inp << "MATERIAL-cg\n";
+            }
+            else{
+                inp << "MATERIAL-1\n";
+            }
+            //////////////////////////////////////////////////////////////////////////////////////////////////////////
+            inp << thickness << "\n";
+            inp << "*End Part\n";
+            inp << "**  \n";
+            inp << "** ASSEMBLY\n";
+            inp << "**\n";
+            inp << "*Assembly, name=Assembly\n";
+            inp << "**  \n";
+            inp << "*Instance, name=Part-1-1, part=Part\n";
+            inp << "*End Instance\n";
+            inp << "**  \n";
+            for (int i = 0; i < (n_el+1)*m[0].node_list.size() ; ++i){//liste des sets de noeuds
+                inp << "*Nset, nset=N_1_" << i+1 << ", instance=Part-1-1\n";
+                inp << " " << i + 1 << ",\n";
+            }
+            inp << "*End Assembly\n";
+            inp << "** \n";
+            inp << "** MATERIALS\n";
+            inp << "** \n";
+            
+            if (thelaw == "Elas_iso"){
+                inp << "*Material, name=MATERIAL-1\n";
+                inp << "*Elastic\n";
+                inp << "" << elastic_modulus << ", " << poisson_ratio << "\n";
+            }
+            else if (thelaw == "Elas_ortho"){
+                inp << "*Material, name=MATERIAL-1\n";
+                inp << "*Elastic, TYPE=ENGINEERING CONSTANTS\n";
+                inp << "" << elastic_modulus << ", " << elastic_modulus*rapport << ", " << elastic_modulus*rapport << ", " << poisson_ratio << ", " << poisson_ratio << ", " << poisson_ratio << ", " << elastic_modulus/(2 + 2* poisson_ratio) << ", " <<  elastic_modulus*rapport/(2 + 2* poisson_ratio) << "\n";
+                inp << elastic_modulus*rapport/(2 + 2*poisson_ratio) << ",\n";
+            }
+            else if (thelaw == "RO"){
+                inp << "*Material, name=MATERIAL-1\n";
+                inp << "*Deformation Plasticity\n";
+                double ys = 0.02; // Par défaut
+                inp << "" << elastic_modulus << ", " << poisson_ratio << ", " << sigma_0 << ", " << n << ", " << ys << "\n";
+            }
+            else if (thelaw == "Drucker_Prager_Hardening"){
+                inp << "*Material, name=MATERIAL-1\n";
+                inp << "*Elastic\n";
+                inp << "" << elastic_modulus << ", " << poisson_ratio << "\n";
+                inp << "*Drucker Prager\n";
+                inp << "" << friction_angle << ", " << flowstress_ratio << ", " << dilation_angle << "\n";
+                inp << "*Drucker Prager Hardening\n";
+                inp << "" << sigma_0 << ", " << eps_0 << "\n";
+            }
+            else if (thelaw == "Creep_Time_Hardening"){
+                inp << "*Material, name=MATERIAL-1\n";
+                inp << "*Elastic\n";
+                inp << "" << elastic_modulus << ", " << poisson_ratio << "\n";
+                inp << "*Creep, law=TIME\n";
+                inp << "" << pl_multiplier << ", " << eq_stress_order << ", " << time_order << "\n";
+            }
+            else if (thelaw == "UMAT"){
+                inp << "*Material, name=";
+                inp << Prop_Mat[0][1];
+                inp << "\n";
+                inp << "*Depvar\n";
+            std::istringstream iss(Prop_Mat[1][1]);
+            iss >> nparam;
+                inp << "    " << Prop_Mat[1+1+nparam][1] << ",\n";
+                inp << "*User Material, constants=";
+                inp << nparam;
+                inp << "\n";
+                int npl=0;
+                for (int np=1; np<nparam; np++){
+                  npl++;
+                  if (npl>7){
+                      inp << "\n";
+                      npl=1;
+                  }
+                  inp << Prop_Mat[1+np][1] << ", ";
+                }
+                inp << Prop_Mat[1+nparam][1] << "\n";
+                
+            }
+            else if (thelaw == "Equation"){
+                inp << "*Material, name=MATERIAL-1\n";
+                inp << "*Elastic\n";
+                inp << "" << elastic_modulus << ", " << poisson_ratio << "\n";
+                inp << "*Plastic\n";
+                for (int numeps = 0; numeps<neps; numeps++){
+                    inp << "<sig" << numeps << ">,  " << eps[numeps] << "\n";
+                }
+            }
+            else if (thelaw == "UMAT_Lem_diccit"){
+                inp << "*Material, name=";
+                inp << Prop_Mat[0][1];
+                inp << "\n";
+                inp << "*Depvar\n";
+            std::istringstream iss(Prop_Mat[1][1]);
+            iss >> nparam;
+                inp << "    " << Prop_Mat[1+1+nparam][1] << ",\n";
+                inp << "    	 1,EpsE11\n";
+                inp << "    	 2,EpsE22\n";
+                inp << "    	 3,EpsE33\n";
+                inp << "    	 4,EpsE12\n";
+                inp << "    	 5,EpsE13\n";
+                inp << "    	 6,EpsE23\n";
+                inp << "    	 7,EpsP11\n";
+                inp << "    	 8,EpsP22\n";
+                inp << "    	 9,EpsP33\n";
+                inp << "    	 10,EpsP12\n";
+                inp << "    	 11,EpsP13\n";
+                inp << "    	 12,EpsP23\n";
+                inp << "    	 13,p\n";
+                inp << "    	 14,r\n";
+                inp << "    	 15,gR\n";
+                inp << "    	 16,D \n";
+                inp << "    	 17,EpsCr\n";
+                inp << "    	 18,Tx\n";
+                inp << "*DENSITY\n";
+                inp << "2.7e-9\n";
+                inp << "*User Material, constants=66\n";
+                inp << "<E>,        <Nu>,     <sig0>,     <eps0>,  <sig1>,     <eps1>,    <sig2>,     <eps2>, \n";
+                inp << "<sig3>,    <eps3>, <sig4>,    <eps4>,   <sig5>,     <eps5>,    <sig6>,     <eps6>,   \n";
+                inp << "<sig7>,    <eps7>,  <sig8>,    <eps8>,   <sig9>,     <eps9>,    <sig10>,     <eps10>,   \n";
+                inp << "<sig11>,    <eps11>, <sig12>,    <eps12>,   <sig13>,     <eps13>,    <sig14>,     <eps14>,   \n";
+                inp << "<sig15>,    <eps15>, <sig16>,    <eps16>,   <sig17>,     <eps17>,    <sig18>,     <eps18>,   \n";
+                inp << "<sig19>,    <eps19>, <sig20>,    <eps20>,   <sig21>,     <eps21>,    <sig22>,     <eps22>,   \n";
+                inp << "<sig23>,    <eps23>, <sig24>,    <eps24>,   <sig25>,     <eps25>,    <sig26>,     <eps26>,   \n";
+                inp << "<sig27>,    <eps27>, <sig28>,    <eps28>,   <sig29>,     <eps29>,    <pth>,       <s>,       \n";
+                inp << "<S>,        <Dcr>, <mDam>,     <eDam>\n";
+          
+        }
         else if (thelaw == "dpc"){/*
             
             std::string nom_fic_param_dpc = "dpc_param_tmp.txt";
@@ -424,12 +463,16 @@ void Write2DINP (Vec<TM> &m, std::string root_dir, Vec<double> constrained_nodes
 //             inp << "** BOUNDARY CONDITIONS\n";
 	    
 	    inp << "*Step, NLGEOM=YES, name=Step-" << i+1 << ", inc=1000000\n";
-	    inp << "*Static\n";
-	   // inp << "1., 1., 0.0001, 1.\n";
-	    inp << "1., 1., 0.0000001, 1.\n";
-	    inp << "*CONTROLS, PARAMETERS=TIME INCREMENTATION\n";
-	    inp << ", , , , , , , 10000, , ,\n";
-	    inp << "0.5, , , , , , 2.5, \n";
+        if (thelaw == "Creep_Time_Hardening"){
+            inp << "*Visco, CETOL=0.0001\n";
+        }
+        else{
+            inp << "*Static\n";
+        }
+        inp << "0.1, 1., 1e-07, 1.\n";
+        inp << "*CONTROLS, PARAMETERS=TIME INCREMENTATION\n";
+        inp << ", , , , , , , 10000, , ,\n";
+        inp << "0.5, , , , , , 2.5, \n";
 	    inp << "** \n";
 	    inp << "** BOUNDARY CONDITIONS\n";
 

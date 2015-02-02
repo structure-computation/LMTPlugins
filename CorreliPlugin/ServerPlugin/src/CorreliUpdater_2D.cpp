@@ -4,6 +4,5 @@
 #include "CorreliUpdater_nD.h"
 
 bool correli_updater_2D( CorreliUpdater *updater, MP mp ) {
-  std::cout << "coucou" << std::endl;
     correliUpdater_nD( updater, mp, LMT::Number<2>() );
 }

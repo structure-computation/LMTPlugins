@@ -88,33 +88,33 @@ bool FieldExportUpdater::run( MP mp ) {
 	    std::string rac_disp = racine_fic + "disp";
 	    std::string rac_eps = racine_fic + "eps";
 	    for (int i = 0; i < Mesh_Vector.size(); i++){
-		if (save_disp){
-		    for (int j = 0; j < Mesh_Vector[0].node_list[0].dim; j++){
-			std::string name_disp = rac_disp + "XYZ"[ j ] + "_im" + to_string(i+1) + ".txt";
-			if (exists(name_disp)) remove(name_disp.c_str());
-			std::ofstream disp (name_disp.c_str());
-			for (int k = 0; k < Mesh_Vector[0].node_list.size(); k++)
-			    disp << Mesh_Vector[i].node_list[k].dep[j] << "\n";
-		    }
-		}
-		if (save_eps){
-		    dic.get_epsilon( Mesh_Vector[i] );
-		    GetEpsInVecs ge;
-		    apply( Mesh_Vector[i].elem_list, ge );
-		    for (int j = 0; j < 3; j++){
-			std::string name_eps;
-			if (j == 0)
-			  name_eps = rac_eps + "X" + "_im" + to_string(i+1) + ".txt";
-			else if (j == 1)
-			  name_eps = rac_eps + "Y" + "_im" + to_string(i+1) + ".txt";
-			else if (j == 2)
-			  name_eps = rac_eps + "XY" + "_im" + to_string(i+1) + ".txt";
-			if (exists(name_eps)) remove(name_eps.c_str());
-			std::ofstream eps (name_eps.c_str());
-			for (int k = 0; k < Mesh_Vector[0].elem_list.size(); k++)
-			    eps << ge.e[k][j] << "\n";
-		    }
-		}
+            if (save_disp){
+                for (int j = 0; j < Mesh_Vector[0].node_list[0].dim; j++){
+                std::string name_disp = rac_disp + "XYZ"[ j ] + "_im" + to_string(i+1) + ".txt";
+                if (exists(name_disp)) remove(name_disp.c_str());
+                std::ofstream disp (name_disp.c_str());
+                for (int k = 0; k < Mesh_Vector[0].node_list.size(); k++)
+                    disp << Mesh_Vector[i].node_list[k].dep[j] << "\n";
+                }
+            }
+            if (save_eps){
+                dic.get_epsilon( Mesh_Vector[i] );
+                GetEpsInVecs ge;
+                apply( Mesh_Vector[i].elem_list, ge );
+                for (int j = 0; j < 3; j++){
+                std::string name_eps;
+                if (j == 0)
+                  name_eps = rac_eps + "X" + "_im" + to_string(i+1) + ".txt";
+                else if (j == 1)
+                  name_eps = rac_eps + "Y" + "_im" + to_string(i+1) + ".txt";
+                else if (j == 2)
+                  name_eps = rac_eps + "XY" + "_im" + to_string(i+1) + ".txt";
+                if (exists(name_eps)) remove(name_eps.c_str());
+                std::ofstream eps (name_eps.c_str());
+                for (int k = 0; k < Mesh_Vector[0].elem_list.size(); k++)
+                    eps << ge.e[k][j] << "\n";
+                }
+            }
 	    }
 	    add_message( mp, ET_Info, "Result written" );
 	}
