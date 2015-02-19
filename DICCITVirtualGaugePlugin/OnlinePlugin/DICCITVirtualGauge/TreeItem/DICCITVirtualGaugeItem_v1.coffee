@@ -9,6 +9,7 @@ class DICCITVirtualGaugeItem_v1 extends TreeItem_Computable
         
         @add_attr
             show_point  : new Bool true
+            show_fleche : new Bool true
             _point      : new PointMesher [ 0, 0, 0 ], 2, 6 
             angle_x     : new ConstrainedVal( 0, { min: -180, max: 180 } )
             angle_z     : new ConstrainedVal( 0, { min: -180, max: 180 } )
@@ -24,7 +25,9 @@ class DICCITVirtualGaugeItem_v1 extends TreeItem_Computable
         @add_attr    
             _mesh         : new Mesh( not_editable: true )
             _fleche       : new Mesh( not_editable: true )
-             
+            _vec_n        : new Mesh( not_editable: true )
+            normal        : new Vec_3
+
           
         @add_attr  
             visualization : @_mesh.visualization
@@ -49,10 +52,87 @@ class DICCITVirtualGaugeItem_v1 extends TreeItem_Computable
         @_v3_scale     = new Vec
         @m_glob        = math.matrix
         
+#         color = new Color( 100, 100, 100, 255 )
+#         @_mesh.theme.surfaces.color.set color
+        
         @bind =>
             if @center.has_been_modified() or @width.has_been_modified() or @height.has_been_modified() or @nb_values.has_been_modified() or @angle_x.has_been_modified() or @angle_z.has_been_modified() or @angle_n.has_been_modified()
               @make_mesh()
                 
+    display_suppl_context_actions: ( context_action )  ->
+        instance = this
+        context_action.push
+            txt: "get normal"
+            ico: "img/LinkTo.png"
+            fun: ( evt, app ) =>
+                instance.calcul_normale()
+                
+    
+    calcul_normale:() ->
+        #calcul de la normale moyenne à l'ensemble des éléments du maillage
+#         console.log @_mesh._elements
+        
+        XM_temp = 0
+        YM_temp = 0
+        ZM_temp = 0
+        n_value_temp = 0
+        for i in [ 0 ... @_mesh._elements[0].indices.size( 1 ) ]    
+            x1 = @_mesh.points[ @_mesh._elements[0].indices.get [ 0, i ] ].pos[0].get()
+            y1 = @_mesh.points[ @_mesh._elements[0].indices.get [ 0, i ] ].pos[1].get()
+            z1 = @_mesh.points[ @_mesh._elements[0].indices.get [ 0, i ] ].pos[2].get()
+            
+            x2 = @_mesh.points[ @_mesh._elements[0].indices.get [ 1, i ] ].pos[0].get()
+            y2 = @_mesh.points[ @_mesh._elements[0].indices.get [ 1, i ] ].pos[1].get()
+            z2 = @_mesh.points[ @_mesh._elements[0].indices.get [ 1, i ] ].pos[2].get()
+            
+            x3 = @_mesh.points[ @_mesh._elements[0].indices.get [ 2, i ] ].pos[0].get()
+            y3 = @_mesh.points[ @_mesh._elements[0].indices.get [ 2, i ] ].pos[1].get()
+            z3 = @_mesh.points[ @_mesh._elements[0].indices.get [ 2, i ] ].pos[2].get()
+    
+            X = (y2-y1)*(z3-z1) - (z2-z1)*(y3-y1)
+            Y = (z2-z1)*(x3-x1) - (x2-x1)*(z3-z1)
+            Z = (x2-x1)*(y3-y1) - (y2-y1)*(x3-x1)
+            
+            #norme
+            NN = Math.sqrt(X*X+Y*Y+Z*Z)
+            XN = X/NN
+            YN = Y/NN
+            ZN = Z/NN 
+            
+            XM_temp += XN
+            YM_temp += YN
+            ZM_temp += ZN
+            n_value_temp += 1
+            
+        #vecteur normal moyen
+        @normal[0].set (XM_temp/n_value_temp) 
+        @normal[1].set (YM_temp/n_value_temp) 
+        @normal[2].set (ZM_temp/n_value_temp) 
+        
+#         @_vec_n.points.clear()
+#         @_vec_n._elements.clear()    
+#         
+#         current_point = @_vec_n.points.length 
+#         @_vec_n.add_point [ @center.pos[0].get(),  @center.pos[1].get(), @center.pos[2].get() ]
+#         @_vec_n.add_point [ @center.pos[0].get() + @width.get() * @normal[0].get(),  @center.pos[1].get() + @width.get() * @normal[1].get(), @center.pos[2].get() + @width.get() * @normal[2].get() ]
+#     
+#         console.log @_vec_n.points
+    
+#         @_vec_n.add_element new Element_BoundedSurf [
+#             { o: +1, e: new Element_Line [ current_point + 0, current_point + 1 ] }
+#             { o: +1, e: new Element_Line [ current_point + 1, current_point + 0 ] }
+#         ]
+        
+#         console.log @normal
+        normal_vec = new DICCITVectorItem 
+        
+        normal_vec.center = @center
+        normal_vec.vector.set @normal
+        normal_vec.make_mesh()
+        
+        @add_child normal_vec
+    
+    
     
     #ajout d'une fleche épaisse
     make_fleche_0: () ->
@@ -241,15 +321,19 @@ class DICCITVirtualGaugeItem_v1 extends TreeItem_Computable
         
         
     sub_canvas_items: ->
+        lst = []
+        lst.push @_mesh
         if @show_point.get()
-            [ @_point, @_mesh, @_fleche]
-        else
-            [ @_mesh, @_fleche]
-    #    if @nothing_to_do()
-    #        [ @_mesh ]
-    #    else
-    #        []
-    
+            lst.push @_point
+            
+        if @show_fleche.get()
+            lst.push @_fleche
+            
+#         if @show_vec_n.get()
+#             lst.push @_vec_n
+         
+        return lst 
+#             [ @_point, @_mesh, @_fleche]
     
     z_index: ->
         @_mesh.z_index()
