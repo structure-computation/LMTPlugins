@@ -83,7 +83,6 @@ MP soda_mesh_from_lmtpp_mesh( const TM &m ) {
 
         MP pnt = MP::new_obj( "Point" );
         pnt[ "pos" ] = pos;
-
         om[ "points" ] << pnt;
     }
 
@@ -145,15 +144,6 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
     std::vector<QString> vec_names;
     int tot_num_im=0; //total number of images
     
-    //test
-    MP test00 = mp[ "_output[ 0 ].visualization.color_by.lst" ][ 0 ];
-    qDebug() << "output_field : " << test00; 
-//     for( int ii = 0; ii < test00["data._data"].size() ; ++ii ) {
-//         MP test1 = test00["data._data"][ii];
-//         qDebug() << "output_field : " << test1["pos"];  
-//     }
-
-    
     // load data
     MP mesh;
     MP ch = mp[ "_children" ];
@@ -211,7 +201,7 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
         }
         else if ( c.type() == "ImgDirectorySetItem"){
             MP ch = c[ "_children" ];
-            tot_num_im += ch.size();
+            tot_num_im = ch.size();
             vec_names.resize(tot_num_im);
             
             for( int j = 0; j < ch.size(); ++j ) {
@@ -447,7 +437,6 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
         }
 
 
-
         // disp field
         for( int d = 0; d < dic_mesh.dim; ++d ) {
             // data
@@ -503,7 +492,7 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
     }
     
     MP test0 = mp[ "_output[ 0 ].visualization.color_by.lst" ][ 0 ];
-    qDebug() << "output_field : " << test0; 
+    //qDebug() << "output_field : " << test0; 
 //     for( int ii = 0; ii < test0["data._data"].size() ; ++ii ) {
 //         MP test1 = test0["data._data"][ii];
 //         qDebug() << "output_field : " << test1["pos"]; 
@@ -523,7 +512,6 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
     for( int i = 0; i < dic.history_norm_inf_dU           .size(); ++i ) output_field[ "_norm_i_history"   ] << dic.history_norm_inf_dU           [ i ];
     for( int i = 0; i < dic.history_norm_2_dU             .size(); ++i ) output_field[ "_norm_2_history"   ] << dic.history_norm_2_dU             [ i ];
     for( int i = 0; i < dic.history_dimensionless_residual.size(); ++i ) output_field[ "_residual_history" ] << dic.history_dimensionless_residual[ i ];
-
     
     mp.flush();
     //    display( mesh_vec[ 0 ] );

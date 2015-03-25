@@ -29,7 +29,7 @@ class BoundariesSelectionItem extends TreeItem
         
     draw: ( info ) ->
         for ch in @_children when ch instanceof PickedZoneItem
-            for pe in ch.picked_element
+            for pe in ch._picked_element
                 mesh = pe.mesh
                 elem = pe.element
                 proj = for p in mesh.points
@@ -67,13 +67,13 @@ class BoundariesSelectionItem extends TreeItem
     create_pzi: ( msh, elem ) ->
         pzi = @add_child_mesh msh
         pe = mesh : msh, element : elem
-        pzi.picked_element.push pe
+        pzi._picked_element.push pe
         
         # adding callback for when a point is deleted (call in mesh)
         msh.delete_selected_points_callback.push ( msh, index_selected_points ) =>
             for ch in @_children when ch instanceof PickedZoneItem
-                for pe in ch.picked_element
-                    for ind in pe.element.indices.get()
+                for pe in ch._picked_element
+                    for ind in pe._element.indices.get()
                         for isp in index_selected_points
                             if ind == isp
                                 # It means there is a selected point in this picked zone item, we now can delete the correct pzi
