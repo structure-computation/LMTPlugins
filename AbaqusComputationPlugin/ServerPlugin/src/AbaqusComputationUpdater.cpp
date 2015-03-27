@@ -26,7 +26,7 @@ bool AbaqusComputationUpdater::run( MP mp ) {
     Vec<Vec< std::string> > force_files;
     Vec<Vec< double > > calc_force;
     //////////////
-    
+     
     extract_computation_parameters( mp, Mesh_Vector_input, constrained_nodes, indices_bc_cn,  Prop_Mat, fs_output, force_files, ex_field); // Lecture des paramètres du calcul
     
     if (ex_field == 0){
@@ -50,19 +50,19 @@ bool AbaqusComputationUpdater::run( MP mp ) {
 	add_message( mp, ET_Info, "There was a problem with the model edition. Check your computation conditions." );    mp.flush(); 
     }
     else {    
-      
-	add_message( mp, ET_Info, "Computation launched" );    mp.flush();
-	Vec<TM> Mesh_Vector_output = calc_abq_into_LMTppMesh(Mesh_Vector_input, constrained_nodes, pix2m, Prop_Mat, thickness); // Ref field computation for a given set of parameter
-	add_message( mp, ET_Info, "Computation just ended" );    mp.flush();
-	
-	extract_f_from_LMTppMesh (Mesh_Vector_output, constrained_nodes, indices_bc_cn, calc_force);
-	
-	PRINT(calc_force);
-	
-	put_result_in_MP(Mesh_Vector_output, mp, fs_output); mp.flush();   // Sortie dans un FieldSet "calcul" 
-	add_message( mp, ET_Info, "Result transmitted" );    mp.flush(); 
-	
-	sleep(1);
+        add_message( mp, ET_Info, "Computation launched" );   // mp.flush();
+        Vec<TM> Mesh_Vector_output = calc_abq_into_LMTppMesh(Mesh_Vector_input, constrained_nodes, pix2m, Prop_Mat, thickness); // Ref field computation for a given set of parameter
+        add_message( mp, ET_Info, "Computation just ended" ); //   mp.flush();
+        
+        extract_f_from_LMTppMesh (Mesh_Vector_output, constrained_nodes, indices_bc_cn, calc_force);
+        
+        PRINT(calc_force);
+        
+        put_result_in_MP(Mesh_Vector_output, mp, fs_output); //mp.flush();   // Sortie dans un FieldSet "calcul" 
+        push_back_material_parameters(param, Prop_Mat); //mp.flush();
+        add_message( mp, ET_Info, "Result transmitted" ); mp.flush(); 
+        
+        sleep(1);
     }
     
 }

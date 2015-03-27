@@ -17,7 +17,8 @@ class TreeAppApplication_Correlation extends TreeAppApplication
 
     add_corr: ( app_data ) =>
         #
-        m = @add_item_depending_selected_tree app_data, CorrelationItem
-#         app_data.watch_item m
-#         app_data.watch_item m._children[ 1 ]
+        m = @add_item_depending_selected_tree app_data, CorrelationItem, (object) =>
+            if object._children[3]?
+                object._children[3].time = app_data.time
+                object._children[3]._app_data = app_data
         

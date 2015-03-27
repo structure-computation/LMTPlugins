@@ -1,4 +1,3 @@
-
 #
 class CorrelationItem extends TreeItem_Computable
     constructor: ->
@@ -8,10 +7,10 @@ class CorrelationItem extends TreeItem_Computable
         @_name.set "Correlation"
         @_ico.set "img/correlation_19.png"
         @_viewable.set false
-        #@add_child new PhysicsItem
         @add_child new ImgSetItem
         @add_child new DiscretizationItem
         @add_child new MaskItem
+        @add_child new ImgDirectorySetItem
         
         @add_output new FieldSetCorreliItem
         
@@ -27,14 +26,14 @@ class CorrelationItem extends TreeItem_Computable
                 # <math>\delta \infty</math> mod: [ 1e-5, new Choice( 0, [ "||&#8710;u||2", "||&#8710;u||&#x221E;"] ) ]
 
                 # con: 1e-5
-                multi_res       : new ConstrainedVal( 0, { min: 0, max: 5, div: 5 } )
+                multi_res       : new ConstrainedVal( 0, { min: 0, max: 10, div: 10 } )
                 nb_iter_max     : 100
                 lambda_bulk     : 0
-        #        max_displacement: -1
-        #        crack_eps_threshold: -1
-        #        ident           : false
-         #       crack_dir       : [ 1, 0, 0 ]
-         #       rb_guess        : [ 0, 0, 0 ]
+              #  max_displacement: -1
+               # crack_eps_threshold: -1
+               # ident           : false
+               # crack_dir       : [ 1, 0, 0 ]
+               # rb_guess        : [ 0, 0, 0 ]
 #                 preview_result  : false
                 #                 clear_lst       : false
             
@@ -70,8 +69,8 @@ class CorrelationItem extends TreeItem_Computable
 #             res.push @visualization
     #    return res
         
-    #cosmetic_attribute: ( name ) ->
-    #    super( name ) or ( name in [ "visualization", "_residual", "_residual_adv", "_residual_int", "_residual_int_adv", "_norm_i_history", "_norm_2_history", "_residual_history" ] )
+    cosmetic_attribute: ( name ) ->
+       super( name ) or ( name in [ "_output","visualization", "_residual", "_residual_adv", "_residual_int", "_residual_int_adv", "_norm_i_history", "_norm_2_history", "_residual_history" ] )
         
     
     #information: ( div ) ->
@@ -80,6 +79,3 @@ class CorrelationItem extends TreeItem_Computable
     #            parentNode: div
     #            
     #    @txt.innerHTML = @_norm_2_history.get()
-
-
-            

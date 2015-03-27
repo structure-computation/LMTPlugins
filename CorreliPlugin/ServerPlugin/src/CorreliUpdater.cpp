@@ -11,6 +11,13 @@ int CorreliUpdater::_ok( const MP &mp ) const {
             for( int j = 0; j < c[ "_children" ].size(); ++j )
                 nb_images += c[ "_children" ][ j ].type() == "ImgItem" or
                              c[ "_children" ][ j ].type() == "RawVolume";
+        } else if ( c.type() == "ImgDirectorySetItem" ) {
+          
+            MP ch = c[ "_children" ];
+            for( int j = 0; j <ch.size(); ++j ){
+                nb_images += 1;
+            }
+            
         } else if ( c.type() == "DiscretizationItem" ) {
             MP m = c[ "_children[ 0 ]._mesh" ];
             if ( not m.ok() or not m[ "points" ].size() )
@@ -171,6 +178,7 @@ int CorreliUpdater::_ok( const MP &mp ) const {
 }
 
 bool CorreliUpdater::run( MP mp ) {
+    qDebug() << mp.type();
     if ( int d = _ok( mp ) ) {
         qDebug() << d;
         switch ( d ) {

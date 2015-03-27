@@ -14,6 +14,7 @@ class Job : public QObject {
     quint64 model_id;
     quint64 model_ready_state;
     quint64 model_computation_state;
+    quint64 model_computation_mode;
     quint64 model_pending_state;
     quint64 model_processing_state;
     quint64 model_finish_state;
@@ -115,6 +116,7 @@ class Job : public QObject {
         // model state
         model_ready_state               = model_test[ "_ready_state" ];
         model_computation_state         = model_test[ "_computation_state" ];
+        model_computation_mode          = model_test[ "_computation_mode" ];
         model_pending_state             = model_test[ "_pending_state" ];
         model_processing_state          = model_test[ "_processing_state" ];
         model_finish_state              = model_test[ "_finish_state" ];
@@ -123,6 +125,7 @@ class Job : public QObject {
 //         qDebug() << "--------------------------------------------------------------- ";
 //         qDebug() << "model_ready_state : " << model_ready_state;
 //         qDebug() << "model_computation_state : " << model_computation_state;
+//         qDebug() << "model_computation_mode : " << model_computation_mode;
 //         qDebug() << "model_pending_state : " << model_pending_state;
 //         qDebug() << "model_processing_state : " << model_processing_state;
 //         qDebug() << "model_finish_state : " << model_finish_state;
@@ -135,7 +138,7 @@ class Job : public QObject {
         finish          = false;
         stop            = false;
         
-        if ( model_computation_state == true ){
+        if ( model_computation_state == true or model_computation_mode){
             run = true;
         }
         if ( model_pending_state == true ){
@@ -173,15 +176,16 @@ class Job : public QObject {
         return req > rep and m != a;
     }
 
-    bool run_model_test(MP model_test){
+    bool run_model_test( MP model_test ){
         bool run_app = false;
-        model_set_state(model_test);
+        model_set_state( model_test );
 
         quint64 model_computation_mode          = model_test[ "_computation_mode" ]; 
         quint64 model_computation_req_date      = model_test[ "_computation_req_date" ];
         quint64 model_computation_rep_date      = model_test[ "_computation_rep_date" ];
         
 //         qDebug() << "model_computation_mode : " << model_computation_mode << "  model_computation_state : " << model_computation_state;
+        qDebug() << "model_computation_state" << model_computation_state;
         if ( model_computation_state == true ){
             run_app = true;
         }
@@ -200,6 +204,9 @@ class Job : public QObject {
         
         
 //         qDebug() << "run_app : " << run_app;
+        quint64 auto_compute = model_test[ "auto_compute" ]; 
+        if ( auto_compute )
+            return true;
         
         return run_app;
     }
@@ -249,13 +256,13 @@ class Job : public QObject {
         qDebug() << "launcher_exists : " << launcher_exists << ", thread_exists : " << thread_exists << ", run : " << run << ", stop : " << stop;
         if(launcher_exists and thread_exists and run){
             qDebug() << "job lance model------------------------- : " << model_id;
-            mp[ "_ready_state" ]        = false;
-            mp[ "_computation_state" ]  = true;
-            mp[ "_pending_state" ]      = true;
-            mp[ "_processing_state" ]   = false;
-            mp[ "_finish_state" ]       = false;
-            mp[ "_stop_state" ]         = false;
-            mp.flush();
+//             mp[ "_ready_state" ]        = false;
+//             mp[ "_computation_state" ]  = true;
+//             mp[ "_pending_state" ]      = true;
+//             mp[ "_processing_state" ]   = false;
+//             mp[ "_finish_state" ]       = false;
+//             mp[ "_stop_state" ]         = false;
+//             mp.flush();
             launcher->sc = sc;
             launcher->mp.reassign(model);
             connect(thread, SIGNAL(started()), launcher, SLOT(launch()));
@@ -292,7 +299,6 @@ class Job : public QObject {
 //         model[ "_finish_state" ]       = false;
 //         model[ "_stop_state" ]         = false;
 //         model.flush();
-	//qDebug() << "thread->quit() ";
         thread->quit();
     };
 };  
@@ -302,7 +308,7 @@ class JobList : public QObject{
   
 public slots: 
     void kill_jobs(){
-       // qDebug() << "kill_jobs " ;
+//         qDebug() << "kill_jobs " ;
         bool find_kill = true;
         while(find_kill){
             find_kill = false;
@@ -328,8 +334,8 @@ public:
     int find_job_index( MP mp_test, SodaClient &sc ){
 //         qDebug() << "find_job_index " ;
 //         qDebug() << "model : " << mp_test;
-        for (int i = 0; i < jobs.size(); ++i) {
-            if (jobs[i]->find_job_model(mp_test)){
+        for( int i = 0; i < jobs.size(); ++i ) {
+            if ( jobs[i]->find_job_model( mp_test ) ){
                 
                 jobs[i]->model = mp_test;
                 jobs[i]->sc = &sc;
@@ -338,20 +344,19 @@ public:
             }
         }
         Job *new_job = new Job();
-        if(new_job->run_model_test(mp_test)){
-            
+        if ( new_job->run_model_test( mp_test ) ) {
             new_job->model = mp_test;
             new_job->sc = &sc;
-            new_job->initialize(mp_test);
-            jobs.append(new_job);
+            new_job->initialize( mp_test );
+            jobs.append( new_job );
             //return &(jobs.last());
             qDebug() << "run_model_test";
-            return (jobs.size()-1);
+            return jobs.size() - 1;
         }
-        if(new_job->waiting_something_to_compute){
-            return (-1);
+        if ( new_job->waiting_something_to_compute ){
+            return -1;
         }
-        return (-2);
+        return -2;
     }
     
 };

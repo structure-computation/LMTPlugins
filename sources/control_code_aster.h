@@ -378,22 +378,22 @@ void load_aster_res_into_LMTppMesh(std::string root_file, Vec<TM> &mesh, double 
     
     Vec<int> num_nodes;
     for (int nc=0; nc<TM::dim; nc++){
-	num_nodes = clear_result_file(root_file + "_D" + "XYZ"[nc] + ".resu");
-	Vec<Vec<double> > result_file = load_vecvec(root_file + "_D" + "XYZ"[nc] + ".resu");
-	for (int num_mesh=0; num_mesh<mesh.size(); num_mesh++){
-	    for (int nn=0; nn<num_nodes.size(); nn++){
-		mesh[num_mesh].node_list[num_nodes[nn]-1].dep[nc] = result_file[num_mesh][nn+1];
-	    }
-	}
+        num_nodes = clear_result_file(root_file + "_D" + "XYZ"[nc] + ".resu");
+        Vec<Vec<double> > result_file = load_vecvec(root_file + "_D" + "XYZ"[nc] + ".resu");
+        for (int num_mesh=0; num_mesh<mesh.size(); num_mesh++){
+            for (int nn=0; nn<num_nodes.size(); nn++){
+                mesh[num_mesh].node_list[num_nodes[nn]-1].dep[nc] = result_file[num_mesh][nn+1];
+            }
+        }
     }
     for (int nc=0; nc<TM::dim; nc++){
-	num_nodes = clear_result_file(root_file + "_F" + "XYZ"[nc] + ".resu");
-	Vec<Vec<double> > result_file = load_vecvec(root_file + "_F" + "XYZ"[nc] + ".resu");
-	for (int num_mesh=0; num_mesh<mesh.size(); num_mesh++){
-	    for (int nn=0; nn<num_nodes.size(); nn++){
-		mesh[num_mesh].node_list[num_nodes[nn]-1].f_nodal[nc] = thickness*result_file[num_mesh][nn+1];
-	    }
-	}
+        num_nodes = clear_result_file(root_file + "_F" + "XYZ"[nc] + ".resu");
+        Vec<Vec<double> > result_file = load_vecvec(root_file + "_F" + "XYZ"[nc] + ".resu");
+        for (int num_mesh=0; num_mesh<mesh.size(); num_mesh++){
+            for (int nn=0; nn<num_nodes.size(); nn++){
+                mesh[num_mesh].node_list[num_nodes[nn]-1].f_nodal[nc] = thickness*result_file[num_mesh][nn+1];
+            }
+        }
     }
 }
     
@@ -416,13 +416,48 @@ Vec<TM> calc_code_aster_into_LMTppMesh(Vec<TM> &m_ref, Vec<double> constrained_n
     std::cout << " " << std::endl;
     std::cout << "LAUNCHING COMPUTATION WITH CODE_ASTER..." << std::endl;
     int res_sys = system(("/opt/aster/bin/as_run " + root_file + ".export > " + root_file + "result.txt").c_str()); // COMPUTATION
+    
     load_aster_res_into_LMTppMesh(root_file, Mesh_vector_output, thickness);
     if (res_sys == 0)
-	std::cout << "... COMPUTATION JUST ENDED, AND WELL" << std::endl;
+        std::cout << "... COMPUTATION JUST ENDED, AND WELL" << std::endl;
     else
-	std::cout << "... COMPUTATION ENDED BECAUSE OF A CRASH. PLEASE CHECK THE COMPUTATION REPORT " << std::endl;
+        std::cout << "... COMPUTATION ENDED BECAUSE OF A CRASH. PLEASE CHECK THE COMPUTATION REPORT " << std::endl;
     std::cout << "  " << std::endl;
     
     return Mesh_vector_output;
     
+}
+
+std::string launch_calc_code_aster_for_id(Vec<TM> &m_ref, Vec<double> constrained_nodes, double pix2m, Vec < Vec < std::string > > Prop_Mat , double thickness, int num){
+    
+    Vec<TM> Mesh_vector_output = m_ref;
+    char* HomeDir;
+    HomeDir = getenv ("HOME");
+    std::string root_dir = std::string(HomeDir) + "/scratch";
+    std::string root_file = std::string(HomeDir) + "/scratch/" + to_string(num) + "_aaa_test";
+    create_dir(root_dir);
+    remove((root_dir + "/ok_" + to_string(num) +".txt").c_str());
+    std::string thelaw = Prop_Mat[0][1];
+    
+    Write_msh_file(m_ref[0], root_file, pix2m, Prop_Mat[Prop_Mat.size()-1][0]);
+    Write_export_file(root_file);
+    Write_comm_file(root_file, m_ref, Prop_Mat, constrained_nodes, pix2m);
+    
+    put_void_file_in(root_file + "result.txt");
+    std::cout << " " << std::endl;
+    std::cout << "LAUNCHING COMPUTATION WITH CODE_ASTER..." << std::endl;
+    
+    std::string root_bash = root_dir + "/bash_for_comp_";
+    std::string filename = root_bash  + to_string(num) + ".sh";
+    if (exists(filename)) remove(filename.c_str());
+    std::ofstream inp( filename.c_str() , std::ios::app);
+    inp << "#!/bin/bash\n";
+    inp << " \n";
+    inp << "/opt/aster/bin/as_run " + root_file + ".export > " + root_file + "result.txt"<< "\n";
+    inp << "touch " << root_file << "/ok_" << num << ".txt\n";
+    inp.close();
+    
+    int res_sys = system((filename + " &").c_str());
+             
+    return root_file;
 }

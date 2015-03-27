@@ -61,20 +61,16 @@ void FieldSet::save(MP fieldsetitem) const
     int nb_fields_out = fieldsetitem["visualization.color_by.lst"].size();
     fieldsetitem["visualization.color_by.lst"].clear();
     nb_fields_out = fieldsetitem["visualization.color_by.lst"].size();
-    fieldsetitem.flush();
+
     for(int f = 0; f < fields.size(); f++)
     {
         MP field = MP::new_obj("NamedParametrizedDrawable");
-        fields[f].save(field);
-	MP tmp = field[ "data._data" ];
-        if(nb_fields_out) {
-	     fieldsetitem["visualization.color_by.lst"][0] = field; 
-	}
+        fields[f].save(field); //BUG (notamment)
+        if(nb_fields_out) fieldsetitem["visualization.color_by.lst"][0] = field; 
         else fieldsetitem["visualization.color_by.lst"] << field; 
     }
-    nb_fields_out = fieldsetitem["visualization.color_by.lst"].size();
-    fieldsetitem.flush();
-    PRINT(nb_fields_out);
+    qDebug() << "nb_fields_out : " << fieldsetitem["visualization.color_by.lst"].size();
+   
 }
 
 FieldSet FieldSet::operator+(const FieldSet& other) const

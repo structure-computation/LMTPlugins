@@ -78,6 +78,10 @@ class Launcher : public QObject {
               commande = "../VirtualGaugePlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " + temp_str ;
               output = std::system(commande.c_str());
           }   
+          else if(mp.type() == "TestAllItem"  ){
+              commande = "../TestPlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " + temp_str ;
+              output = std::system(commande.c_str());
+          }   
           else if(mp.type() == "CorrelationItem" or mp.type() == "File" or mp.type() == "Img" or mp.type() == "ServerAssistedVisualization" ){
               commande = "../CorreliPlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " + temp_str ;
               output = std::system(commande.c_str());
@@ -93,8 +97,8 @@ temp_str ;
           }
           
           qDebug() << "----------------- output : " << output;
-          if(output){
-              mp[ "_computation_mode" ]   = false;
+//           if(output){
+//               mp[ "_computation_mode" ]   = false;
               mp[ "_ready_state" ]        = false;
               mp[ "_computation_state" ]  = false;
               mp[ "_pending_state" ]      = false;
@@ -102,7 +106,7 @@ temp_str ;
               mp[ "_finish_state" ]       = false;
               mp[ "_stop_state" ]         = true;
               mp.flush();
-          }
+//           }
           
           return output;
       }; 
@@ -138,12 +142,12 @@ temp_str ;
               
       void launch(){ 
           qDebug() << "###############   launch tool ###############" ;
-          mp[ "_ready_state" ]        = false;
-          mp[ "_computation_state" ]  = true;
-          mp[ "_pending_state" ]      = false;
+//           mp[ "_ready_state" ]        = false;
+//           mp[ "_computation_state" ]  = true;
+//           mp[ "_pending_state" ]      = false;
           mp[ "_processing_state" ]   = true;
-          mp[ "_finish_state" ]       = false;
-          mp[ "_stop_state" ]         = false;
+//           mp[ "_finish_state" ]       = false;
+//           mp[ "_stop_state" ]         = false;
           mp.flush();
           TicToc tic;
           tic.start();
