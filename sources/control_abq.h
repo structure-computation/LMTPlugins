@@ -17,165 +17,97 @@
 #include "FieldSet.h"
 #include "commandes_generales.h"
 
+
 // Writes 2D (of extruded 3D) input file for Abaqus, based on a Vec(LMT::Mesh)
 void Write2DINP (Vec<TM> &m, std::string root_dir, Vec<double> constrained_nodes, double pix2m, Vec < Vec < std::string > > Prop_Mat, double thickness){
     std::string nom_fic = ( root_dir + ".inp" );
     for (int z = 0; z <1; ++z) { // fausse boucle pour écrire l'inp
         
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////
-        std::string thelaw;
-        double elastic_modulus, poisson_ratio, rapport, sigma_0, n, nparam, friction_angle , flowstress_ratio , dilation_angle, eps_0, time_order, pl_multiplier, eq_stress_order;
-        int n_el;
-	
+        int nparam;
+        
+        std::string thelaw = find_str_in_propmat("thelaw",Prop_Mat);
         std::string computation_type = Prop_Mat[Prop_Mat.size()-1][0]; 
-        std::string n_el_str = Prop_Mat[Prop_Mat.size()-1][1];
-        std::istringstream iss(n_el_str);
-        iss >> n_el;
-		
-        for (int ii=0; ii< Prop_Mat.size(); ii++){
-            if (Prop_Mat[ii][0] == "thelaw"){
-                std::string texte = Prop_Mat[ii][1];
-                std::istringstream iss(texte);
-                iss >> thelaw;
-            }
-            else if (Prop_Mat[ii][0] == "Young"){
-                std::string texte = Prop_Mat[ii][1];
-                std::istringstream iss(texte);
-                iss >> elastic_modulus;
-            }
-            else if (Prop_Mat[ii][0] == "Poisson"){
-                std::string texte = Prop_Mat[ii][1];
-                std::istringstream iss(texte);
-                iss >> poisson_ratio;     
-            }
-            else if (Prop_Mat[ii][0] == "rapport"){
-                std::string texte = Prop_Mat[ii][1];
-                std::istringstream iss(texte);
-                iss >> rapport;   
-            }
-            else if (Prop_Mat[ii][0] == "sigma_0"){
-                std::string texte = Prop_Mat[ii][1];
-                std::istringstream iss(texte);
-                iss >> sigma_0;     
-            }
-            else if (Prop_Mat[ii][0] == "n"){
-                std::string texte = Prop_Mat[ii][1];
-                std::istringstream iss(texte);
-                iss >> n;      
-            }
-            else if (Prop_Mat[ii][0] == "eps_0"){
-                std::string texte = Prop_Mat[ii][1];
-                std::istringstream iss(texte);
-                iss >> eps_0;      
-            }
-            else if (Prop_Mat[ii][0] == "friction_angle"){
-                std::string texte = Prop_Mat[ii][1];
-                std::istringstream iss(texte);
-                iss >> friction_angle;      
-            }
-            else if (Prop_Mat[ii][0] == "flowstress_ratio"){
-                std::string texte = Prop_Mat[ii][1];
-                std::istringstream iss(texte);
-                iss >> flowstress_ratio;      
-            }
-            else if (Prop_Mat[ii][0] == "dilation_angle"){
-                std::string texte = Prop_Mat[ii][1];
-                std::istringstream iss(texte);
-                iss >> dilation_angle;      
-            }
-            else if (Prop_Mat[ii][0] == "pl_multiplier"){
-                std::string texte = Prop_Mat[ii][1];
-                std::istringstream iss(texte);
-                iss >> pl_multiplier;      
-            }
-            else if (Prop_Mat[ii][0] == "eq_stress_order"){
-                std::string texte = Prop_Mat[ii][1];
-                std::istringstream iss(texte);
-                iss >> eq_stress_order;      
-            }
-            else if (Prop_Mat[ii][0] == "time_order"){
-                std::string texte = Prop_Mat[ii][1];
-                std::istringstream iss(texte);
-                iss >> time_order;      
-            }
-        }
+        int n_el = find_double_in_propmat(computation_type,Prop_Mat);
         
         if (exists(nom_fic)) remove(nom_fic.c_str());
         int vide = system(("touch " + nom_fic).c_str());
         std::ofstream inp( nom_fic.c_str() , std::ios::app);
-        Vec<std::string> eps; eps << "0.";
-        int neps = 50;
-        double maxeps=0.5;
-        if (thelaw == "Equation"){
-            for (int numeps = 1; numeps<neps; numeps++){
-                eps << LMT::to_string(numeps*(maxeps/neps));
+        
+        if ((thelaw == "Equation") or (thelaw == "UMAT_Lem_diccit")){
+            Vec<std::string> eps; eps << "0.";
+            int neps = 50;
+            double maxeps=0.5;
+            if (thelaw == "Equation"){
+                for (int numeps = 1; numeps<neps; numeps++){
+                    eps << LMT::to_string(numeps*(maxeps/neps));
+                }
+                inp << "*Parameter\n";
+                std::istringstream iss(Prop_Mat[3][1]);
+                iss >> nparam;
+                for (int npa=0; npa<nparam; npa++){
+                    inp << Prop_Mat[2+2+nparam+npa][1] << "=" << Prop_Mat[2+2+npa][1] << "\n";
+                }
+                for (int numeps = 0; numeps<neps; numeps++){
+                    inp << "eps" << numeps << "=" << eps[numeps] << "\n";
+                }
+                for (int numeps = 0; numeps<neps; numeps++){
+                    //inp << "sig" << numeps << "=" << Prop_Mat[2+2+nparam][1] << "*(" << Prop_Mat[2+2+nparam+1][1] << "+eps" << numeps << ")**" << Prop_Mat[2+2+nparam+2][1] << "\n"; // SWIFT
+                    //inp << "sig" << numeps << "=" << Prop_Mat[2+2+nparam][1] << "+" << Prop_Mat[2+2+nparam+1][1] << "*eps" << numeps << "**" << Prop_Mat[2+2+nparam+2][1] << "\n"; // POWER LAW
+                    std::string eq = Prop_Mat[Prop_Mat.size()-2][1]; 
+                    std::string subs = "varsigma";
+                    Vec<std::size_t> fs = find_str_in_str(eq, subs);
+                    std::string sube = "varepsilonp";
+                    Vec<std::size_t> fe = find_str_in_str(eq, sube);
+                    inp << eq.substr(0,fs[0]);
+                    inp << "sig" << numeps; 
+                    inp << eq.substr(fs[0]+subs.size(),fe[0]-(fs[0]+subs.size()));
+                    inp << "eps" << numeps;
+                    inp << eq.substr(fe[0]+sube.size(),eq.size()) << "\n";
+                }
+              
             }
-          
-            inp << "*Parameter\n";
-            std::istringstream iss(Prop_Mat[3][1]);
-            iss >> nparam;
-            for (int npa=0; npa<nparam; npa++){
-                inp << Prop_Mat[2+2+nparam+npa][1] << "=" << Prop_Mat[2+2+npa][1] << "\n";
+            else if (thelaw == "UMAT_Lem_diccit"){  
+                for (int numeps = 1; numeps<neps; numeps++){
+                    eps << LMT::to_string(numeps*(maxeps/neps));
+                }
+                inp << "*Parameter\n";
+                inp << "E=" << Prop_Mat[3][1] << "\n";
+                inp << "Nu=" << Prop_Mat[4][1] << "\n";
+                inp << "B=" << Prop_Mat[5][1] << "\n";
+                inp << "C=" << Prop_Mat[6][1] << "\n";
+                inp << "n=" << Prop_Mat[7][1] << "\n";
+                inp << "s=" << Prop_Mat[8][1] << "\n";
+                inp << "S=" << Prop_Mat[9][1] << "\n";
+                inp << "pth=" << Prop_Mat[10][1] << "\n";
+                inp << "Dcr=" << Prop_Mat[11][1] << "\n";
+                inp << "mDam=" << Prop_Mat[12][1] << "\n";
+                inp << "eDam=" << Prop_Mat[13][1] << "\n";
+              
+                for (int numeps = 0; numeps<neps; numeps++){
+                    inp << "eps" << numeps << "=" << eps[numeps] << "\n";
+                }
+                for (int numeps = 0; numeps<neps; numeps++){
+                    inp << "sig" << numeps << "=B*(C+eps" << numeps << ")**n\n"; // SWIFT
+                }
+                inp << "G=E/(2.*(1+Nu))\n";
+                inp << "Hourg=0.005*G\n";
             }
-            for (int numeps = 0; numeps<neps; numeps++){
-                inp << "eps" << numeps << "=" << eps[numeps] << "\n";
-            }
-            for (int numeps = 0; numeps<neps; numeps++){
-                //inp << "sig" << numeps << "=" << Prop_Mat[2+2+nparam][1] << "*(" << Prop_Mat[2+2+nparam+1][1] << "+eps" << numeps << ")**" << Prop_Mat[2+2+nparam+2][1] << "\n"; // SWIFT
-                //inp << "sig" << numeps << "=" << Prop_Mat[2+2+nparam][1] << "+" << Prop_Mat[2+2+nparam+1][1] << "*eps" << numeps << "**" << Prop_Mat[2+2+nparam+2][1] << "\n"; // POWER LAW
-                std::string eq = Prop_Mat[Prop_Mat.size()-2][1]; 
-                std::string subs = "varsigma";
-                Vec<std::size_t> fs = find_str_in_str(eq, subs);
-                std::string sube = "varepsilonp";
-                Vec<std::size_t> fe = find_str_in_str(eq, sube);
-                inp << eq.substr(0,fs[0]);
-                inp << "sig" << numeps; 
-                inp << eq.substr(fs[0]+subs.size(),fe[0]-(fs[0]+subs.size()));
-                inp << "eps" << numeps;
-                inp << eq.substr(fe[0]+sube.size(),eq.size()) << "\n";
-            }
-          
-        }
-        else if (thelaw == "UMAT_Lem_diccit"){  
-            for (int numeps = 1; numeps<neps; numeps++){
-                eps << LMT::to_string(numeps*(maxeps/neps));
-            }
-            inp << "*Parameter\n";
-            inp << "E=" << Prop_Mat[3][1] << "\n";
-            inp << "Nu=" << Prop_Mat[4][1] << "\n";
-            inp << "B=" << Prop_Mat[5][1] << "\n";
-            inp << "C=" << Prop_Mat[6][1] << "\n";
-            inp << "n=" << Prop_Mat[7][1] << "\n";
-            inp << "s=" << Prop_Mat[8][1] << "\n";
-            inp << "S=" << Prop_Mat[9][1] << "\n";
-            inp << "pth=" << Prop_Mat[10][1] << "\n";
-            inp << "Dcr=" << Prop_Mat[11][1] << "\n";
-            inp << "mDam=" << Prop_Mat[12][1] << "\n";
-            inp << "eDam=" << Prop_Mat[13][1] << "\n";
-          
-            for (int numeps = 0; numeps<neps; numeps++){
-            inp << "eps" << numeps << "=" << eps[numeps] << "\n";
-            }
-            for (int numeps = 0; numeps<neps; numeps++){
-            inp << "sig" << numeps << "=B*(C+eps" << numeps << ")**n\n"; // SWIFT
-            }
-            inp << "G=E/(2.*(1+Nu))\n";
-            inp << "Hourg=0.005*G\n";
         }
         
-            inp << "*Heading\n";
-            inp << "** Job name: test_florent Model name: Model-1\n";
-            inp << "*Preprint, echo=NO, model=NO, history=NO, contact=NO\n";
-            inp << "**\n";
-            inp << "** PARTS\n";
-            inp << "**\n";
-            inp << "*Part, name=Part\n";
-            inp << "*Node\n";
-            if (computation_type == "3Dex"){
+        inp << "*Heading\n";
+        inp << "** Job name: test_florent Model name: Model-1\n";
+        inp << "*Preprint, echo=NO, model=NO, history=NO, contact=NO\n";
+        inp << "**\n";
+        inp << "** PARTS\n";
+        inp << "**\n";
+        inp << "*Part, name=Part\n";
+        inp << "*Node\n";
+        
+        if (computation_type == "3Dex"){
             for (int layer_number =0; layer_number < (n_el+1); layer_number++){
-            for (int i = 0; i < m[0].node_list.size() ; ++i){//liste des noeuds avec leur position dans l'espace
-                inp << "     " << layer_number*m[0].node_list.size() + i + 1 << ", " << m[0].node_list[i].pos[ 0 ]*pix2m << ", " << m[0].node_list[i].pos[ 1 ]*pix2m << ", " << layer_number*(thickness/n_el)<< "\n";                 
-            }
+                for (int i = 0; i < m[0].node_list.size() ; ++i){//liste des noeuds avec leur position dans l'espace
+                    inp << "     " << layer_number*m[0].node_list.size() + i + 1 << ", " << m[0].node_list[i].pos[ 0 ]*pix2m << ", " << m[0].node_list[i].pos[ 1 ]*pix2m << ", " << layer_number*(thickness/n_el)<< "\n";                 
+                }
             }	
         }
         else{
@@ -183,22 +115,21 @@ void Write2DINP (Vec<TM> &m, std::string root_dir, Vec<double> constrained_nodes
             inp << "     " << i + 1 << ", " << m[0].node_list[i].pos[ 0 ]*pix2m << ", " << m[0].node_list[i].pos[ 1 ]*pix2m << "\n";
             }
         }
-            inp << "*Element, type=";
-            //////////////////////////////////////////////////////////////////////////////////////////////////////////
+        
+        inp << "*Element, type=";
+        
+        if (m[0].elem_list[0]->nb_nodes_virtual() == 3){
+            if (computation_type == "2DPS") inp << "CPS3";
+            else if (computation_type == "2DPE") inp << "CPE3";
+            else if (computation_type == "3Dex") inp << "C3D6";
+        }
+        else if (m[0].elem_list[0]->nb_nodes_virtual() == 4){
+            if (computation_type == "2DPS") inp << "CPS4";
+            else if (computation_type == "2DPE") inp << "CPE4";
+            else if (computation_type == "3Dex") inp << "C4D8";
+        }
 
-            //////////////////////////////////////////////////////////////////////////////////////////////////////////
-            if (m[0].elem_list[0]->nb_nodes_virtual() == 3){
-                if (computation_type == "2DPS") inp << "CPS3";
-                else if (computation_type == "2DPE") inp << "CPE3";
-                else if (computation_type == "3Dex") inp << "C3D6";
-            }
-            else if (m[0].elem_list[0]->nb_nodes_virtual() == 4){
-                if (computation_type == "2DPS") inp << "CPS4";
-                else if (computation_type == "2DPE") inp << "CPE4";
-                else if (computation_type == "3Dex") inp << "C4D8";
-            }
-
-            inp << "\n";
+        inp << "\n";
         if (computation_type == "3Dex"){
             for (int layer_number =0; layer_number < (n_el); layer_number++){
               for (int i = 0; i < m[0].elem_list.size(); ++i){//liste des noeuds avec leur position dans l'espace
@@ -225,10 +156,13 @@ void Write2DINP (Vec<TM> &m, std::string root_dir, Vec<double> constrained_nodes
         else
             inp << " 1, " << m[0].node_list.size() << ", 1\n";
             inp << "*Elset, elset=_PickedSet5, internal, generate\n";
-        if (computation_type == "3Dex") 
+        if (computation_type == "3Dex") {
             inp << " 1, " << n_el*m[0].elem_list.size() << ", 1\n";
-        else
+        }
+        else{
             inp << " 1, " << m[0].elem_list.size() << ", 1\n";
+        }
+        
             inp << "*Orientation, name=Ori-1\n";
             inp << "          1.,           0.,           0.,           0.,           1.,           0.\n";
             inp << "1, 0.\n";
@@ -265,277 +199,278 @@ void Write2DINP (Vec<TM> &m, std::string root_dir, Vec<double> constrained_nodes
             inp << "** MATERIALS\n";
             inp << "** \n";
             
-            if (thelaw == "Elas_iso"){
+            if (thelaw == "Isotropic elastic"){
                 inp << "*Material, name=MATERIAL-1\n";
                 inp << "*Elastic\n";
-                inp << "" << elastic_modulus << ", " << poisson_ratio << "\n";
+                inp << find_double_in_propmat("Young",Prop_Mat) << ", " ;
+                inp << find_double_in_propmat("Poisson",Prop_Mat) << "\n";
             }
-            else if (thelaw == "Elas_ortho"){
-                inp << "*Material, name=MATERIAL-1\n";
-                inp << "*Elastic, TYPE=ENGINEERING CONSTANTS\n";
-                inp << "" << elastic_modulus << ", " << elastic_modulus*rapport << ", " << elastic_modulus*rapport << ", " << poisson_ratio << ", " << poisson_ratio << ", " << poisson_ratio << ", " << elastic_modulus/(2 + 2* poisson_ratio) << ", " <<  elastic_modulus*rapport/(2 + 2* poisson_ratio) << "\n";
-                inp << elastic_modulus*rapport/(2 + 2*poisson_ratio) << ",\n";
-            }
-            else if (thelaw == "RO"){
+            else if (thelaw == "Ramberg-Osgood"){
                 inp << "*Material, name=MATERIAL-1\n";
                 inp << "*Deformation Plasticity\n";
                 double ys = 0.02; // Par défaut
-                inp << "" << elastic_modulus << ", " << poisson_ratio << ", " << sigma_0 << ", " << n << ", " << ys << "\n";
+                inp << find_double_in_propmat("Young",Prop_Mat) << ", " ;
+                inp << find_double_in_propmat("Poisson",Prop_Mat) << ", " ;
+                inp << find_double_in_propmat("sigma_0",Prop_Mat) << ", " ;
+                inp << find_double_in_propmat("n",Prop_Mat) << ", " << ys << "\n";
             }
-            else if (thelaw == "Drucker_Prager_Hardening"){
+            else if (thelaw == "Drucker-Prager Hardening"){
                 inp << "*Material, name=MATERIAL-1\n";
                 inp << "*Elastic\n";
-                inp << "" << elastic_modulus << ", " << poisson_ratio << "\n";
+                inp << find_double_in_propmat("Young",Prop_Mat) << ", " ;
+                inp << find_double_in_propmat("Poisson",Prop_Mat) << "\n";
                 inp << "*Drucker Prager\n";
-                inp << "" << friction_angle << ", " << flowstress_ratio << ", " << dilation_angle << "\n";
+                inp << find_double_in_propmat("friction_angle",Prop_Mat) << ", " ;
+                inp << find_double_in_propmat("flowstress_ratio",Prop_Mat) << ", " ;
+                inp << find_double_in_propmat("dilation_angle",Prop_Mat) << "\n";
                 inp << "*Drucker Prager Hardening\n";
-                inp << "" << sigma_0 << ", " << eps_0 << "\n";
+                inp << find_double_in_propmat("sigma_0",Prop_Mat) << ", " ;
+                inp << find_double_in_propmat("eps_0",Prop_Mat) << "\n";
             }
-            else if (thelaw == "Creep_Time_Hardening"){
+            else if (thelaw == "Creep, time Hardening"){
                 inp << "*Material, name=MATERIAL-1\n";
                 inp << "*Elastic\n";
-                inp << "" << elastic_modulus << ", " << poisson_ratio << "\n";
+                inp << find_double_in_propmat("Young",Prop_Mat) << ", " ;
+                inp << find_double_in_propmat("Poisson",Prop_Mat) << "\n";
                 inp << "*Creep, law=TIME\n";
-                inp << "" << pl_multiplier << ", " << eq_stress_order << ", " << time_order << "\n";
+                inp << find_double_in_propmat("pl_multiplier",Prop_Mat) << ", " ;
+                inp << find_double_in_propmat("eq_stress_order",Prop_Mat) << ", " ;
+                inp << find_double_in_propmat("time_order",Prop_Mat) << "\n";
             }
             else if (thelaw == "UMAT"){
-                inp << "*Material, name=";
-                inp << Prop_Mat[0][1];
-                inp << "\n";
-                inp << "*Depvar\n";
-            std::istringstream iss(Prop_Mat[1][1]);
-            iss >> nparam;
-                inp << "    " << Prop_Mat[1+1+nparam][1] << ",\n";
-                inp << "*User Material, constants=";
-                inp << nparam;
-                inp << "\n";
-                int npl=0;
-                for (int np=1; np<nparam; np++){
-                  npl++;
-                  if (npl>7){
-                      inp << "\n";
-                      npl=1;
-                  }
-                  inp << Prop_Mat[1+np][1] << ", ";
-                }
-                inp << Prop_Mat[1+nparam][1] << "\n";
+//                 inp << "*Material, name=";
+//                 inp << Prop_Mat[0][1];
+//                 inp << "\n";
+//                 inp << "*Depvar\n";
+//                 std::istringstream iss(Prop_Mat[1][1]);
+//                 iss >> nparam;
+//                 inp << "    " << Prop_Mat[1+1+nparam][1] << ",\n";
+//                 inp << "*User Material, constants=";
+//                 inp << nparam;
+//                 inp << "\n";
+//                 int npl=0;
+//                 for (int np=1; np<nparam; np++){
+//                   npl++;
+//                   if (npl>7){
+//                       inp << "\n";
+//                       npl=1;
+//                   }
+//                   inp << Prop_Mat[1+np][1] << ", ";
+//                 }
+//                 inp << Prop_Mat[1+nparam][1] << "\n";
                 
             }
             else if (thelaw == "Equation"){
-                inp << "*Material, name=MATERIAL-1\n";
-                inp << "*Elastic\n";
-                inp << "" << elastic_modulus << ", " << poisson_ratio << "\n";
-                inp << "*Plastic\n";
-                for (int numeps = 0; numeps<neps; numeps++){
-                    inp << "<sig" << numeps << ">,  " << eps[numeps] << "\n";
-                }
+//                 inp << "*Material, name=MATERIAL-1\n";
+//                 inp << "*Elastic\n";
+//                 inp << elastic_modulus << ", " << poisson_ratio << "\n";
+//                 inp << "*Plastic\n";
+//                 for (int numeps = 0; numeps<neps; numeps++){
+//                     inp << "<sig" << numeps << ">,  " << eps[numeps] << "\n";
+//                 }
             }
             else if (thelaw == "UMAT_Lem_diccit"){
-                inp << "*Material, name=";
-                inp << Prop_Mat[0][1];
-                inp << "\n";
-                inp << "*Depvar\n";
-            std::istringstream iss(Prop_Mat[1][1]);
-            iss >> nparam;
-                inp << "    " << Prop_Mat[1+1+nparam][1] << ",\n";
-                inp << "    	 1,EpsE11\n";
-                inp << "    	 2,EpsE22\n";
-                inp << "    	 3,EpsE33\n";
-                inp << "    	 4,EpsE12\n";
-                inp << "    	 5,EpsE13\n";
-                inp << "    	 6,EpsE23\n";
-                inp << "    	 7,EpsP11\n";
-                inp << "    	 8,EpsP22\n";
-                inp << "    	 9,EpsP33\n";
-                inp << "    	 10,EpsP12\n";
-                inp << "    	 11,EpsP13\n";
-                inp << "    	 12,EpsP23\n";
-                inp << "    	 13,p\n";
-                inp << "    	 14,r\n";
-                inp << "    	 15,gR\n";
-                inp << "    	 16,D \n";
-                inp << "    	 17,EpsCr\n";
-                inp << "    	 18,Tx\n";
-                inp << "*DENSITY\n";
-                inp << "2.7e-9\n";
-                inp << "*User Material, constants=66\n";
-                inp << "<E>,        <Nu>,     <sig0>,     <eps0>,  <sig1>,     <eps1>,    <sig2>,     <eps2>, \n";
-                inp << "<sig3>,    <eps3>, <sig4>,    <eps4>,   <sig5>,     <eps5>,    <sig6>,     <eps6>,   \n";
-                inp << "<sig7>,    <eps7>,  <sig8>,    <eps8>,   <sig9>,     <eps9>,    <sig10>,     <eps10>,   \n";
-                inp << "<sig11>,    <eps11>, <sig12>,    <eps12>,   <sig13>,     <eps13>,    <sig14>,     <eps14>,   \n";
-                inp << "<sig15>,    <eps15>, <sig16>,    <eps16>,   <sig17>,     <eps17>,    <sig18>,     <eps18>,   \n";
-                inp << "<sig19>,    <eps19>, <sig20>,    <eps20>,   <sig21>,     <eps21>,    <sig22>,     <eps22>,   \n";
-                inp << "<sig23>,    <eps23>, <sig24>,    <eps24>,   <sig25>,     <eps25>,    <sig26>,     <eps26>,   \n";
-                inp << "<sig27>,    <eps27>, <sig28>,    <eps28>,   <sig29>,     <eps29>,    <pth>,       <s>,       \n";
-                inp << "<S>,        <Dcr>, <mDam>,     <eDam>\n";
+//                 inp << "*Material, name=";
+//                 inp << Prop_Mat[0][1];
+//                 inp << "\n";
+//                 inp << "*Depvar\n";
+//             std::istringstream iss(Prop_Mat[1][1]);
+//             iss >> nparam;
+//                 inp << "    " << Prop_Mat[1+1+nparam][1] << ",\n";
+//                 inp << "    	 1,EpsE11\n";
+//                 inp << "    	 2,EpsE22\n";
+//                 inp << "    	 3,EpsE33\n";
+//                 inp << "    	 4,EpsE12\n";
+//                 inp << "    	 5,EpsE13\n";
+//                 inp << "    	 6,EpsE23\n";
+//                 inp << "    	 7,EpsP11\n";
+//                 inp << "    	 8,EpsP22\n";
+//                 inp << "    	 9,EpsP33\n";
+//                 inp << "    	 10,EpsP12\n";
+//                 inp << "    	 11,EpsP13\n";
+//                 inp << "    	 12,EpsP23\n";
+//                 inp << "    	 13,p\n";
+//                 inp << "    	 14,r\n";
+//                 inp << "    	 15,gR\n";
+//                 inp << "    	 16,D \n";
+//                 inp << "    	 17,EpsCr\n";
+//                 inp << "    	 18,Tx\n";
+//                 inp << "*DENSITY\n";
+//                 inp << "2.7e-9\n";
+//                 inp << "*User Material, constants=66\n";
+//                 inp << "<E>,        <Nu>,     <sig0>,     <eps0>,  <sig1>,     <eps1>,    <sig2>,     <eps2>, \n";
+//                 inp << "<sig3>,    <eps3>, <sig4>,    <eps4>,   <sig5>,     <eps5>,    <sig6>,     <eps6>,   \n";
+//                 inp << "<sig7>,    <eps7>,  <sig8>,    <eps8>,   <sig9>,     <eps9>,    <sig10>,     <eps10>,   \n";
+//                 inp << "<sig11>,    <eps11>, <sig12>,    <eps12>,   <sig13>,     <eps13>,    <sig14>,     <eps14>,   \n";
+//                 inp << "<sig15>,    <eps15>, <sig16>,    <eps16>,   <sig17>,     <eps17>,    <sig18>,     <eps18>,   \n";
+//                 inp << "<sig19>,    <eps19>, <sig20>,    <eps20>,   <sig21>,     <eps21>,    <sig22>,     <eps22>,   \n";
+//                 inp << "<sig23>,    <eps23>, <sig24>,    <eps24>,   <sig25>,     <eps25>,    <sig26>,     <eps26>,   \n";
+//                 inp << "<sig27>,    <eps27>, <sig28>,    <eps28>,   <sig29>,     <eps29>,    <pth>,       <s>,       \n";
+//                 inp << "<S>,        <Dcr>, <mDam>,     <eDam>\n";
           
         }
-        else if (thelaw == "dpc"){/*
+            else if (thelaw == "dpc"){
             
-            std::string nom_fic_param_dpc = "dpc_param_tmp.txt";
-            double eps_crit = load_param(nom_fic_param_dpc,"eps_crit");
-            double min_eps = load_param(nom_fic_param_dpc,"min_eps");
-            double mid_min_eps = load_param(nom_fic_param_dpc,"mid_min_eps");
-            double mid_max_eps = load_param(nom_fic_param_dpc,"mid_max_eps");
-            double max_eps = load_param(nom_fic_param_dpc,"max_eps");
-            double a2 = load_param(nom_fic_param_dpc,"a2");
-            double b2 = load_param(nom_fic_param_dpc,"b2");
-            double n2 = load_param(nom_fic_param_dpc,"n2");
-            double tan_beta = load_param(nom_fic_param_dpc,"tan_beta");
-            double da_a = load_param(nom_fic_param_dpc,"da_a");
-            double da_b = load_param(nom_fic_param_dpc,"da_b");
-            double da_c = load_param(nom_fic_param_dpc,"da_c");
-            double r_a_min = load_param(nom_fic_param_dpc,"r_a_min");
-            double r_a_max = load_param(nom_fic_param_dpc,"r_a_max");
-            double k_p = load_param(nom_fic_param_dpc,"k_p");
-            double k_crit = load_param(nom_fic_param_dpc,"k_crit");
-            double a_k = load_param(nom_fic_param_dpc,"a_k");
-            double g_p = load_param(nom_fic_param_dpc,"g_p");
-            double g_crit = load_param(nom_fic_param_dpc,"g_crit");
-            double a_g = load_param(nom_fic_param_dpc,"a_g");
+//             std::string nom_fic_param_dpc = "dpc_param_tmp.txt";
+//             double eps_crit = load_param(nom_fic_param_dpc,"eps_crit");
+//             double min_eps = load_param(nom_fic_param_dpc,"min_eps");
+//             double mid_min_eps = load_param(nom_fic_param_dpc,"mid_min_eps");
+//             double mid_max_eps = load_param(nom_fic_param_dpc,"mid_max_eps");
+//             double max_eps = load_param(nom_fic_param_dpc,"max_eps");
+//             double a2 = load_param(nom_fic_param_dpc,"a2");
+//             double b2 = load_param(nom_fic_param_dpc,"b2");
+//             double n2 = load_param(nom_fic_param_dpc,"n2");
+//             double tan_beta = load_param(nom_fic_param_dpc,"tan_beta");
+//             double da_a = load_param(nom_fic_param_dpc,"da_a");
+//             double da_b = load_param(nom_fic_param_dpc,"da_b");
+//             double da_c = load_param(nom_fic_param_dpc,"da_c");
+//             double r_a_min = load_param(nom_fic_param_dpc,"r_a_min");
+//             double r_a_max = load_param(nom_fic_param_dpc,"r_a_max");
+//             double k_p = load_param(nom_fic_param_dpc,"k_p");
+//             double k_crit = load_param(nom_fic_param_dpc,"k_crit");
+//             double a_k = load_param(nom_fic_param_dpc,"a_k");
+//             double g_p = load_param(nom_fic_param_dpc,"g_p");
+//             double g_crit = load_param(nom_fic_param_dpc,"g_crit");
+//             double a_g = load_param(nom_fic_param_dpc,"a_g");
+//             
+//             Vec<double> eps_vol_plas, p_ab, d_ab, tan_beta_ab, r_ab, k_ab, g_ab, e_ab, nu_ab  ;
+//             int npt1 = 10;
+//             int npt2 = 60;
+//             for (int pt=0; pt<npt1; pt++){
+//                 eps_vol_plas << min_eps + pt * (eps_crit-mid_min_eps-min_eps)/(npt1-1);
+//         }
+//         for (int pt=0; pt<npt2; pt++){
+//             eps_vol_plas << eps_crit-mid_max_eps + pt * (mid_max_eps-max_eps)/(npt2-1);
+//         }
+//         
+//         for (int pt=0; pt<eps_vol_plas.size(); pt++){
+//             p_ab << a2 * pow( log( b2 / (eps_crit-eps_vol_plas[pt]) ) , n2) ;
+//             d_ab << da_a * exp( -da_b * (eps_crit-eps_vol_plas[pt]) ) + da_c ;
+//             if (pt == 0) d_ab[pt] = 0.2596;
+//             else if (pt == 1) d_ab[pt] = 0.3718;
+//             else if (pt == 2) d_ab[pt] = 0.5325;
+//             tan_beta_ab << tan_beta ;
+//             if (pt < 20)
+//                 r_ab << r_a_min;
+//             else
+//                 r_ab << r_a_max;
+//             k_ab << k_p + (k_crit - k_p) * exp ( -a_k * (eps_crit - eps_vol_plas[pt]) ) ;
+//             g_ab << g_p + (g_crit - g_p) * exp ( -a_g * (eps_crit - eps_vol_plas[pt]) ) ;
+//             e_ab << ( 9 * k_ab[pt] * g_ab[pt] ) / ( 3 * k_ab[pt] + g_ab[pt] ) ;
+//             double nu_tmp = ( 3 * k_ab[pt] - 2 * g_ab[pt] ) / ( 6 * k_ab[pt] + 2 * g_ab[pt] ) ;
+//             if (pt>0) {
+//                 if (nu_tmp > nu_ab[pt-1])
+//                     nu_ab << nu_tmp;
+//                 else
+//                     nu_ab << nu_ab[pt-1];
+//         }
+//         else
+//             nu_ab << nu_tmp;
+//         }
+//         eps_vol_plas[0]=0;
+//         
+//         inp << "*Material, name=MATERIAL-cg\n";
+//         inp << "*Cap Plasticity, dependencies=1\n";
+//         for (int pt =0; pt < eps_vol_plas.size(); pt++){
+//             inp << d_ab[pt] << ", " << tan_beta_ab[pt] << ", " << r_ab[pt] << ", 0.0, 0.0, 1.0, , " << eps_vol_plas[pt]  << "\n";
+//         }
+//         inp << "*Cap Hardening, dependencies=1\n";
+//         for (int pt =0; pt < eps_vol_plas.size(); pt++){
+//             inp << p_ab[pt] << ", " << eps_vol_plas[pt]  << "\n";
+//         }
+//         inp << "*Depvar\n";
+//         inp << "2,\n";
+//         inp << "*Elastic, dependencies=1\n";
+//         for (int pt =0; pt < eps_vol_plas.size(); pt++){
+//             inp << e_ab[pt] << ", " << nu_ab[pt] << ", " << eps_vol_plas[pt]  << "\n";
+//         }
+//         inp << "*User Defined Field\n";
+        
+        }
+            else if (thelaw == "Elas_ortho"){
+//                 inp << "*Material, name=MATERIAL-1\n";
+//                 inp << "*Elastic, TYPE=ENGINEERING CONSTANTS\n";
+//                 inp << find_double_in_propmat("Young",Prop_Mat) << ", " << elastic_modulus*rapport << ", " << elastic_modulus*rapport << ", " << poisson_ratio << ", " << poisson_ratio << ", " << poisson_ratio << ", " << elastic_modulus/(2 + 2* poisson_ratio) << ", " <<  elastic_modulus*rapport/(2 + 2* poisson_ratio) << "\n";
+//                 inp << elastic_modulus*rapport/(2 + 2*poisson_ratio) << ",\n";
+            }
             
-            Vec<double> eps_vol_plas, p_ab, d_ab, tan_beta_ab, r_ab, k_ab, g_ab, e_ab, nu_ab  ;
-            int npt1 = 10;
-            int npt2 = 60;
-            for (int pt=0; pt<npt1; pt++){
-                eps_vol_plas << min_eps + pt * (eps_crit-mid_min_eps-min_eps)/(npt1-1);
-        }
-        for (int pt=0; pt<npt2; pt++){
-            eps_vol_plas << eps_crit-mid_max_eps + pt * (mid_max_eps-max_eps)/(npt2-1);
-        }
-        
-        for (int pt=0; pt<eps_vol_plas.size(); pt++){
-            p_ab << a2 * pow( log( b2 / (eps_crit-eps_vol_plas[pt]) ) , n2) ;
-            d_ab << da_a * exp( -da_b * (eps_crit-eps_vol_plas[pt]) ) + da_c ;
-            if (pt == 0) d_ab[pt] = 0.2596;
-            else if (pt == 1) d_ab[pt] = 0.3718;
-            else if (pt == 2) d_ab[pt] = 0.5325;
-            tan_beta_ab << tan_beta ;
-            if (pt < 20)
-                r_ab << r_a_min;
-            else
-                r_ab << r_a_max;
-            k_ab << k_p + (k_crit - k_p) * exp ( -a_k * (eps_crit - eps_vol_plas[pt]) ) ;
-            g_ab << g_p + (g_crit - g_p) * exp ( -a_g * (eps_crit - eps_vol_plas[pt]) ) ;
-            e_ab << ( 9 * k_ab[pt] * g_ab[pt] ) / ( 3 * k_ab[pt] + g_ab[pt] ) ;
-            double nu_tmp = ( 3 * k_ab[pt] - 2 * g_ab[pt] ) / ( 6 * k_ab[pt] + 2 * g_ab[pt] ) ;
-            if (pt>0) {
-                if (nu_tmp > nu_ab[pt-1])
-                    nu_ab << nu_tmp;
-                else
-                    nu_ab << nu_ab[pt-1];
-        }
-        else
-            nu_ab << nu_tmp;
-        }
-        eps_vol_plas[0]=0;
-        
-        inp << "*Material, name=MATERIAL-cg\n";
-        inp << "*Cap Plasticity, dependencies=1\n";
-        for (int pt =0; pt < eps_vol_plas.size(); pt++){
-            inp << d_ab[pt] << ", " << tan_beta_ab[pt] << ", " << r_ab[pt] << ", 0.0, 0.0, 1.0, , " << eps_vol_plas[pt]  << "\n";
-        }
-        inp << "*Cap Hardening, dependencies=1\n";
-        for (int pt =0; pt < eps_vol_plas.size(); pt++){
-            inp << p_ab[pt] << ", " << eps_vol_plas[pt]  << "\n";
-        }
-        inp << "*Depvar\n";
-        inp << "2,\n";
-        inp << "*Elastic, dependencies=1\n";
-        for (int pt =0; pt < eps_vol_plas.size(); pt++){
-            inp << e_ab[pt] << ", " << nu_ab[pt] << ", " << eps_vol_plas[pt]  << "\n";
-        }
-        inp << "*User Defined Field\n";*/
-        
-        }
-        
         for (int i=0; i < m.size(); ++i  ){// steps
             inp << "** \n";
-            //inp << "** STEP: Step-" << i+1  << ", inc=11000\n";
             inp << "** STEP: Step-" << i+1  << "\n";
             inp << "** \n";
-	    
-//             inp << "*Step, NLGEOM, name=Step-" << i+1 << "\n";
-//             //inp << "*Step, name=Step-" << i+1 << "\n";
-//             inp << "*Static\n"; 
-// 	    inp << "0.01, 1., 0.0001, 0.1\n";
-// 	    //inp << "0.01, 1., 1e-05, 0.01\n";
-//             inp << "** \n";
-//             inp << "** BOUNDARY CONDITIONS\n";
-	    
-	    inp << "*Step, NLGEOM=YES, name=Step-" << i+1 << ", inc=1000000\n";
-        if (thelaw == "Creep_Time_Hardening"){
-            inp << "*Visco, CETOL=0.0001\n";
-        }
-        else{
-            inp << "*Static\n";
-        }
-        inp << "0.1, 1., 1e-07, 1.\n";
-        inp << "*CONTROLS, PARAMETERS=TIME INCREMENTATION\n";
-        inp << ", , , , , , , 10000, , ,\n";
-        inp << "0.5, , , , , , 2.5, \n";
-	    inp << "** \n";
-	    inp << "** BOUNDARY CONDITIONS\n";
-
-	    if (computation_type == "3Dex"){ 
-		int nbc=/*TM::dim*/2*i*constrained_nodes.size();
-		if (i>0){
-		    for (int j=0; j<constrained_nodes.size(); ++j ){// CL
-			for( int d = 0; d < /*TM::dim*/3; ++d ){//direction
-			    ++nbc;
-			    inp << "** Name: BC-" << nbc - /*TM::dim*/2*constrained_nodes.size() <<" Type: Displacement/Rotation\n";
-			    inp << "*Boundary, op=NEW\n";
-			}
-		    }
-		}
-		
-		for (int layer_number =0; layer_number < (n_el+1); layer_number++){
-		    for (int j=0; j<constrained_nodes.size(); ++j ){// CL
-			for( int d = 0; d < /*TM::dim*/2; ++d ){//direction
-			    ++nbc;
-			    inp << "** Name: BC-" << nbc - /*TM::dim*/2*constrained_nodes.size() <<" Type: Displacement/Rotation\n";
-			    inp << "*Boundary";
-			    if (i>0){
-				inp << ", op=NEW";
-			    }
-			    inp << "\n";
-			    inp << "N_1_" << layer_number*m[i].node_list.size() + constrained_nodes[j] + 1 << ", " << d+1 << ", " << d+1 << ", " << m[ i ].node_list[ constrained_nodes[ j ] ].dep[d]*pix2m << "\n";
-			}
-			++nbc;
-			inp << "** Name: BC-" << nbc - /*TM::dim*/2*constrained_nodes.size() <<" Type: Displacement/Rotation\n";
-			inp << "*Boundary";
-			if (i>0){
-			    inp << ", op=NEW";
-			}
-			inp << "\n";
-			inp << "N_1_" << layer_number*m[i].node_list.size() + constrained_nodes[j] + 1 << ", 3, 3, 0\n";
-		    }
-		}
-	    }
+            inp << "*Step, NLGEOM=YES, name=Step-" << i+1 << ", inc=1000000\n";
+            if (thelaw == "Creep_Time_Hardening"){
+                inp << "*Visco, CETOL=0.0001\n";
+            }
             else{
-		int nbc=/*TM::dim*/2*i*constrained_nodes.size();
-		if (i>0){
-		    for (int j=0; j<constrained_nodes.size(); ++j ){// CL
-			for( int d = 0; d < /*TM::dim*/2; ++d ){//direction
-			    ++nbc;
-			    inp << "** Name: BC-" << nbc - /*TM::dim*/2*constrained_nodes.size() <<" Type: Displacement/Rotation\n";
-			    inp << "*Boundary, op=NEW\n";
-			}
-		    }
-		}
-		for (int j=0; j<constrained_nodes.size(); ++j ){// CL
-		    for( int d = 0; d < /*TM::dim*/2; ++d ){//direction
-			++nbc;
-			inp << "** Name: BC-" << nbc - /*TM::dim*/2*constrained_nodes.size() <<" Type: Displacement/Rotation\n";
-			inp << "*Boundary";
-			if (i>0){
-			    inp << ", op=NEW";
-			}
-			inp << "\n";
-			inp << "N_1_" << constrained_nodes[j] + 1 << ", " << d+1 << ", " << d+1 << ", " << m[ i ].node_list[ constrained_nodes[ j ] ].dep[d]*pix2m << "\n";
-		    }
-		}
-	    }
+                inp << "*Static\n";
+            }
+            inp << "0.1, 1., 1e-07, 1.\n";
+            inp << "*CONTROLS, PARAMETERS=TIME INCREMENTATION\n";
+            inp << ", , , , , , , 10000, , ,\n";
+            inp << "0.5, , , , , , 2.5, \n";
+            inp << "** \n";
+            inp << "** BOUNDARY CONDITIONS\n";
+
+            if (computation_type == "3Dex"){ 
+            int nbc=/*TM::dim*/2*i*constrained_nodes.size();
+            if (i>0){
+                for (int j=0; j<constrained_nodes.size(); ++j ){// CL
+                    for( int d = 0; d < /*TM::dim*/3; ++d ){//direction
+                        ++nbc;
+                        inp << "** Name: BC-" << nbc - /*TM::dim*/2*constrained_nodes.size() <<" Type: Displacement/Rotation\n";
+                        inp << "*Boundary, op=NEW\n";
+                    }
+                }
+            }
+            
+            for (int layer_number =0; layer_number < (n_el+1); layer_number++){
+                for (int j=0; j<constrained_nodes.size(); ++j ){// CL
+                    for( int d = 0; d < /*TM::dim*/2; ++d ){//direction
+                        ++nbc;
+                        inp << "** Name: BC-" << nbc - /*TM::dim*/2*constrained_nodes.size() <<" Type: Displacement/Rotation\n";
+                        inp << "*Boundary";
+                        if (i>0){
+                        inp << ", op=NEW";
+                        }
+                        inp << "\n";
+                        inp << "N_1_" << layer_number*m[i].node_list.size() + constrained_nodes[j] + 1 << ", " << d+1 << ", " << d+1 << ", " << m[ i ].node_list[ constrained_nodes[ j ] ].dep[d]*pix2m << "\n";
+                    }
+                    ++nbc;
+                    inp << "** Name: BC-" << nbc - /*TM::dim*/2*constrained_nodes.size() <<" Type: Displacement/Rotation\n";
+                    inp << "*Boundary";
+                    if (i>0){
+                        inp << ", op=NEW";
+                    }
+                    inp << "\n";
+                    inp << "N_1_" << layer_number*m[i].node_list.size() + constrained_nodes[j] + 1 << ", 3, 3, 0\n";
+                    }
+                }
+            }
+            else{
+                int nbc=/*TM::dim*/2*i*constrained_nodes.size();
+                if (i>0){
+                    for (int j=0; j<constrained_nodes.size(); ++j ){// CL
+                        for( int d = 0; d < /*TM::dim*/2; ++d ){//direction
+                            ++nbc;
+                            inp << "** Name: BC-" << nbc - /*TM::dim*/2*constrained_nodes.size() <<" Type: Displacement/Rotation\n";
+                            inp << "*Boundary, op=NEW\n";
+                        }
+                    }
+                }
+                for (int j=0; j<constrained_nodes.size(); ++j ){// CL
+                    for( int d = 0; d < /*TM::dim*/2; ++d ){//direction
+                        ++nbc;
+                        inp << "** Name: BC-" << nbc - /*TM::dim*/2*constrained_nodes.size() <<" Type: Displacement/Rotation\n";
+                        inp << "*Boundary";
+                        if (i>0){
+                            inp << ", op=NEW";
+                        }
+                        inp << "\n";
+                        inp << "N_1_" << constrained_nodes[j] + 1 << ", " << d+1 << ", " << d+1 << ", " << m[ i ].node_list[ constrained_nodes[ j ] ].dep[d]*pix2m << "\n";
+                    }
+                }
+            }
             inp << "** \n";
             inp << "** \n";
             inp << "** OUTPUT REQUESTS\n";

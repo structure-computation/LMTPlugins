@@ -1,4 +1,4 @@
-DIR_SOURCES_SOCA = -IServerPlugin -IServerPlugin/src  -I../../Soca/src  -IServerPlugin/LMT/include -IServerPlugin/dic
+DIR_SOURCES_SOCA = -IServerPlugin -IServerPlugin/src  -I../../Soca/src  -IServerPlugin/LMT/include 
 
 
 all:
@@ -10,3 +10,4 @@ gdb:
 
 val:
 	metil_comp -ne --valgrind -O3 -g3 $(DIR_SOURCES_SOCA) src/main.cpp
+

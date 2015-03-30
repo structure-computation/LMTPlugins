@@ -15,6 +15,7 @@
 #include "dic/correlation/mesh_carac_correlation.h"
 #include <iostream>
 #include <boost/graph/graph_concepts.hpp>
+#include <boost/lexical_cast.hpp>
 #include "FieldSet.h"
 #include <time.h>
 #include "make_fields.h"
@@ -31,6 +32,24 @@ int get_proc_number( ){
     std::getline(fichier, res);
     int procnum=atoi(res.c_str());
     return procnum;
+}
+
+bool MP2bool(MP mp){
+  int i = mp;
+  return (bool)i;
+}
+
+std::string MP2str(MP mp){
+  QString qstr = mp;
+  std::string str =qstr.toStdString();
+  return str;
+}
+
+double MP2double(MP mp){
+  QString qstr = mp;
+  std::string str =qstr.toStdString();
+  double a = boost::lexical_cast<double>(str);
+  return a;
 }
 
 struct GetEpsInVecs {
@@ -179,7 +198,7 @@ Vec<Vec<double> >  load_vecvec(std::string filename){
 		    endspaces << nplaces[ii];
 		    begspaces << nplaces[ii+1];
 		}
-	    }
+	    } 
 	    for (int ii = 0; ii<begspaces.size(); ii++){
 		std::string tmpstr = ligne.substr(endspaces[ii]+1,begspaces[ii]-1-endspaces[ii]);
 		std::istringstream iss(tmpstr);
@@ -234,28 +253,94 @@ void write_vec (Vec<double> V, std::string filename){
         vec << "\n";
     }
 }
+
+std::string find_str_in_propmat(std::string str,  Vec < Vec < std::string > > Prop_Mat){
+    std::string ret;
+    for (int ii=0; ii< Prop_Mat.size(); ii++){
+                if (Prop_Mat[ii][0] == str){
+                    std::string texte = Prop_Mat[ii][1];
+                    std::istringstream iss(texte);
+                    ret = iss.str();
+                    break;
+                }
+    }
+    return ret;
+}
+
+int int_find_str_in_propmat(std::string str,  Vec < Vec < std::string > > Prop_Mat){
+  
+    int res= -1;
+    for (int ii=0; ii< Prop_Mat.size(); ii++){
+                if (Prop_Mat[ii][0] == str){
+                    res=ii;
+                    break;
+                }
+    }
+    return res;
+}
+
+double find_double_in_propmat(std::string name,  Vec < Vec < std::string > > Prop_Mat){
+  
+      double d = boost::lexical_cast<double>(find_str_in_propmat(name,Prop_Mat));
+      return d;
+}
+
+
 // Compute the distance between a point and a segment (defined by its two extreme points).
 double calc_dist_segment( Vec <double > point, Vec < Vec < double > > segment){
   
-    Vec <double> distances;
+//     Vec <double> distances;
+//     double dist_P0 = pow( pow((point[0] - segment[0][0]),2) + pow((point[1] - segment[0][1]),2) , 0.5);
+//     distances << dist_P0 ;
+//     double dist_P1 = pow( pow((point[0] - segment[1][0]),2) + pow((point[1] - segment[1][1]),2) , 0.5);
+//     distances << dist_P1 ;
+//     
+//     Vec <double> P0M = point - segment[0];
+//     Vec <double> P0P1 = segment[1] - segment[0]; 
+//     double norme_P0P1 =  pow( pow( P0P1[0],2) + pow( P0P1[1],2) , 0.5);
+//     
+//     double norme_P0H = dot(P0M,P0P1)/norme_P0P1;
+//     double norme_P0M = pow( pow( P0M[0],2) + pow( P0M[1],2) , 0.5);
+//     double norme_MH = pow( pow(norme_P0M, 2) - pow(norme_P0H, 2) , 0.5);
+//     
+//     distances << norme_MH ;
+//      
+//     double mini = min(distances);
+    if (segment[1][0]>segment[0][0]){
+         Vec<Vec <double > > nsegment; nsegment.push_back(segment[1]); nsegment.push_back(segment[0]); 
+         segment=nsegment;
+    }
+      
     double dist_P0 = pow( pow((point[0] - segment[0][0]),2) + pow((point[1] - segment[0][1]),2) , 0.5);
-    distances << dist_P0 ;
     double dist_P1 = pow( pow((point[0] - segment[1][0]),2) + pow((point[1] - segment[1][1]),2) , 0.5);
-    distances << dist_P1 ;
+    point[0] = point[0] - segment[0][0];
+    point[1] = point[1] - segment[0][1];
+    double dist_P1P2 = pow( pow((segment[1][0] - segment[0][0]),2) + pow((segment[1][1] - segment[0][1]),2) , 0.5);
     
-    Vec <double> P0M = point - segment[0];
-    Vec <double> P0P1 = segment[1] - segment[0]; 
-    double norme_P0P1 =  pow( pow( P0P1[0],2) + pow( P0P1[1],2) , 0.5);
-    
-    double norme_P0H = dot(P0M,P0P1)/norme_P0P1;
-    double norme_P0M = pow( pow( P0M[0],2) + pow( P0M[1],2) , 0.5);
-    double norme_MH = pow( pow(norme_P0M, 2) - pow(norme_P0H, 2) , 0.5);
-    
-    distances << norme_MH ;
-     
-    double mini = min(distances);
-    
-    return mini;
+    double val;
+    if ((dist_P0<dist_P1P2)&&(dist_P1<dist_P1P2)){
+        double distM = pow( pow(point[0] ,2) + pow(point[1] ,2) , 0.5);
+        Vec <double > posP1, posP2, posM;
+        posP1<<0;posP1<<0;posP2<<dist_P1P2;posP2<<0;
+        double alpha = atan((segment[1][1] - segment[0][1])/(segment[1][0] - segment[0][0]));
+        double beta;
+        if (point[0]<0)
+          beta = atan(point[1]/point[0]);
+        else
+          beta = atan(point[1]/point[0])+3.141592654;
+        
+        posM << distM*cos(beta-alpha); posM << distM*sin(beta-alpha);
+        return posM[1];
+      
+    }
+    else{
+      if (dist_P0<1)
+        val=dist_P0;
+      else if (dist_P1<1)
+        val=dist_P1;
+      else val=1e6;
+    }
+    return val;
 }
 
 struct FillImgWhenInsideElement {
@@ -328,96 +413,103 @@ Vec <double> select_cn (Vec<TM> &meshes, MP ch, std::string &CL, int nbs, Vec <i
 	    Vec<int> indices_bc_cn, bc_num, units;
 	    Vec< Vec< double > > vdx, vdy;
 	    if (CL=="picked"){
+          
 		
-		MP bs = ch[ nbs ];
-		MP bs2 = bs[ 2 ]; // va chercher la liste dans le bsitem
-		Vec < Vec < Vec < double > > >  coor_nds_bc;
-		if (bs2.size() == 0)
-		    CL = "nope";
-		for (int bc = 0; bc < bs2.size(); bc++){                  //  Récupération des coordonnées des segments choisis
-		    MP morceau = bs2 [ bc ];
-		    if ( morceau.type() == "PickedZoneItem"){
-			MP pel_bc = morceau["picked_element[0]"];
-			MP el_bc = pel_bc["element"];
-			MP indice_el_bc = el_bc["indices"];
-			Vec <int> indices;
-			for (int nds = 0; nds < indice_el_bc.size(); nds++)
-			    indices << indice_el_bc[nds];
-			Vec < Vec < double > > coor_nds;
-			MP mesh_bc = pel_bc["mesh"];
-			MP pts_bc = mesh_bc["points"];
-			for (int nds = 0; nds < indices.size(); nds++){
-			    Vec < double > coor_nd;
-			    MP noeuds = pts_bc[indices[nds]];
-			    MP pos = noeuds["pos"];
-			    for (int coor = 0; coor < pos.size(); coor++)
-			      coor_nd << pos[coor];
-			    coor_nds.push_back(coor_nd);
-			}
-			coor_nds_bc.push_back(coor_nds);
-			
-			MP BCType = morceau["_children[0]"];
-			int choice = BCType["Choice.num"];
-			int unit = BCType["Input_unit.num"];
-			units << unit;
-			if (choice == 0) // from field
-			    bool dummy; // do nothing
-			else if (choice == 1){ // disps drom files
-			    bc_num << numbc;
-			    QString Qdx = BCType["Data_X"]; 
-			    std::string dxfile ;
-			    dxfile = Qdx.toStdString();
-			    Vec <double> dx = load_res(dxfile);
-			    vdx.push_back(dx);
-			    QString Qdy = BCType["Data_Y"]; 
-			    std::string dyfile ;
-			    dyfile = Qdy.toStdString();
-			    Vec <double> dy = load_res(dyfile);
-			    vdy.push_back(dy);
-			}
-		    }
-		    numbc++;
-		}
-		meshes[0].update_skin();
-		for( int nds = 0; nds < meshes[0].skin.node_list.size(); ++nds ){ //  Sélection des noeuds contraints
-		      bool close_to_the_border = 0 ;
-		      int indice;
-		      for (int nbc = 0; nbc < coor_nds_bc.size(); nbc++){
-			      Vec < double > pos_nd = meshes[0].skin.node_list[ nds ].pos;
-			      double dist = calc_dist_segment( pos_nd, coor_nds_bc[nbc]);
-			      if (dist < 0.01){
-				  close_to_the_border = 1 ;
-				  indice = nbc;
-			      }
-		      }
-		      if (close_to_the_border){
-			    constrained_nodes << meshes[0].skin.node_list[ nds ].number;
-			    indices_bc_cn << indice;
-			    for (int nbc = 0; nbc < bc_num.size(); nbc++){ // modification of the input (measured) mesh if the bc is taken from a file
-			    // nbc is the number of bc from text files
-				  if (indice == bc_num[nbc]){
-				      double coef;
-				      if (units[nbc] == 0) coef=pix2m;
-				      else if (units[nbc] == 1) coef=1;
-				      if ((vdx[nbc].size() >= meshes.size()) and (vdy[nbc].size() >= meshes.size())){
-					  for (int num_mesh =0; num_mesh < meshes.size(); num_mesh++){
-					      meshes[num_mesh].node_list[ meshes[0].skin.node_list[ nds ].number ].dep[0] = vdx[nbc][num_mesh]/coef;
-					      meshes[num_mesh].node_list[ meshes[0].skin.node_list[ nds ].number ].dep[1] = vdy[nbc][num_mesh]/coef;
-					      meshes[num_mesh].node_list[ meshes[0].skin.node_list[ nds ].number ].is_on_skin = 1;
-					  }
-				      }
-				      else PRINT("NOT ENOUGH INFORMATION IN THE TEXTE FILE (BC" + to_string(nbc) +")");
-				      mode = "no_info_error";
-				  }
-			    }
-		      }
-		}
+            MP bs = ch[ nbs ];
+            MP bs2 = bs[ 2 ]; // va chercher la liste dans le bsitem
+            Vec < Vec < Vec < double > > >  coor_nds_bc;
+            if (bs2.size() == 0)
+                CL = "nope";
+            
+            for (int bc = 0; bc < bs2.size(); bc++){                  //  Récupération des coordonnées des segments choisis
+              
+                MP morceau = bs2 [ bc ];
+                if ( morceau.type() == "PickedZoneItem"){
+                    MP pel_bc = morceau["_picked_element[0]"];
+                    MP el_bc = pel_bc["element"];
+                    MP indice_el_bc = el_bc["indices"];
+                    Vec <int> indices;
+                    for (int nds = 0; nds < indice_el_bc.size(); nds++){
+                        indices << indice_el_bc[nds];
+                    }
+                    Vec < Vec < double > > coor_nds;
+                    MP mesh_bc = pel_bc["mesh"];
+                    MP pts_bc = mesh_bc["points"];
+                    for (int nds = 0; nds < indices.size(); nds++){
+                        Vec < double > coor_nd;
+                        MP noeuds = pts_bc[indices[nds]];
+                        MP pos = noeuds["pos"];
+                        for (int coor = 0; coor < pos.size(); coor++)
+                            coor_nd << pos[coor];
+                        coor_nds.push_back(coor_nd);
+                    }
+                    coor_nds_bc.push_back(coor_nds);
+                    
+                    MP BCType = morceau["_children[0]"];
+                    int choice = BCType["Choice.num"];
+                    int unit = BCType["Input_unit.num"];
+                    units << unit;
+                    if (choice == 0) // from field
+                        bool dummy; // do nothing
+                    else if (choice == 1){ // disps drom files
+                        bc_num << numbc;
+                        QString Qdx = BCType["Data_X"]; 
+                        std::string dxfile ;
+                        dxfile = Qdx.toStdString();
+                        Vec <double> dx = load_res(dxfile);
+                        vdx.push_back(dx);
+                        QString Qdy = BCType["Data_Y"]; 
+                        std::string dyfile ;
+                        dyfile = Qdy.toStdString();
+                        Vec <double> dy = load_res(dyfile);
+                        vdy.push_back(dy);
+                    }
+                }
+                numbc++;
+            }
+            meshes[0].update_skin();
+            
+            for( int nds = 0; nds < meshes[0].skin.node_list.size(); ++nds ){ //  Sélection des noeuds contraints
+                  bool close_to_the_border = 0 ;
+                  int indice;
+                  for (int nbc = 0; nbc < coor_nds_bc.size(); nbc++){
+                      Vec < double > pos_nd = meshes[0].skin.node_list[ nds ].pos;
+                      double dist = calc_dist_segment( pos_nd, coor_nds_bc[nbc]);
+                      if (dist < 0.1){
+                          close_to_the_border = 1 ;
+                          indice = nbc;
+                      }
+                  }
+                  if (close_to_the_border){
+                      constrained_nodes << meshes[0].skin.node_list[ nds ].number;
+                      indices_bc_cn << indice;
+                      for (int nbc = 0; nbc < bc_num.size(); nbc++){ // modification of the input (measured) mesh if the bc is taken from a file
+                      // nbc is the number of bc from text files
+                          if (indice == bc_num[nbc]){
+                              double coef;
+                              if (units[nbc] == 0) coef=pix2m;
+                              else if (units[nbc] == 1) coef=1;
+                              if ((vdx[nbc].size() >= meshes.size()) and (vdy[nbc].size() >= meshes.size())){
+                                  for (int num_mesh =0; num_mesh < meshes.size(); num_mesh++){
+                                      meshes[num_mesh].node_list[ meshes[0].skin.node_list[ nds ].number ].dep[0] = vdx[nbc][num_mesh]/coef;
+                                      meshes[num_mesh].node_list[ meshes[0].skin.node_list[ nds ].number ].dep[1] = vdy[nbc][num_mesh]/coef;
+                                      meshes[num_mesh].node_list[ meshes[0].skin.node_list[ nds ].number ].is_on_skin = 1;
+                                  }
+                              }
+                              else PRINT("NOT ENOUGH INFORMATION IN THE TEXT FILE (BC" + to_string(nbc) +")");
+                              mode = "no_info_error";
+                          }
+                      }
+                  }
+              }
 	     } 
+	     
 	     if ((CL == "nope") and (mode != "fromfield")) CL = "dummy";
 	     if (CL == "nope"){
-		for( int i = 0; i < meshes[0].skin.node_list.size(); ++i )
-		    constrained_nodes << meshes[0].skin.node_list[ i ].number;
-		indices_bc_cn << 0;
+              for( int i = 0; i < meshes[0].skin.node_list.size(); ++i ){
+                  constrained_nodes << meshes[0].skin.node_list[ i ].number;
+                  indices_bc_cn << 0;
+              }
 	     }
 	     return indices_bc_cn;
 }
@@ -516,7 +608,6 @@ void extract_f_from_LMTppMesh (Vec<TM> Mesh_Vector_output, Vec<int> constrained_
     extract_fnod_from_LMTppMesh( Mesh_Vector_output, 1 , calc_force_nodes, constrained_nodes );
     
     calc_force.resize(max(indices_bc_cn) + 1 - min(indices_bc_cn));
-    
     for (int ncl = min(indices_bc_cn); ncl < max(indices_bc_cn)+1; ncl++){
         calc_force[ncl].resize(Mesh_Vector_output.size());
         for (int nim =0; nim<Mesh_Vector_output.size(); nim ++){
@@ -586,87 +677,141 @@ void extract_images(MP mp, LMT::Vec<I2> &images){
 // Extracts the properties to be identified (related to the position of the property in the Prop_Mat)
 void extract_id_properties( MP mp, Vec < Vec < std::string > > Prop_Mat, Vec<int> &prop2id){
   
-   int cochea, cochen, coches;
-   MP ch = mp[ "_children" ]; 
-   for( int ii = 0; ii < ch.size(); ++ii ) {
-	MP c = ch[ ii ];
-	if ( c.type() == "Material_Code_Aster_Item" ) {
-		coches = c["sigma_y[1]"];
-		cochea = c["a[1]"];
-		cochen = c["n[1]"];
-	}
-   }
+    MP ch = mp[ "_children" ]; 
+    std::string thelaw = find_str_in_propmat("thelaw",Prop_Mat);
+    for( int ii = 0; ii < ch.size(); ++ii ) {
+          MP c = ch[ ii ];
+          if ( c.type() == "Material_Code_Aster_Item" ) {
+              if (thelaw == "Elas_iso"){
+                  prop2id << 2; // nu
+              }
+              if (thelaw == "Powerlaw"){
+                  if (MP2bool(c["a[1]"]))
+                    prop2id << 3;// a
+                  if (MP2bool(c["n[1]"]))
+                    prop2id << 4;// n
+                  if (MP2bool(c["sigma_y[1]"]))
+                    prop2id << 5;// sigma_y
+               }
+          }
+          else if ( c.type() == "ABQMaterialItem" ) {
+          
+                int loi = c["type.num"];
+                MP lst_material_type = c[ "type.lst" ];
+                MP type_material = lst_material_type[loi];
+                
+                if (thelaw == "Isotropic elastic"){
+                    // Elasticity
+                    if (MP2bool(type_material["elasticity.E[1]"])) prop2id << int_find_str_in_propmat("Young",Prop_Mat);
+                    if (MP2bool(type_material["elasticity.nu[1]"])) prop2id << int_find_str_in_propmat("Poisson",Prop_Mat);
+                }
+                else if (thelaw == "Ramberg-Osgood"){ // Ramberg-Osgood
+                    // Elasticity
+                    if (MP2bool(type_material["elasticity.E[1]"])) prop2id << int_find_str_in_propmat("Young",Prop_Mat);
+                    if (MP2bool(type_material["elasticity.nu[1]"])) prop2id << int_find_str_in_propmat("Poisson",Prop_Mat);
+                    // Plasticity
+                    if (MP2bool(type_material["plasticity.S0[1]"])) prop2id << int_find_str_in_propmat("sigma_0",Prop_Mat);
+                    if (MP2bool(type_material["plasticity.n[1]"])) prop2id << int_find_str_in_propmat("n",Prop_Mat);
+                }
+                else if (thelaw == "Drucker-Prager Hardening"){ // DP Hardening
+                    // Elasticity
+                    if (MP2bool(type_material["elasticity.E[1]"])) prop2id << int_find_str_in_propmat("Young",Prop_Mat);
+                    if (MP2bool(type_material["elasticity.nu[1]"])) prop2id << int_find_str_in_propmat("Poisson",Prop_Mat);
+                    // Plasticity
+                    if (MP2bool(type_material["hardening.S0[1]"])) prop2id << int_find_str_in_propmat("sigma_0",Prop_Mat);
+                    if (MP2bool(type_material["hardening.eps0[1]"])) prop2id << int_find_str_in_propmat("eps_0",Prop_Mat);
+                    // Drucker-Prager parameters
+                    if (MP2bool(type_material["DruckerPrager.friction_angle[1]"])) prop2id << int_find_str_in_propmat("friction_angle",Prop_Mat);
+                    if (MP2bool(type_material["DruckerPrager.flowstress_ratio[1]"])) prop2id << int_find_str_in_propmat("flowstress_ratio",Prop_Mat);
+                    if (MP2bool(type_material["DruckerPrager.dilation_angle[1]"])) prop2id << int_find_str_in_propmat("dilation_angle",Prop_Mat);
+                }
+                else if (thelaw == "Creep, time Hardening"){ // Creep : time-hardening
+                    // Elasticity
+                    if (MP2bool(type_material["elasticity.E[1]"])) prop2id << int_find_str_in_propmat("Young",Prop_Mat);
+                    if (MP2bool(type_material["elasticity.nu[1]"])) prop2id << int_find_str_in_propmat("Poisson",Prop_Mat);
+                    // Creep
+                    if (MP2bool(type_material["creep.pl_multiplier[1]"])) prop2id << int_find_str_in_propmat("pl_multiplier",Prop_Mat);
+                    if (MP2bool(type_material["creep.eq_stress_order[1]"])) prop2id << int_find_str_in_propmat("eq_stress_order",Prop_Mat);
+                    if (MP2bool(type_material["creep.time_order[1]"])) prop2id << int_find_str_in_propmat("time_order",Prop_Mat);
+                }
+          }
+    }
 	  
-    std::string thelaw = Prop_Mat[0][1];
     
-    if (thelaw == "Elas_iso"){
-	prop2id << 2; // nu
-    }
-    else if (thelaw == "Elas_ortho"){
-	prop2id << 2;// nu
-	prop2id << 3;// E1/E2
-    }
-    else if (thelaw == "Powerlaw"){
-	if (cochea == 1)
-	  prop2id << 3;// a
-	if (cochen == 1)
-	  prop2id << 4;// n
-	if (coches == 1)
-	  prop2id << 5;// sigma_y
-    }
-    else if (thelaw == "RO"){
-	prop2id << 3;// sigma_0
-	prop2id << 4;// n
-    }
-    else if (thelaw == "UMAT"){
-	std::istringstream iss(Prop_Mat[1][1]);
-	int umat_nparam;
-	iss >> umat_nparam;
-	std::string texte2 = Prop_Mat[1+1+umat_nparam+1][1];
-	std::istringstream iss2(texte2);
-	int umat_nparamid;
-	iss2 >> umat_nparamid;
-	for (int npa = 0; npa < umat_nparamid; npa++){
-	    std::string stri = "paramid" + LMT::to_string(npa);
-	    std::string texte = Prop_Mat[1+1+umat_nparam+1+1+npa][1];
-	    std::istringstream is(Prop_Mat[1+1+umat_nparam+1+1+npa][1]);
-	    int prop;
-	    is >> prop;
-	    prop2id << prop + 1 ;
-	}
-    }
-    else if (thelaw == "Equation"){
-	std::istringstream iss(Prop_Mat[3][1]);
-	int nparam;
-	iss >> nparam;
-	std::string texte2 = Prop_Mat[2+2+2*nparam][1];
-	std::istringstream iss2(texte2);
-	int nparamid; 
-	iss2 >> nparamid;
-	for (int npa = 0; npa < nparamid; npa++){
-	    std::istringstream is(Prop_Mat[2+2+2*nparam+1+npa][1]);
-	    int prop;
-	    is >> prop;
-	    prop2id << prop + 3 ;
-	}
-    }
-    else if (thelaw == "UMAT_Lem_diccit"){
-	std::istringstream iss(Prop_Mat[1][1]);
-	int umat_nparam;
-	iss >> umat_nparam;
-	std::string texte2 = Prop_Mat[1+1+umat_nparam+1][1];
-	std::istringstream iss2(texte2);
-	int umat_nparamid;
-	iss2 >> umat_nparamid;
-	for (int npa = 0; npa < umat_nparamid; npa++){
-	    std::string stri = "paramid" + LMT::to_string(npa);
-	    std::string texte = Prop_Mat[1+1+umat_nparam+1+1+npa][1];
-	    std::istringstream is(Prop_Mat[1+1+umat_nparam+1+1+npa][1]);
-	    int prop;
-	    is >> prop;
-	    prop2id << prop + 1 ;
-	}
-    }
+    if (0){
+      
+    
+//     if (thelaw == "Elas_iso"){
+//         prop2id << 2; // nu
+//     }
+//     else if (thelaw == "Elas_ortho"){
+//         prop2id << 2;// nu
+//         prop2id << 3;// E1/E2
+//     }
+//     else if (thelaw == "Powerlaw"){
+// 	if (cochea == 1)
+// 	  prop2id << 3;// a
+// 	if (cochen == 1)
+// 	  prop2id << 4;// n
+// 	if (coches == 1)
+// 	  prop2id << 5;// sigma_y
+//     }
+//     else if (thelaw == "RO"){
+// 	prop2id << 3;// sigma_0
+// 	prop2id << 4;// n
+//     }
+//     else if (thelaw == "UMAT"){
+// 	std::istringstream iss(Prop_Mat[1][1]);
+// 	int umat_nparam;
+// 	iss >> umat_nparam;
+// 	std::string texte2 = Prop_Mat[1+1+umat_nparam+1][1];
+// 	std::istringstream iss2(texte2);
+// 	int umat_nparamid;
+// 	iss2 >> umat_nparamid;
+// 	for (int npa = 0; npa < umat_nparamid; npa++){
+// 	    std::string stri = "paramid" + LMT::to_string(npa);
+// 	    std::string texte = Prop_Mat[1+1+umat_nparam+1+1+npa][1];
+// 	    std::istringstream is(Prop_Mat[1+1+umat_nparam+1+1+npa][1]);
+// 	    int prop;
+// 	    is >> prop;
+// 	    prop2id << prop + 1 ;
+// 	}
+//     }
+//     else if (thelaw == "Equation"){
+// 	std::istringstream iss(Prop_Mat[3][1]);
+// 	int nparam;
+// 	iss >> nparam;
+// 	std::string texte2 = Prop_Mat[2+2+2*nparam][1];
+// 	std::istringstream iss2(texte2);
+// 	int nparamid; 
+// 	iss2 >> nparamid;
+// 	for (int npa = 0; npa < nparamid; npa++){
+// 	    std::istringstream is(Prop_Mat[2+2+2*nparam+1+npa][1]);
+// 	    int prop;
+// 	    is >> prop;
+// 	    prop2id << prop + 3 ;
+// 	}
+//     }
+//     else if (thelaw == "UMAT_Lem_diccit"){
+// 	std::istringstream iss(Prop_Mat[1][1]);
+// 	int umat_nparam;
+// 	iss >> umat_nparam;
+// 	std::string texte2 = Prop_Mat[1+1+umat_nparam+1][1];
+// 	std::istringstream iss2(texte2);
+// 	int umat_nparamid;
+// 	iss2 >> umat_nparamid;
+// 	for (int npa = 0; npa < umat_nparamid; npa++){
+// 	    std::string stri = "paramid" + LMT::to_string(npa);
+// 	    std::string texte = Prop_Mat[1+1+umat_nparam+1+1+npa][1];
+// 	    std::istringstream is(Prop_Mat[1+1+umat_nparam+1+1+npa][1]);
+// 	    int prop;
+// 	    is >> prop;
+// 	    prop2id << prop + 1 ;
+// 	}
+//     }
+//   
+    }   
+
   
 }
 
@@ -682,284 +827,303 @@ void extract_computation_parameters( MP mpc, Vec<TM> &Mesh_vector_input, Vec<int
     MP mat;
     ct = mp["computation_type.num"];
     
+            if (ct == 0)
+            computation_type = "2DPS";
+            else if (ct == 1)
+            computation_type = "2DPE";
+            else if (ct == 2)
+            computation_type = "3Dex";
+    
     // CHARGEMENT DU CHAMP D'ENTREE ET DES PROPRIETES MATERIAU
     std::string CL = "nope";
     int nbs;
     for( int ii = 0; ii < ch.size(); ++ii ) {
-	MP c = ch[ ii ];
-	if (( c.type() == "BoundariesSelectionItem" )){
-	    CL = "picked";
-	    nbs = ii;
-	}
+        MP c = ch[ ii ];
+        if (( c.type() == "BoundariesSelectionItem" )){
+            CL = "picked";
+            nbs = ii;
+        }
     }
     for( int ii = 0; ii < ch.size(); ++ii ) {
-	MP c = ch[ ii ];
-	qDebug() << c.type();
-	if (( c.type() == "FieldSetItem" ) or ( c.type() == "FieldSetCorreliItem" )){
-	    ex_field++;
-	    FieldSet fs_input(c); 
-	    fs_input_bckp.load(c);
-	    Mesh_vector_input = load_FieldSetItem_into_LMTpp_Mesh(fs_input);
-	    mode = "fromfield";
-	    indices_bc_cn = select_cn (Mesh_vector_input,  ch,  CL, nbs, constrained_nodes, pix2m, mode);
-	}
-	else if (( c.type() == "MeshItem" ) ){
-	    ex_field++;
-	    Mesh_vecs maillage; maillage = c["_mesh"];
-	    MP maillage_transfert = maillage.save();
-	    TM mesh = load_MeshMP_into_2DLMTpp_Mesh(maillage_transfert);
-	    double n_timesteps = mp["n_timesteps"];
-	    fs_input_bckp.mesh = maillage;
-	    for (int ts = 0; ts < n_timesteps; ts++)
-            Mesh_vector_input << mesh;
-	    mode = "fromtxt";
-	    indices_bc_cn = select_cn (Mesh_vector_input,  ch,  CL, nbs, constrained_nodes, pix2m, mode);
-	    if (mode == "no_info_error"){
-            indices_bc_cn.resize(0);
-            ex_field = -1;
-            break;
-	    }
-	}
-	
-	if ( c.type() == "MaterialABQItem" ) {
-	    mat=c;
-	    loi = c["Law_type.num"];
-	    Young = c["Young[0]"];
-	    Poisson = c["Poisson[0]"];
-	    if (loi == 1) // Elas_ortho
-            elas_ratio = c["elas_ratio[0]"];
-	    else if (loi == 2){ // Ramberg_Osgood
-            sigma_0 = c["sigma_0[0]"];
-            n = c["n[0]"];
-	    }
-	    else if (loi == 3){ // UMAT
-		QString Qparam_file = c["param_file"];
-	        param_file = Qparam_file.toStdString();
-		QString Qumatname = c["umat_file"];
-	        umatname = Qumatname.toStdString();
-	    }
-	    else if (loi == 4){ // Equation
-		QString Qparam_file = c["param_file"];
-	        param_file = Qparam_file.toStdString();
-	    }
-	    else if (loi == 5){ // Equation + UMAT
-		QString Qparam_file = c["param_file"];
-	        param_file = Qparam_file.toStdString();
-		QString Qumatname = c["umat_file"];
-	        umatname = Qumatname.toStdString();
-	    }
-        else if (loi == 6){ // Drucker_Prager_Hardening
-            sigma_0 = c["sigma_0[0]"];
-            eps_0 = c["eps_0[0]"];
-            friction_angle = c["friction_angle[0]"];
-            flowstress_ratio = c["flowstress_ratio[0]"];
-            dilation_angle = c["dilation_angle[0]"];
+        MP c = ch[ ii ];
+        if (( c.type() == "FieldSetItem" ) or ( c.type() == "FieldSetCorreliItem" )){
+            ex_field++;
+            FieldSet fs_input(c); 
+            fs_input_bckp.load(c);
+            Mesh_vector_input = load_FieldSetItem_into_LMTpp_Mesh(fs_input);
+            mode = "fromfield";
+            indices_bc_cn = select_cn (Mesh_vector_input,  ch,  CL, nbs, constrained_nodes, pix2m, mode);
         }
-        else if (loi == 7){ //Creep : time-hardening
-            pl_multiplier = c["pl_multiplier[0]"];
-            eq_stress_order = c["eq_stress_order[0]"];
-            time_order = c["time_order[0]"];
-        }
-	    if (ct == 0)
-		computation_type = "2DPS";
-	    else if (ct == 1)
-		computation_type = "2DPE";
-	    else if (ct == 2)
-		computation_type = "3Dex";
-	    
-	    if ((loi == 3) or (loi==5)){ // UMAT
-            umat_nparam = load_param(param_file,"umat_nparam");
-            umat_ndepvar = load_param(param_file,"umat_ndepvar");
-            umat_nparamid = load_param(param_file,"umat_nparamid");
-            Prop_Mat.resize(1 + 1 + umat_nparam + 1 + 1 + umat_nparamid +1 ); // thelaw + umat_nparam + number of parameters of the UMAT + umat_ndepvar + umat_nparamid + line for umat_nparamid + nparamid lines + umatname
-	    }
-	    if (loi == 4){ // Equation
-            nparam = load_param(param_file,"nparam");
-            nparamid = load_param(param_file,"nparamid");
-            Prop_Mat.resize(1 +2 + 1 + nparam + nparam  + 1 + nparamid +1); // thelaw + Young + Poisson + nparam + number of parameters of the equation + names of parameters of the equation + nparamid + nparamid lines + equation
-	    }
-	    if (loi == 5){ // Equation+UMAT
-            umat_nparam = load_param(param_file,"umat_nparam");
-            umat_ndepvar = load_param(param_file,"umat_ndepvar");
-            umat_nparamid = load_param(param_file,"umat_nparamid");
-            Prop_Mat.resize(1 + 1 + umat_nparam + 1 + 1 + umat_nparamid +1 ); // thelaw + umat_nparam + number of parameters of the UMAT + umat_ndepvar + umat_nparamid + line for umat_nparamid + nparamid lines + umatname
-	    }
-	    
-	    
-	    if (loi == 0)
-		Prop_Mat.resize(3);
-	    if (loi == 1)
-		Prop_Mat.resize(4);
-	    if (loi == 2)
-		Prop_Mat.resize(5);
-        if (loi == 6)
-        Prop_Mat.resize(8);
-        if (loi == 7)
-        Prop_Mat.resize(6);
-	    
-	    Prop_Mat[0] << "thelaw";
-	    if (loi == 0)
-		Prop_Mat[0] << "Elas_iso";
-	    else if (loi == 1)
-		Prop_Mat[0] << "Elas_ortho";
-	    else if (loi == 2)
-		Prop_Mat[0] << "RO";
-	    else if (loi == 3)
-		Prop_Mat[0] << "UMAT";
-	    else if (loi == 4)
-		Prop_Mat[0] << "Equation";
-	    else if (loi == 5)
-		Prop_Mat[0] << "UMAT_Lem_diccit";
-        else if (loi == 6)
-        Prop_Mat[0] << "Drucker_Prager_Hardening";
-        else if (loi == 7)
-        Prop_Mat[0] << "Creep_Time_Hardening";
-	    
-	    if ((loi == 3) or (loi == 5)){ // UMAT
-            Prop_Mat[1] << "umat_nparam";
-            Prop_Mat[1] << LMT::to_string(umat_nparam);
-            for (int npa = 0; npa < umat_nparam; npa++){
-                std::string stri;
-                stri = "param" + LMT::to_string(npa+1);
-                Prop_Mat[2+npa] << stri;
-                std::string par = load_param_str(param_file,stri);
-                Prop_Mat[2+npa] << par;
+        else if (( c.type() == "MeshItem" ) ){
+            ex_field++;
+            Mesh_vecs maillage; maillage = c["_mesh"];
+            MP maillage_transfert = maillage.save();
+            TM mesh = load_MeshMP_into_2DLMTpp_Mesh(maillage_transfert);
+            double n_timesteps = mp["n_timesteps"];
+            fs_input_bckp.mesh = maillage;
+            for (int ts = 0; ts < n_timesteps; ts++)
+                Mesh_vector_input << mesh;
+            mode = "fromtxt";
+            indices_bc_cn = select_cn (Mesh_vector_input,  ch,  CL, nbs, constrained_nodes, pix2m, mode);
+            if (mode == "no_info_error"){
+                indices_bc_cn.resize(0);
+                ex_field = -1;
+                break;
             }
-            Prop_Mat[2+umat_nparam] << "umat_ndepvar";
-            Prop_Mat[2+umat_nparam] << LMT::to_string(umat_ndepvar);
-            Prop_Mat[2+umat_nparam+1] << "umat_nparamid";
-            Prop_Mat[2+umat_nparam+1] << LMT::to_string(umat_nparamid);
+        }
+        
+        if ( c.type() == "ABQMaterialItem" ) {
+          
+            int loi = c["type.num"];
+            MP lst_material_type = c[ "type.lst" ];
+            MP type_material = lst_material_type[loi];
+            std::string lawname = MP2str(type_material["_name"]);
             
-            for (int npa = 0; npa < umat_nparamid; npa++){
-                std::string stri;
-                stri = "paramid" + LMT::to_string(npa+1);
-                Prop_Mat[2+umat_nparam+1+1+npa] << stri;///
-                std::string par = load_param_str(param_file,stri);
-                Prop_Mat[2+umat_nparam+1+1+npa] << par;
-            }
-            Prop_Mat[2+umat_nparam+1+1+umat_nparamid] << "umatname";
-            Prop_Mat[2+umat_nparam+1+1+umat_nparamid] << umatname;
-        }
-	    else if (loi == 4){ // Equation // thelaw + Young + Poisson + nparam + number of parameters of the equation + names of parameters of the equation + nparamid + nparamid lines + equation
-            Prop_Mat[1] << "Young";
-            Prop_Mat[1] << LMT::to_string(Young*1e9); 
-            Prop_Mat[2] << "Poisson";
-            Prop_Mat[2] << LMT::to_string(Poisson); 
-            Prop_Mat[2+1] << "nparam";
-            Prop_Mat[2+1] << LMT::to_string(nparam);
-            for (int npa = 0; npa < nparam; npa++){
-                std::string stri;
-                stri = "param" + LMT::to_string(npa+1);
-                Prop_Mat[2+2+npa] << stri;
-                std::string par = load_param_str(param_file,stri);
-                Prop_Mat[2+2+npa] << par;
-            }
-            for (int npa = 0; npa < nparam; npa++){
-                std::string stri;
-                stri = "param" + LMT::to_string(npa+1) + "_symbol";
-                Prop_Mat[2+2+nparam+npa] << stri;
-                std::string par = load_param_str(param_file,stri);
-                Prop_Mat[2+2+nparam+npa] << par;
-            }
-              
-            Prop_Mat[2+2+2*nparam] << "nparamid";
-            Prop_Mat[2+2+2*nparam] << LMT::to_string(nparamid);
+            Prop_Mat.resize(1);
+            Prop_Mat[0] << "thelaw";
+            Prop_Mat[0] << lawname;
             
-            for (int npa = 0; npa < nparamid; npa++){
-                std::string stri;
-                stri = "paramid" + LMT::to_string(npa+1);
-                Prop_Mat[2+2+2*nparam+1+npa] << stri;///
-                std::string par = load_param_str(param_file,stri);
-                Prop_Mat[2+2+2*nparam+1+npa] << par;
+            if (lawname == "Isotropic elastic"){
+                // Elasticity
+                Prop_Mat.resize(3);
+                Prop_Mat[1] << "Young";
+                Prop_Mat[1] << LMT::to_string(MP2double(type_material["elasticity.E[0]"])*1e9); 
+                Prop_Mat[2] << "Poisson";
+                Prop_Mat[2] << LMT::to_string(MP2double(type_material["elasticity.nu[0]" ])); 
             }
-            std::string eq = load_param_str(param_file,"equation");
-            Prop_Mat[2+2+2*nparam+1+nparamid] << "equation";
-            Prop_Mat[2+2+2*nparam+1+nparamid] << eq;
-	    }
-	    else { // no UMAT or equation
-            Prop_Mat[1] << "Young";
-            Prop_Mat[1] << LMT::to_string(Young*1e9); 
-            Prop_Mat[2] << "Poisson";
-            Prop_Mat[2] << LMT::to_string(Poisson); 
-            if (loi == 1){
-                Prop_Mat[3] << "elas_ratio";
-                Prop_Mat[3] << LMT::to_string(elas_ratio);
-            }
-            else if (loi == 2){
+            else if (lawname == "Ramberg-Osgood"){ // Ramberg-Osgood
+                Prop_Mat.resize(5);
+                // Elasticity
+                Prop_Mat[1] << "Young";
+                Prop_Mat[1] << LMT::to_string(MP2double(type_material["elasticity.E[0]"])*1e9); 
+                Prop_Mat[2] << "Poisson";
+                Prop_Mat[2] << LMT::to_string(MP2double(type_material["elasticity.nu[0]" ]));
+                // Plasticity 
                 Prop_Mat[3] << "sigma_0";
-                Prop_Mat[3] << LMT::to_string(sigma_0*1e6);
+                Prop_Mat[3] << LMT::to_string(MP2double(type_material["plasticity.S0[0]"])*1e6);
                 Prop_Mat[4] << "n";
-                Prop_Mat[4] << LMT::to_string(n);
+                Prop_Mat[4] << LMT::to_string(MP2double(type_material["plasticity.n[0]"]));
             }
-            else if (loi == 6){
+            else if (lawname == "Drucker-Prager Hardening"){ // DP Hardening
+                Prop_Mat.resize(8); 
+                // Elasticity
+                Prop_Mat[1] << "Young";
+                Prop_Mat[1] << LMT::to_string(MP2double(type_material["elasticity.E[0]"])*1e9); 
+                Prop_Mat[2] << "Poisson";
+                Prop_Mat[2] << LMT::to_string(MP2double(type_material["elasticity.nu[0]" ]));
+                // Plasticity 
                 Prop_Mat[3] << "sigma_0";
-                Prop_Mat[3] << LMT::to_string(sigma_0*1e6);
+                Prop_Mat[3] << LMT::to_string(MP2double(type_material["hardening.S0[0]"])*1e6);
                 Prop_Mat[4] << "eps_0";
-                Prop_Mat[4] << LMT::to_string(eps_0);
+                Prop_Mat[4] << LMT::to_string(MP2double(type_material["hardening.eps0[0]"]));
+                // Drucker-Prager parameters
                 Prop_Mat[5] << "friction_angle";
-                Prop_Mat[5] << LMT::to_string(friction_angle);
+                Prop_Mat[5] << LMT::to_string(MP2double(type_material["DruckerPrager.friction_angle[0]"]));
                 Prop_Mat[6] << "flowstress_ratio";
-                Prop_Mat[6] << LMT::to_string(flowstress_ratio);
+                Prop_Mat[6] << LMT::to_string(MP2double(type_material["DruckerPrager.flowstress_ratio[0]"]));
                 Prop_Mat[7] << "dilation_angle";
-                Prop_Mat[7] << LMT::to_string(dilation_angle);
+                Prop_Mat[7] << LMT::to_string(MP2double(type_material["DruckerPrager.dilation_angle[0]"]));
             }
-            else if (loi == 7){
+            else if (lawname == "Creep, time Hardening"){ // Creep : time-hardening
+                Prop_Mat.resize(6);
+                // Elasticity
+                Prop_Mat[1] << "Young";
+                Prop_Mat[1] << LMT::to_string(MP2double(type_material["elasticity.E[0]"])*1e9); 
+                Prop_Mat[2] << "Poisson";
+                Prop_Mat[2] << LMT::to_string(MP2double(type_material["elasticity.nu[0]" ]));
+                // Creep
                 Prop_Mat[3] << "pl_multiplier";
-                Prop_Mat[3] << LMT::to_string(pl_multiplier);
+                Prop_Mat[3] << LMT::to_string(MP2double(type_material["creep.pl_multiplier[0]" ])*1e-9);
                 Prop_Mat[4] << "eq_stress_order";
-                Prop_Mat[4] << LMT::to_string(eq_stress_order);
+                Prop_Mat[4] << LMT::to_string(MP2double(type_material["creep.eq_stress_order[0]" ]));
                 Prop_Mat[5] << "time_order";
-                Prop_Mat[5] << LMT::to_string(time_order);
+                Prop_Mat[5] << LMT::to_string(MP2double(type_material["creep.time_order[0]" ]));
             }
-	    }
-	}
-	else if ( c.type() == "Material_Code_Aster_Item" ) {
-	    mat=c;
-	    loi = c["Law_type.num"];
-	    Young = c["Young[0]"];
-	    Poisson = c["Poisson[0]"];
-	    if (ct == 0)
-		computation_type = "2DPS";
-	    else if (ct == 1)
-		computation_type = "2DPE";
-	    else if (ct == 2)
-		computation_type = "3Dex";
-	    if (loi == 1){ // Powerlaw
-		sigma_y = c["sigma_y[0]"];
-		int coches = c["sigma_y[1]"];
-		a = c["a[0]"];
-		int cochea = c["a[1]"];
-		n = c["n[0]"];
-		int cochen = c["n[1]"];
-	    }
-	    
-	    if (loi == 0) // Elas_iso
-		Prop_Mat.resize(3);
-	    if (loi == 1) // Powerlaw
-		Prop_Mat.resize(6);
-	    
-	    Prop_Mat[0] << "thelaw";
-	    if (loi == 0){
-		Prop_Mat[0] << "Elas_iso";
-		Prop_Mat[1] << "Young";
-		Prop_Mat[1] << LMT::to_string(Young*1e9); 
-		Prop_Mat[2] << "Poisson";
-		Prop_Mat[2] << LMT::to_string(Poisson); 
-	    }
-	    else if (loi == 1){
-		Prop_Mat[0] << "Powerlaw";
-		Prop_Mat[1] << "Young";
-		Prop_Mat[1] << LMT::to_string(Young*1e9); 
-		Prop_Mat[2] << "Poisson";
-		Prop_Mat[2] << LMT::to_string(Poisson); 
-		Prop_Mat[3] << "a";
-		Prop_Mat[3] << LMT::to_string(a); 
-		Prop_Mat[4] << "n";
-		Prop_Mat[4] << LMT::to_string(n); 
-		Prop_Mat[5] << "sigma_y";
-		Prop_Mat[5] << LMT::to_string(sigma_y*1e6); 
-	    }
-	}
+            
+            if (0){//COMMENTS FROM PREVIOUS MATERIAL SYLE
+//             else if (loi == 5){ // Equation + UMAT
+//             QString Qparam_file = c["param_file"];
+//                 param_file = Qparam_file.toStdString();
+//             QString Qumatname = c["umat_file"];
+//                 umatname = Qumatname.toStdString();
+//             }
+//             else if (loi == 6){ // Drucker_Prager_Hardening
+//                 sigma_0 = c["sigma_0[0]"];
+//                 eps_0 = c["eps_0[0]"];
+//                 friction_angle = c["friction_angle[0]"];
+//                 flowstress_ratio = c["flowstress_ratio[0]"];
+//                 dilation_angle = c["dilation_angle[0]"];
+//             }
+//             else if (loi == 7){ //Creep : time-hardening
+//                 pl_multiplier = c["pl_multiplier[0]"];
+//                 eq_stress_order = c["eq_stress_order[0]"];
+//                 time_order = c["time_order[0]"];
+//             }
+//             else if (loi == 3){ // UMAT
+//             QString Qparam_file = c["param_file"];
+//                 param_file = Qparam_file.toStdString();
+//             QString Qumatname = c["umat_file"];
+//                 umatname = Qumatname.toStdString();
+//             }   
+//             if ((loi == 3) or (loi==5)){ // UMAT
+//                 umat_nparam = load_param(param_file,"umat_nparam");
+//                 umat_ndepvar = load_param(param_file,"umat_ndepvar");
+//                 umat_nparamid = load_param(param_file,"umat_nparamid");
+//                 Prop_Mat.resize(1 + 1 + umat_nparam + 1 + 1 + umat_nparamid +1 ); // thelaw + umat_nparam + number of parameters of the UMAT + umat_ndepvar + umat_nparamid + line for umat_nparamid + nparamid lines + umatname
+//             }
+//             if (loi == 4){ // Equation
+//                 nparam = load_param(param_file,"nparam");
+//                 nparamid = load_param(param_file,"nparamid");
+//                 Prop_Mat.resize(1 +2 + 1 + nparam + nparam  + 1 + nparamid +1); // thelaw + Young + Poisson + nparam + number of parameters of the equation + names of parameters of the equation + nparamid + nparamid lines + equation
+//             }
+//             if (loi == 5){ // Equation+UMAT
+//                 umat_nparam = load_param(param_file,"umat_nparam");
+//                 umat_ndepvar = load_param(param_file,"umat_ndepvar");
+//                 umat_nparamid = load_param(param_file,"umat_nparamid");
+//                 Prop_Mat.resize(1 + 1 + umat_nparam + 1 + 1 + umat_nparamid +1 ); // thelaw + umat_nparam + number of parameters of the UMAT + umat_ndepvar + umat_nparamid + line for umat_nparamid + nparamid lines + umatname
+//             }
+            
+            
+//             if ((loi == 3) or (loi == 5)){ // UMAT
+//                 Prop_Mat[1] << "umat_nparam";
+//                 Prop_Mat[1] << LMT::to_string(umat_nparam);
+//                 for (int npa = 0; npa < umat_nparam; npa++){
+//                     std::string stri;
+//                     stri = "param" + LMT::to_string(npa+1);
+//                     Prop_Mat[2+npa] << stri;
+//                     std::string par = load_param_str(param_file,stri);
+//                     Prop_Mat[2+npa] << par;
+//                 }
+//                 Prop_Mat[2+umat_nparam] << "umat_ndepvar";
+//                 Prop_Mat[2+umat_nparam] << LMT::to_string(umat_ndepvar);
+//                 Prop_Mat[2+umat_nparam+1] << "umat_nparamid";
+//                 Prop_Mat[2+umat_nparam+1] << LMT::to_string(umat_nparamid);
+//                 
+//                 for (int npa = 0; npa < umat_nparamid; npa++){
+//                     std::string stri;
+//                     stri = "paramid" + LMT::to_string(npa+1);
+//                     Prop_Mat[2+umat_nparam+1+1+npa] << stri;///
+//                     std::string par = load_param_str(param_file,stri);
+//                     Prop_Mat[2+umat_nparam+1+1+npa] << par;
+//                 }
+//                 Prop_Mat[2+umat_nparam+1+1+umat_nparamid] << "umatname";
+//                 Prop_Mat[2+umat_nparam+1+1+umat_nparamid] << umatname;
+//             }
+//             else if (loi == 4){ // Equation // thelaw + Young + Poisson + nparam + number of parameters of the equation + names of parameters of the equation + nparamid + nparamid lines + equation
+//                 Prop_Mat[1] << "Young";
+//                 Prop_Mat[1] << LMT::to_string(Young*1e9); 
+//                 Prop_Mat[2] << "Poisson";
+//                 Prop_Mat[2] << LMT::to_string(Poisson); 
+//                 Prop_Mat[2+1] << "nparam";
+//                 Prop_Mat[2+1] << LMT::to_string(nparam);
+//                 for (int npa = 0; npa < nparam; npa++){
+//                     std::string stri;
+//                     stri = "param" + LMT::to_string(npa+1);
+//                     Prop_Mat[2+2+npa] << stri;
+//                     std::string par = load_param_str(param_file,stri);
+//                     Prop_Mat[2+2+npa] << par;
+//                 }
+//                 for (int npa = 0; npa < nparam; npa++){
+//                     std::string stri;
+//                     stri = "param" + LMT::to_string(npa+1) + "_symbol";
+//                     Prop_Mat[2+2+nparam+npa] << stri;
+//                     std::string par = load_param_str(param_file,stri);
+//                     Prop_Mat[2+2+nparam+npa] << par;
+//                 }
+//                   
+//                 Prop_Mat[2+2+2*nparam] << "nparamid";
+//                 Prop_Mat[2+2+2*nparam] << LMT::to_string(nparamid);
+//                 
+//                 for (int npa = 0; npa < nparamid; npa++){
+//                     std::string stri;
+//                     stri = "paramid" + LMT::to_string(npa+1);
+//                     Prop_Mat[2+2+2*nparam+1+npa] << stri;///
+//                     std::string par = load_param_str(param_file,stri);
+//                     Prop_Mat[2+2+2*nparam+1+npa] << par;
+//                 }
+//                 std::string eq = load_param_str(param_file,"equation");
+//                 Prop_Mat[2+2+2*nparam+1+nparamid] << "equation";
+//                 Prop_Mat[2+2+2*nparam+1+nparamid] << eq;
+//             }
+//             else { // no UMAT or equation
+//                 Prop_Mat[1] << "Young";
+//                 Prop_Mat[1] << LMT::to_string(Young*1e9); 
+//                 Prop_Mat[2] << "Poisson";
+//                 Prop_Mat[2] << LMT::to_string(Poisson); 
+//                 if (loi == 1){
+//                     Prop_Mat[3] << "elas_ratio";
+//                     Prop_Mat[3] << LMT::to_string(elas_ratio);
+//                 }
+//                 else if (loi == 2){
+//                     Prop_Mat[3] << "sigma_0";
+//                     Prop_Mat[3] << LMT::to_string(sigma_0*1e6);
+//                     Prop_Mat[4] << "n";
+//                     Prop_Mat[4] << LMT::to_string(n);
+//                 }
+//                 else if (loi == 6){
+//                     Prop_Mat[3] << "sigma_0";
+//                     Prop_Mat[3] << LMT::to_string(sigma_0*1e6);
+//                     Prop_Mat[4] << "eps_0";
+//                     Prop_Mat[4] << LMT::to_string(eps_0);
+//                     Prop_Mat[5] << "friction_angle";
+//                     Prop_Mat[5] << LMT::to_string(friction_angle);
+//                     Prop_Mat[6] << "flowstress_ratio";
+//                     Prop_Mat[6] << LMT::to_string(flowstress_ratio);
+//                     Prop_Mat[7] << "dilation_angle";
+//                     Prop_Mat[7] << LMT::to_string(dilation_angle);
+//                 }
+//                 else if (loi == 7){
+//                     Prop_Mat[3] << "pl_multiplier";
+//                     Prop_Mat[3] << LMT::to_string(pl_multiplier);
+//                     Prop_Mat[4] << "eq_stress_order";
+//                     Prop_Mat[4] << LMT::to_string(eq_stress_order);
+//                     Prop_Mat[5] << "time_order";
+//                     Prop_Mat[5] << LMT::to_string(time_order);
+//                 }
+//             }
+            }
+        }
+        else if ( c.type() == "Material_Code_Aster_Item" ) {
+            loi = c["Law_type.num"];
+            Young = c["Young[0]"];
+            Poisson = c["Poisson[0]"];
+            
+            if (loi == 1){ // Powerlaw
+            sigma_y = c["sigma_y[0]"];
+            int coches = c["sigma_y[1]"];
+            a = c["a[0]"];
+            int cochea = c["a[1]"];
+            n = c["n[0]"];
+            int cochen = c["n[1]"];
+            }
+            
+            if (loi == 0) // Elas_iso
+            Prop_Mat.resize(3);
+            if (loi == 1) // Powerlaw
+            Prop_Mat.resize(6);
+            
+            Prop_Mat[0] << "thelaw";
+            if (loi == 0){
+            Prop_Mat[0] << "Elas_iso";
+            Prop_Mat[1] << "Young";
+            Prop_Mat[1] << LMT::to_string(Young*1e9); 
+            Prop_Mat[2] << "Poisson";
+            Prop_Mat[2] << LMT::to_string(Poisson); 
+            }
+            else if (loi == 1){
+            Prop_Mat[0] << "Powerlaw";
+            Prop_Mat[1] << "Young";
+            Prop_Mat[1] << LMT::to_string(Young*1e9); 
+            Prop_Mat[2] << "Poisson";
+            Prop_Mat[2] << LMT::to_string(Poisson); 
+            Prop_Mat[3] << "a";
+            Prop_Mat[3] << LMT::to_string(a); 
+            Prop_Mat[4] << "n";
+            Prop_Mat[4] << LMT::to_string(n); 
+            Prop_Mat[5] << "sigma_y";
+            Prop_Mat[5] << LMT::to_string(sigma_y*1e6); 
+            }
+        }
     }
     
     
@@ -1068,7 +1232,7 @@ void build_matrix_for_the_kinematic_part(Mat<double,Sym<>,SparseLine<> > &M_red,
 void build_matrix_for_the_force_part(Vec<Mat<double, Sym<> ,SparseLine<> > > &VMF, Vec <Vec<double> > &VFF, Vec<Vec< std::string> > force_files, Vec <Vec<double> > calc_force, Vec <Vec <Vec <double> > > calc_force_nodes, Vec<int> indices_bc_cn, double n_im, double n_prop, Vec <Vec <Vec <double> > > comp_disp, double pix2m, double offset, std::string method, int senstrac){
 		
 		Vec<double> meas_force, res_f;
-		
+		bool use_bc;
 		// transfert from nodal forces to global forces associated to the bc groups
 		for (int ncl = min(indices_bc_cn); ncl < max(indices_bc_cn)+1; ncl++){
 		    meas_force = load_res(force_files[ncl][0]);
@@ -1076,59 +1240,60 @@ void build_matrix_for_the_force_part(Vec<Mat<double, Sym<> ,SparseLine<> > > &VM
 		    calc_force.resize(calc_force_nodes.size());
 		    
 		    if (senstrac>0){
-			if (force_files[ncl][1] == "-")
-			    meas_force = - meas_force;
-			else if (force_files[ncl][1] == "0")
-			    meas_force *= 0;
+                if (force_files[ncl][1] == "+" or force_files[ncl][1] == "-"){
+                    meas_force = - meas_force;
+                    use_bc = 1;
+                }
+                else if (force_files[ncl][1] == "0"){
+                    meas_force *= 0;
+                    use_bc = 0;
+                }
 		    }
 		    else meas_force=abs(meas_force);
-		    
-		    Mat<double,Sym<>,SparseLine<> > MF_red( n_prop );
-		    Vec<double> FF_red; FF_red.resize( n_prop, 0 );
-		    calc_force_nodes.resize(comp_disp.size());
-		    for (int nsf =0; nsf<comp_disp.size(); nsf ++){
-			calc_force[nsf].resize(n_im);
-			for (int nim =0; nim<n_im; nim ++){
-			    calc_force[nsf][nim] =0;
-			    for (int nn =0; nn<calc_force_nodes[0][0].size(); nn++){
-				if (indices_bc_cn[nn] == ncl){
-				    calc_force[nsf][nim] += calc_force_nodes[nsf][nim][nn];
-				}
-			    }
-			}
-		    }
-		    
-		    res_f=meas_force-calc_force[0];
-		    if (force_files[ncl][1] == "0" and senstrac>0) res_f=meas_force;
-		    PRINT(meas_force);
-		    PRINT(calc_force[0]);
-		    PRINT(res_f);
-		    //write_vec(calc_force[0],"dernier_effort_calc.txt");
+            
+		    if (use_bc){
+                Mat<double,Sym<>,SparseLine<> > MF_red( n_prop );
+                Vec<double> FF_red; FF_red.resize( n_prop, 0 );
+                calc_force_nodes.resize(comp_disp.size());
+                for (int nsf =0; nsf<comp_disp.size(); nsf ++){
+                    calc_force[nsf].resize(n_im);
+                    for (int nim =0; nim<n_im; nim ++){
+                        calc_force[nsf][nim] =0;
+                        for (int nn =0; nn<calc_force_nodes[0][0].size(); nn++){
+                            if (indices_bc_cn[nn] == ncl){
+                                calc_force[nsf][nim] += calc_force_nodes[nsf][nim][nn];
+                            }
+                        }
+                    }
+                }
+                
+                res_f=meas_force-calc_force[0];
+                if (force_files[ncl][1] == "0" and senstrac>0) res_f=meas_force;
+                PRINT(meas_force);
+                PRINT(calc_force[0]);
+                PRINT(res_f);
+                //write_vec(calc_force[0],"dernier_effort_calc.txt");
 
-		    for( int r = 0; r < n_prop; ++r ) {
-			for( int c = 0; c <= r; ++c ){
-			    MF_red( r, c ) += dot( (calc_force[ 0 ] - calc_force [ r + 1 ]) / offset, (calc_force[ 0 ] - calc_force [ c + 1 ]) / offset );
-			}
-			FF_red[ r ] += dot( (calc_force[ 0 ] - calc_force [ r + 1 ]) / offset, res_f );
-		    }
-		    VMF << MF_red;
-		    VFF << FF_red;
-		    
+                for( int r = 0; r < n_prop; ++r ) {
+                    for( int c = 0; c <= r; ++c ){
+                        MF_red( r, c ) += dot( (calc_force[ 0 ] - calc_force [ r + 1 ]) / offset, (calc_force[ 0 ] - calc_force [ c + 1 ]) / offset );
+                    }
+                    FF_red[ r ] += dot( (calc_force[ 0 ] - calc_force [ r + 1 ]) / offset, res_f );
+                }
+                VMF << MF_red;
+                VFF << FF_red;
+            }
 		}
 }
 
 // assemble kinematic and force parts of an ID problem
-void assemble_global_matrix (Mat<double,Sym<>,SparseLine<> > &M_tot, Vec<double> &F_tot, Mat<double,Sym<>,SparseLine<> > M_red, Vec<double> F_red, Vec<Mat<double, Sym<> ,SparseLine<> > > VMF, Vec <Vec<double> > VFF, bool UF, Vec<int> indices_bc_cn, double ponderation_efforts, double w){
-	
+void assemble_global_matrix (Mat<double,Sym<>,SparseLine<> > &M_tot, Vec<double> &F_tot, Mat<double,Sym<>,SparseLine<> > M_red, Vec<double> F_red, Vec<Mat<double, Sym<> ,SparseLine<> > > VMF, Vec <Vec<double> > VFF, bool UF, double ponderation_efforts, double w){
 	M_tot = M_red;
 	F_tot = F_red ;
 	if (UF){
-		for (int ncl = min(indices_bc_cn); ncl < max(indices_bc_cn)+1; ncl++){
-    //	        int ncl = 1;
-		    M_tot +=  ponderation_efforts * VMF[ncl] * w / (max(indices_bc_cn)+1);
-		    F_tot +=  ponderation_efforts * VFF[ncl] * w / (max(indices_bc_cn)+1);
-		    //M_tot =  ponderation_efforts * VMF[ncl] * w / (max(indices_bc_cn)+1);
-		    //F_tot =  ponderation_efforts * VFF[ncl] * w / (max(indices_bc_cn)+1);
+		for (int ncl = 0; ncl < VMF.size(); ncl++){
+		    M_tot +=  ponderation_efforts * VMF[ncl] * w / VMF.size();
+		    F_tot +=  ponderation_efforts * VFF[ncl] * w / VMF.size();
 		}
 	}
 	
@@ -1153,91 +1318,117 @@ Vec<double> solve_with_max(Mat<double,Sym<>,SparseLine<> > M_tot, Vec<double> F_
 
 	for (int jj=0; jj< dif.size(); jj++){
 	    if (dif[jj] >  max_level){
-		dif[jj]= max_level;
-		PRINT( dif );
+            dif[jj]= max_level;
+            PRINT( dif );
 	    }
 	    if (dif[jj] < -max_level){
-		dif[jj]=-max_level;
-		PRINT( dif );
+            dif[jj]=-max_level;
+            PRINT( dif );
 	    }
 	}
 	return dif;
 }
 
 // Updates material propoerties of an ID problem after solving
-void update_properties(Vec < Vec < std::string > > &Prop_Mat, Vec < Vec < std::string > > Prop_Mat_Backup, Vec<int> prop2id, Vec<double> dif, std::string thelaw){
+void update_properties(Vec < Vec < std::string > > &Prop_Mat, Vec < Vec < std::string > > Prop_Mat_Backup, Vec<int> prop2id, Vec<double> dif){
 
-        Prop_Mat = Prop_Mat_Backup;
+    Prop_Mat = Prop_Mat_Backup;
+    std::string thelaw = find_str_in_propmat("thelaw",Prop_Mat);
+    
 	// Properties update
 	for (int nsf = 0; nsf < dif.size(); nsf++){
-	    double prop;
-	    std::string texte = Prop_Mat[prop2id[nsf]][1];
-	    std::istringstream iss(texte);
-	    iss >> prop;
+	    double prop = boost::lexical_cast<double>(Prop_Mat[prop2id[nsf]][1]);
 	    prop *= (1 + dif[nsf]);
-	    if (thelaw == "RO"){
-		if (Prop_Mat[prop2id[nsf]][1] == "n"){
-		    if (prop < 1.01)
-		       prop =1.1;
-		}
+        if (Prop_Mat[prop2id[nsf]][0] == "Poisson"){
+            if (prop > 0.49)
+                prop = 0.49;
+            if (prop < -0.99)
+                prop = -0.99;
+        }
+	    else if (thelaw == "RO"){
+            if (Prop_Mat[prop2id[nsf]][0] == "n"){
+                if (prop < 1.01)
+                    prop =1.1;
+            }
 	    }
+        else if (thelaw == "Creep, time Hardening"){
+            if (Prop_Mat[prop2id[nsf]][0] == "time_order"){
+                if (prop<0)
+                    prop=0;
+            }
+        }
+        else if (thelaw == "Drucker-Prager Hardening"){
+            if (Prop_Mat[prop2id[nsf]][0] == "eps_0"){
+                if (prop<0)
+                    prop=0;
+            }
+        }
 	    Prop_Mat[prop2id[nsf]][1] = LMT::to_string(prop);
 	}
   
-}
-
-// Puts a string in a double
-void put_string_in_double(std::string str, double &prop){
-
-    std::istringstream iss(str);
-    iss >> prop;
-    
 }
 
 // Send a set of material properties to a MP
 void push_back_material_parameters( MP &mp, Vec < Vec < std::string > > Prop_Mat){
 
     MP ch = mp[ "_children" ]; 
-    double prop;
-    std::string thelaw = Prop_Mat[0][1];
+    std::string thelaw = find_str_in_propmat("thelaw",Prop_Mat);
     for( int ii = 0; ii < ch.size(); ++ii ) {
-	MP c = ch[ ii ];
-	if ( c.type() == "MaterialABQItem" ) {
-	    if ((thelaw == "Elas_iso") or (thelaw == "Elas_ortho") or (thelaw == "RO")){
-		put_string_in_double(Prop_Mat[1][1], prop);
-		PRINT(prop);
-		c["Young[0]"]=prop;
-		put_string_in_double(Prop_Mat[2][1], prop);
-		PRINT(prop);
-		c["Poisson[0]"]=prop;
-	    }
-	    if ((thelaw == "Elas_ortho")){
-		put_string_in_double(Prop_Mat[3][1], prop);
-		c["elas_ratio[0]"]=prop;
-	    }
-	    if ((thelaw == "RO")){
-		put_string_in_double(Prop_Mat[3][1], prop);
-		c["sigma_0[0]"]=prop/1e6;
-		put_string_in_double(Prop_Mat[4][1], prop);
-		c["n[0]"]=prop;
-	    }
-	}
-	if ( c.type() == "Material_Code_Aster_Item" ) {
-	    if ((thelaw == "Elas_iso") or (thelaw == "Powerlaw")){
-		put_string_in_double(Prop_Mat[1][1], prop);
-		c["Young[0]"]=prop/1e9;
-		put_string_in_double(Prop_Mat[2][1], prop);
-		c["Poisson[0]"]=prop;
-	    }
-	    if ((thelaw == "Powerlaw")){
-		put_string_in_double(Prop_Mat[3][1], prop);
-		c["a[0]"]=prop;
-		put_string_in_double(Prop_Mat[4][1], prop);
-		c["n[0]"]=prop;
-		put_string_in_double(Prop_Mat[5][1], prop);
-		c["sigma_y[0]"]=prop/1e6;
-	    }
-	}
+        MP c = ch[ ii ];
+        if ( c.type() == "ABQMaterialItem" ) {
+          
+            int loi = c["type.num"];
+            MP lst_material_type = c[ "type.lst" ];
+            MP type_material = lst_material_type[loi];    
+            if (thelaw == "Isotropic elastic"){
+                // Elasticity
+                type_material["elasticity.E[0]"]=(char*)LMT::to_string(find_double_in_propmat("Young",Prop_Mat)/1e9).c_str();
+                type_material["elasticity.nu[0]"]=find_str_in_propmat("Poisson",Prop_Mat).c_str();
+            }
+            else if (thelaw == "Ramberg-Osgood"){
+                // Elasticity
+                type_material["elasticity.E[0]"]=(char*)LMT::to_string(find_double_in_propmat("Young",Prop_Mat)/1e9).c_str();
+                type_material["elasticity.nu[0]"]=find_str_in_propmat("Poisson",Prop_Mat).c_str();
+                // Plasticity 
+                type_material["plasticity.S0[0]"]=(char*)LMT::to_string(find_double_in_propmat("sigma_0",Prop_Mat)/1e6).c_str();
+                type_material["plasticity.n[0]"]=find_str_in_propmat("n",Prop_Mat).c_str();
+            }
+            else if (thelaw == "Drucker-Prager Hardening"){
+                // Elasticity
+                type_material["elasticity.E[0]"]=(char*)LMT::to_string(find_double_in_propmat("Young",Prop_Mat)/1e9).c_str();
+                type_material["elasticity.nu[0]"]=find_str_in_propmat("Poisson",Prop_Mat).c_str();
+                // Plasticity 
+                type_material["hardening.S0[0]"]=(char*)LMT::to_string(find_double_in_propmat("sigma_0",Prop_Mat)/1e6).c_str();
+                type_material["hardening.eps0[0]"]=find_str_in_propmat("eps_0",Prop_Mat).c_str();
+                // Drucker-Prager parameters
+                type_material["DruckerPrager.friction_angle[0]"]=find_str_in_propmat("friction_angle",Prop_Mat).c_str();
+                type_material["DruckerPrager.flowstress_ratio[0]"]=find_str_in_propmat("flowstress_ratio",Prop_Mat).c_str();
+                type_material["DruckerPrager.dilation_angle[0]"]=find_str_in_propmat("dilation_angle",Prop_Mat).c_str();
+            }
+            else if (thelaw == "Creep, time Hardening"){
+                // Elasticity
+                type_material["elasticity.E[0]"]=(char*)LMT::to_string(find_double_in_propmat("Young",Prop_Mat)/1e9).c_str();
+                type_material["elasticity.nu[0]"]=find_str_in_propmat("Poisson",Prop_Mat).c_str();
+                // Creep
+                type_material["creep.pl_multiplier[0]"]=(char*)LMT::to_string(find_double_in_propmat("pl_multiplier",Prop_Mat)/1e-9).c_str();
+                type_material["creep.eq_stress_order[0]"]=find_str_in_propmat("eq_stress_order",Prop_Mat).c_str();
+                type_material["creep.time_order[0]"]=find_str_in_propmat("time_order",Prop_Mat).c_str();
+            }
+            
+        }
+        if ( c.type() == "Material_Code_Aster_Item" ) {
+            if ((thelaw == "Elas_iso") or (thelaw == "Powerlaw")){
+                c["Young[0]"]=find_double_in_propmat("Young",Prop_Mat)/1e9;
+                c["Poisson[0]"]=find_double_in_propmat("Poisson",Prop_Mat);
+            }
+            if ((thelaw == "Powerlaw")){
+                c["Young[0]"]=find_double_in_propmat("Young",Prop_Mat)/1e9;
+                c["Poisson[0]"]=find_double_in_propmat("Poisson",Prop_Mat);
+                c["a[0]"]=find_double_in_propmat("a",Prop_Mat);
+                c["n[0]"]=find_double_in_propmat("n",Prop_Mat);
+                c["sigma_y[0]"]=find_double_in_propmat("sigma_y",Prop_Mat)/1e6;
+            }
+        }
     }
     mp.flush();
     
@@ -1390,12 +1581,12 @@ void calc_young_for_elastic_case(Vec<int> indices_bc_cn,  Vec<Vec< std::string> 
 			for (int nsf =0; nsf<n_prop; nsf ++){
 			    calc_force[nsf].resize(n_im);
 			    for (int nim =0; nim<n_im; nim ++){
-				calc_force[nsf][nim] =0;
-				for (int nn =0; nn<calc_force_nodes[0][0].size(); nn++){
-				    if (indices_bc_cn[nn] == ncl){
-					calc_force[nsf][nim] += calc_force_nodes[nsf][nim][nn];
-				    }
-				}
+                    calc_force[nsf][nim] =0;
+                    for (int nn =0; nn<calc_force_nodes[0][0].size(); nn++){
+                        if (indices_bc_cn[nn] == ncl){
+                        calc_force[nsf][nim] += calc_force_nodes[nsf][nim][nn];
+                        }
+                    }
 			    }
 			}
 			meas_force.resize(calc_force[0].size());

@@ -94,7 +94,6 @@ void Field::save(MP fielditem) const
         for(int i = 0; i < values[v].data.size(); i++)
             data->operator[](i) = values[v].data[i];
         value[ "_data" ] = data;
-        
         MP disp = MP::new_obj();
         disp[ "field" ] = value;
         disp[ "pos" ] = MP::new_lst();
