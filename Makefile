@@ -2,12 +2,13 @@ LIBRARIES = \
 	AbaqusComputationPlugin \
 	DicUncertaintyPlugin \
 	IdentificationWithAbaqusPlugin \
-	Code_Aster_ComputationPlugin \
+	#Code_Aster_ComputationPlugin \
 	FieldExportPlugin \
-	IdentificationWithCode_AsterPlugin \
+	#IdentificationWithCode_AsterPlugin \
 	VirtualGaugePlugin \
-	CorreliPlugin 
-	
+	CorreliPlugin
+
+
 SHELL = /bin/bash
 	
 all: 

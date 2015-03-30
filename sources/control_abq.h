@@ -9,7 +9,8 @@
 #include "LMT/include/mesh/mesh.h"
 #include "header_abq.h"
 #include "LMT/include/containers/apply_ij.h"
-#include "/media/mathieu/Data/Abaqus/include/odb_API.h" // pour les fonctions odb d'abaqus
+// #include </usr/local/6.14-1/code/include/odb_API.h> // pour les fonctions odb d'abaqus
+#include "odb_API.h" // pour les fonctions odb d'abaqus
 #include "dic/correlation/mesh_carac_correlation.h"
 #include <iostream>
 #include <boost/graph/graph_concepts.hpp>
