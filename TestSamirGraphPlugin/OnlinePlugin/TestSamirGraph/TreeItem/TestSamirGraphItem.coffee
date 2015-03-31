@@ -91,7 +91,7 @@ class TestSamirGraphItem extends TreeItem_Computable
                         
                 inst = undefined
                 for inst_i in app.selected_canvas_inst()
-                    console.log inst_i
+#                     console.log inst_i
                     inst = inst_i
                     
                                 
@@ -109,9 +109,13 @@ class TestSamirGraphItem extends TreeItem_Computable
                   Pwidth = 800 
                   Pheight = 500 
                 
-                p = new_popup "My graph", event: evt, child: @_container_global, top_x: Pleft, top_y: Ptop, width: Pwidth, height: Pheight, onclose: =>
-                    @onPopupClose( app ) 
-                                    
+#                 p = new_popup "My graph", event: evt, child: @_container_global, top_x: Pleft, top_y: Ptop, width: Pwidth, height: Pheight, onclose: =>
+#                     @onPopupClose( app ) 
+#                   new GenericManagerPanelInstance( this, el, @app_data, undo_manager )
+
+                el = undefined   
+                data = undefined # @data = new TreeAppData
+                @genericPanel_inst = new GenericManagerPanelInstance( el, data, title = "", elem_kind = "div", this )   
 #                 graph_view = new TestSamirGraphView(
 #                                    this,
 #                                   @_container_global,
@@ -119,13 +123,7 @@ class TestSamirGraphItem extends TreeItem_Computable
 #                                   @_vec_y,
 #                                   Pwidth,
 #                                   Pheight)
-                graph_view = new TestSamirGraphView(
-                                  this,
-                                  @_container_global,
-                                  @_vec_x,
-                                  [@_vec_y],
-                                  Pwidth,
-                                  Pheight)
+
                 app.active_key.set false
                
                 ##TODO
