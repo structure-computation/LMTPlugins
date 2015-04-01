@@ -99,7 +99,8 @@ bool IdentificationWithCode_AsterUpdater::run( MP mpid ) {
 	Mat<double,Sym<>,SparseLine<> > M_d_report;
 	Vec<Mat<double,Sym<>,SparseLine<> > > M_f_report;
 	Vec<double> F_d_report, dif_report;
-	Vec <Vec<double> > F_f_report;
+    Vec <Vec<double> > F_f_report;
+	Vec<double>  dif;
 	Vec <Vec<double> > calc_force_report, meas_force_report;
 	/////////// VARIABLES TO BE INCLUDED IN THE REPORT
 
@@ -137,13 +138,12 @@ bool IdentificationWithCode_AsterUpdater::run( MP mpid ) {
             jobnames << jobname;
         }
         
-        PRINT(jobnames);
-        
         std::cout << " " << std::endl;
         std::cout << "Waiting for result" << std::endl;
         std::cout << " " << std::endl;
         
         Vec<int> comp_finished; comp_finished.resize(prop2id.size()+1);
+        for (int ii =0; ii < comp_finished.size(); ii++) comp_finished[ii] = 0;
         Vec<Vec<TM> > Metares; Metares.resize(prop2id.size()+1);
         for (int ii =0; ii < Metares.size(); ii++) Metares[ii] = Mesh_Vector_input;
         
@@ -154,11 +154,12 @@ bool IdentificationWithCode_AsterUpdater::run( MP mpid ) {
             for (int ii = 0; ii < comp_finished.size(); ii++){
                 if (exists((root_dir + "/ok_" + to_string(ii) + ".txt").c_str()) and (comp_finished[ii]==0) ) {
                     std::cout << " " << std::endl;
-                    std::cout << "Computation " << ii << "finished" << std::endl;
+                    std::cout << "Computation " << ii << " finished" << std::endl;
                     std::cout << " " << std::endl;
                     load_aster_res_into_LMTppMesh(jobnames[ii], Metares[ii], thickness); 
                     extract_dep_from_LMTppMesh( Metares[ii], comp_disp );
                     extract_fnod_from_LMTppMesh( Metares[ii], senstrac, calc_force_nodes, constrained_nodes);
+                    comp_finished[ii]=1;
                 }
             }
             sleep(1);
@@ -170,8 +171,11 @@ bool IdentificationWithCode_AsterUpdater::run( MP mpid ) {
 	    if (UF) build_matrix_for_the_force_part(VMF, VFF, force_files, calc_force, calc_force_nodes, indices_bc_cn, Mesh_Vector_output.size(), prop2id.size(), comp_disp, pix2m, offset, method, senstrac);
 	    assemble_global_matrix (M_tot, F_tot, M_red, F_red, VMF, VFF, UF, ponderation_efforts, w);
 	    
-	    Vec<double> dif = solve_with_max(M_tot, F_tot, max_level, resolution, relaxation);
-	    update_properties(Prop_Mat, Prop_Mat_Backup, prop2id, dif);
+        if (F_tot.size() > 0){
+                dif = solve_with_max(M_tot, F_tot, max_level, resolution, relaxation);
+                update_properties(Prop_Mat, Prop_Mat_Backup, prop2id, dif);
+        }
+            
 	    
 	    if ( (norm_inf( dif ) < 1e-3) or (it+1 == iterations) ){
 	      //it_report, M_d_report, M_f_report, F_d_report, F_f_report, calc_force_report, meas_force_report
@@ -198,9 +202,9 @@ bool IdentificationWithCode_AsterUpdater::run( MP mpid ) {
 	    
 	}
 	
-	qDebug() << mpid["id_done"];
-	mpid["id_done"] = double(0.3);
-	qDebug() << mpid["id_done[0]"];
+	PRINT((char*)LMT::to_string(10).c_str()); 
+	
+    mpid["id_done"] = (char*)LMT::to_string(id_ok).c_str(); 
 	//push_back_material_parameters(param, Prop_Mat); mpid.flush();
 	
 	std::string report_address = root_dir + "/report";
