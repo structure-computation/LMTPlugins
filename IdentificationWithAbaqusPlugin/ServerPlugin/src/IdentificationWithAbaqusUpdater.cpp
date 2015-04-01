@@ -120,6 +120,7 @@ bool IdentificationWithAbaqusUpdater::run( MP mpid ) {
             Vec <Vec <Vec <double> > > comp_disp, calc_force_nodes;
             Vec<double> fnod;
             Vec <Vec<double> > calc_force;
+            Vec<double> dif;
             
             Mat<double,Sym<>,SparseLine<> > M_tot ;
             Vec<double> F_tot ;
@@ -149,42 +150,38 @@ bool IdentificationWithAbaqusUpdater::run( MP mpid ) {
             if (UF) build_matrix_for_the_force_part(VMF, VFF, force_files, calc_force, calc_force_nodes, indices_bc_cn, Mesh_Vector_output.size(), prop2id.size(), comp_disp, pix2m, offset, method, senstrac);
             assemble_global_matrix (M_tot, F_tot, M_red, F_red, VMF, VFF, UF, ponderation_efforts, w);
             
-            Vec<double> dif = solve_with_max(M_tot, F_tot, max_level, resolution, relaxation);
-            update_properties(Prop_Mat, Prop_Mat_Backup, prop2id, dif);
+            if (F_tot.size() > 0){
+                dif = solve_with_max(M_tot, F_tot, max_level, resolution, relaxation);
+                update_properties(Prop_Mat, Prop_Mat_Backup, prop2id, dif);
+            }
             
             if ( (norm_inf( dif ) < 1e-3) or (it+1 == iterations) ){
-              //it_report, M_d_report, M_f_report, F_d_report, F_f_report, calc_force_report, meas_force_report
-            it_report = it;
-            dif_report = dif;
-            M_d_report = M_red;
-            F_d_report = F_red;
-            calc_force_report = calc_force;
-            meas_force_report = meas_force_report;
-            for (int ncl = 0; ncl < VMF.size(); ncl++){
-                M_f_report << VMF[ncl];
-                F_f_report << VFF[ncl];
+                //it_report, M_d_report, M_f_report, F_d_report, F_f_report, calc_force_report, meas_force_report
+                it_report = it;
+                dif_report = dif;
+                M_d_report = M_red;
+                F_d_report = F_red;
+                calc_force_report = calc_force;
+                meas_force_report = meas_force_report;
+                for (int ncl = 0; ncl < VMF.size(); ncl++){
+                    M_f_report << VMF[ncl];
+                    F_f_report << VFF[ncl];
+                }
+                if ( (norm_inf( dif ) < 1e-3)) id_ok = 1;
+                else id_ok = 0;
+                break;
             }
-            
-            for (int num_mesh = 0; num_mesh < Mesh_Vector_output.size(); num_mesh++)
-                write_mesh_vtk( root_dir + "/aaa_test" + to_string(num_mesh) + ".vtu",Mesh_Vector_output[ num_mesh ]);
-            
-            if (thelaw == "Elas_iso") calc_young_for_elastic_case(indices_bc_cn, force_files, calc_force, calc_force_nodes, prop2id.size(), Mesh_Vector_output.size(), Prop_Mat);
-
-            if ( (norm_inf( dif ) < 1e-3)) id_ok = 1;
-            else id_ok = 0;
-            break;
-            }
-            
         }
         
-       // mpid["id_done[0]"] = id_ok;
-        mpid["id_done[0]"] = double(1);
-        push_back_material_parameters(param, Prop_Mat); mpid.flush();
+        mpid["id_done"] = (char*)LMT::to_string(id_ok).c_str(); 
+        push_back_material_parameters(param, Prop_Mat);
         
         std::string report_address = root_dir + "/report";
         write_identification_report (report_address, Mesh_Vector_output, Prop_Mat, it_report, iterations, M_d_report, M_f_report, F_d_report, F_f_report, calc_force_report, meas_force_report, prop2id, ponderation_efforts, dif_report);
 
+        PRINT(Mesh_Vector_output.size());
         put_result_in_MP(Mesh_Vector_output, mpid, fs_output); // Sortie dans un FieldSet "calcul"
+         mpid.flush();
         add_message( mpid, ET_Info, "Result transmitted" );    mpid.flush();
         
     }

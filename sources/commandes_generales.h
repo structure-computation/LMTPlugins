@@ -681,18 +681,26 @@ void extract_id_properties( MP mp, Vec < Vec < std::string > > Prop_Mat, Vec<int
     std::string thelaw = find_str_in_propmat("thelaw",Prop_Mat);
     for( int ii = 0; ii < ch.size(); ++ii ) {
           MP c = ch[ ii ];
-          if ( c.type() == "Material_Code_Aster_Item" ) {
-              if (thelaw == "Elas_iso"){
-                  prop2id << 2; // nu
-              }
-              if (thelaw == "Powerlaw"){
-                  if (MP2bool(c["a[1]"]))
-                    prop2id << 3;// a
-                  if (MP2bool(c["n[1]"]))
-                    prop2id << 4;// n
-                  if (MP2bool(c["sigma_y[1]"]))
-                    prop2id << 5;// sigma_y
-               }
+          if ( c.type() == "Code_Aster_MaterialItem" ) {
+          
+                int loi = c["type.num"];
+                MP lst_material_type = c[ "type.lst" ];
+                MP type_material = lst_material_type[loi];
+                
+                if (thelaw == "Isotropic elastic"){
+                    // Elasticity
+                    if (MP2bool(type_material["elasticity.E[1]"])) prop2id << int_find_str_in_propmat("Young",Prop_Mat);
+                    if (MP2bool(type_material["elasticity.nu[1]"])) prop2id << int_find_str_in_propmat("Poisson",Prop_Mat);
+                }
+                else if (thelaw == "Powerlaw"){ // Powerlaw
+                    // Elasticity
+                    if (MP2bool(type_material["elasticity.E[1]"])) prop2id << int_find_str_in_propmat("Young",Prop_Mat);
+                    if (MP2bool(type_material["elasticity.nu[1]"])) prop2id << int_find_str_in_propmat("Poisson",Prop_Mat);
+                    // Plasticity
+                    if (MP2bool(type_material["plasticity.S0[1]"])) prop2id << int_find_str_in_propmat("sigma_0",Prop_Mat);
+                    if (MP2bool(type_material["plasticity.a[1]"])) prop2id << int_find_str_in_propmat("a",Prop_Mat);
+                    if (MP2bool(type_material["plasticity.n[1]"])) prop2id << int_find_str_in_propmat("n",Prop_Mat);
+                }
           }
           else if ( c.type() == "ABQMaterialItem" ) {
           
@@ -1083,45 +1091,39 @@ void extract_computation_parameters( MP mpc, Vec<TM> &Mesh_vector_input, Vec<int
 //             }
             }
         }
-        else if ( c.type() == "Material_Code_Aster_Item" ) {
-            loi = c["Law_type.num"];
-            Young = c["Young[0]"];
-            Poisson = c["Poisson[0]"];
+        else if ( c.type() == "Code_Aster_MaterialItem" ) {
             
-            if (loi == 1){ // Powerlaw
-            sigma_y = c["sigma_y[0]"];
-            int coches = c["sigma_y[1]"];
-            a = c["a[0]"];
-            int cochea = c["a[1]"];
-            n = c["n[0]"];
-            int cochen = c["n[1]"];
-            }
+            int loi = c["type.num"];
+            MP lst_material_type = c[ "type.lst" ];
+            MP type_material = lst_material_type[loi];
+            std::string lawname = MP2str(type_material["_name"]);
             
-            if (loi == 0) // Elas_iso
-            Prop_Mat.resize(3);
-            if (loi == 1) // Powerlaw
-            Prop_Mat.resize(6);
-            
+            Prop_Mat.resize(1);
             Prop_Mat[0] << "thelaw";
-            if (loi == 0){
-            Prop_Mat[0] << "Elas_iso";
-            Prop_Mat[1] << "Young";
-            Prop_Mat[1] << LMT::to_string(Young*1e9); 
-            Prop_Mat[2] << "Poisson";
-            Prop_Mat[2] << LMT::to_string(Poisson); 
+            Prop_Mat[0] << lawname;
+            
+            if (lawname == "Isotropic elastic"){
+                // Elasticity
+                Prop_Mat.resize(3);
+                Prop_Mat[1] << "Young";
+                Prop_Mat[1] << LMT::to_string(MP2double(type_material["elasticity.E[0]"])*1e9); 
+                Prop_Mat[2] << "Poisson";
+                Prop_Mat[2] << LMT::to_string(MP2double(type_material["elasticity.nu[0]" ])); 
             }
-            else if (loi == 1){
-            Prop_Mat[0] << "Powerlaw";
-            Prop_Mat[1] << "Young";
-            Prop_Mat[1] << LMT::to_string(Young*1e9); 
-            Prop_Mat[2] << "Poisson";
-            Prop_Mat[2] << LMT::to_string(Poisson); 
-            Prop_Mat[3] << "a";
-            Prop_Mat[3] << LMT::to_string(a); 
-            Prop_Mat[4] << "n";
-            Prop_Mat[4] << LMT::to_string(n); 
-            Prop_Mat[5] << "sigma_y";
-            Prop_Mat[5] << LMT::to_string(sigma_y*1e6); 
+            else if (lawname == "Powerlaw"){ // Powerlaw
+                Prop_Mat.resize(6);
+                // Elasticity
+                Prop_Mat[1] << "Young";
+                Prop_Mat[1] << LMT::to_string(MP2double(type_material["elasticity.E[0]"])*1e9); 
+                Prop_Mat[2] << "Poisson";
+                Prop_Mat[2] << LMT::to_string(MP2double(type_material["elasticity.nu[0]" ]));
+                // Plasticity 
+                Prop_Mat[3] << "sigma_0";
+                Prop_Mat[3] << LMT::to_string(MP2double(type_material["plasticity.S0[0]"])*1e6);
+                Prop_Mat[4] << "a";
+                Prop_Mat[4] << LMT::to_string(MP2double(type_material["plasticity.a[0]"])*1e6);
+                Prop_Mat[5] << "n";
+                Prop_Mat[5] << LMT::to_string(MP2double(type_material["plasticity.n[0]"]));
             }
         }
     }
@@ -1414,19 +1416,25 @@ void push_back_material_parameters( MP &mp, Vec < Vec < std::string > > Prop_Mat
                 type_material["creep.eq_stress_order[0]"]=find_str_in_propmat("eq_stress_order",Prop_Mat).c_str();
                 type_material["creep.time_order[0]"]=find_str_in_propmat("time_order",Prop_Mat).c_str();
             }
-            
         }
-        if ( c.type() == "Material_Code_Aster_Item" ) {
-            if ((thelaw == "Elas_iso") or (thelaw == "Powerlaw")){
-                c["Young[0]"]=find_double_in_propmat("Young",Prop_Mat)/1e9;
-                c["Poisson[0]"]=find_double_in_propmat("Poisson",Prop_Mat);
+        if ( c.type() == "Code_Aster_MaterialItem" ) {
+          
+            int loi = c["type.num"];
+            MP lst_material_type = c[ "type.lst" ];
+            MP type_material = lst_material_type[loi];    
+            if (thelaw == "Isotropic elastic"){
+                // Elasticity
+                type_material["elasticity.E[0]"]=(char*)LMT::to_string(find_double_in_propmat("Young",Prop_Mat)/1e9).c_str();
+                type_material["elasticity.nu[0]"]=find_str_in_propmat("Poisson",Prop_Mat).c_str();
             }
-            if ((thelaw == "Powerlaw")){
-                c["Young[0]"]=find_double_in_propmat("Young",Prop_Mat)/1e9;
-                c["Poisson[0]"]=find_double_in_propmat("Poisson",Prop_Mat);
-                c["a[0]"]=find_double_in_propmat("a",Prop_Mat);
-                c["n[0]"]=find_double_in_propmat("n",Prop_Mat);
-                c["sigma_y[0]"]=find_double_in_propmat("sigma_y",Prop_Mat)/1e6;
+            else if (thelaw == "Powerlaw"){
+                // Elasticity
+                type_material["elasticity.E[0]"]=(char*)LMT::to_string(find_double_in_propmat("Young",Prop_Mat)/1e9).c_str();
+                type_material["elasticity.nu[0]"]=find_str_in_propmat("Poisson",Prop_Mat).c_str();
+                // Plasticity 
+                type_material["plasticity.S0[0]"]=(char*)LMT::to_string(find_double_in_propmat("sigma_0",Prop_Mat)/1e6).c_str();
+                type_material["plasticity.a[0]"]=(char*)LMT::to_string(find_double_in_propmat("a",Prop_Mat)/1e6).c_str();
+                type_material["plasticity.n[0]"]=find_str_in_propmat("n",Prop_Mat).c_str();
             }
         }
     }

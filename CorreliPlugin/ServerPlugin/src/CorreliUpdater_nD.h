@@ -201,7 +201,8 @@ bool correliUpdater_nD( CorreliUpdater *updater, MP mp, LMT::Number<dim> ) {
         }
         else if ( c.type() == "ImgDirectorySetItem"){
             MP ch = c[ "_children" ];
-            tot_num_im = ch.size();
+            if (tot_num_im<2)
+                tot_num_im = ch.size();
             vec_names.resize(tot_num_im);
             
             for( int j = 0; j < ch.size(); ++j ) {
