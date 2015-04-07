@@ -1542,7 +1542,6 @@ void put_result_in_MP (Vec<TM> meshes, MP &mp, FieldSet &fs_output){// SORTIE DA
     }
     else {
         //fs_output.save(mp["_output[0]"]); // Don't know why but it has to be saved first
-        
         for (int num_mesh = 0; num_mesh < meshes.size(); num_mesh++){
             for (int no = 0; no < meshes[num_mesh].node_list.size(); no++ ) {
                 for (int dim =0; dim < TM::dim; dim++){
@@ -1551,6 +1550,8 @@ void put_result_in_MP (Vec<TM> meshes, MP &mp, FieldSet &fs_output){// SORTIE DA
             }
         }
         fs_output.save(mp["_output[0]"]); //BUG (et notamment field.save à l'intérieur ligne 66)
+        qDebug() <<mp["_output[0]"];
+        mp.flush();
     }
 }
 
