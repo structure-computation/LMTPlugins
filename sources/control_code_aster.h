@@ -96,7 +96,7 @@ void Write_export_file (std::string root_file){
     exp << "P rep_trav /tmp/mathieu-marsannay-batch.12746\n";
     exp << "P soumbtc oui\n";
     exp << "P tpsjob 2640\n";
-    exp << "P version 11.5\n";
+    exp << "P version 11.7\n";
     exp << "A args \n";
     exp << "A memjeveux 750.0\n";
     exp << "A tpmax 158400\n";
