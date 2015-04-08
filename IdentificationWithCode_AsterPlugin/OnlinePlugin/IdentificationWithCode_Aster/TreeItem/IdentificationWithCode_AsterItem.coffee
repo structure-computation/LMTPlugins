@@ -7,7 +7,7 @@ class IdentificationWithCode_AsterItem extends TreeItem_Computable
            iterations : 10
            relaxation : 1
            offset : 0.01
-           id_done : 0
+           id_done : "0"
            traction_direction : new Choice( 0, [ "none", "X", "Y"] )
         
         @_name.set name
@@ -15,7 +15,7 @@ class IdentificationWithCode_AsterItem extends TreeItem_Computable
         @_viewable.set false
         
         @_computation_mode.set false
-#        @_add_output new MeshItem
+        
         @add_child new Code_Aster_DataItem
         @add_output new FieldSetItem
         

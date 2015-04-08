@@ -57,29 +57,27 @@ bool VirtualGaugeUpdater::run( MP mp ) {
 	    Vec<Vec<double> > dep_tmp; dep_tmp.resize(TM::dim);
 	    GetEpsInVecs ge;
 	    for (int no = 0; no < GaugeMesh.node_list.size(); no++){
-		GaugeMesh.node_list[ no ].dep = interpolation( Mesh_Vector_input[num_mesh], dep_DM(), GaugeMesh.node_list[ no ].pos );
-		for (int d = 0; d < TM::dim; d++)
-		  dep_tmp[d] << GaugeMesh.node_list[ no ].dep[d];
-	    }
-	    dic.get_epsilon( GaugeMesh );
-	    write_mesh_vtk( racine_fic + to_string(num_mesh) + ".vtu",GaugeMesh);
-	    apply( GaugeMesh.elem_list, ge );
-	    
-	    Vec<Vec<double> > eps_tmp; eps_tmp.resize(eps_result.size());
-	    for (int d = 0; d<eps_result.size(); d++){
-		eps_tmp[d].resize(ge.e.size());
-		for (int ne = 0; ne < ge.e.size(); ne++){
-		    eps_tmp[d][ne] = ge.e[ne][d];
-		}
-		eps_result[d].resize(Mesh_Vector_input.size());
-		eps_result[d][num_mesh] = mean(eps_tmp[d]);
+            GaugeMesh.node_list[ no ].dep = interpolation( Mesh_Vector_input[num_mesh], dep_DM(), GaugeMesh.node_list[ no ].pos );
+            for (int d = 0; d < TM::dim; d++)
+                dep_tmp[d] << GaugeMesh.node_list[ no ].dep[d];
+        }
+        dic.get_epsilon( GaugeMesh );
+        write_mesh_vtk( racine_fic + to_string(num_mesh) + ".vtu",GaugeMesh);
+        apply( GaugeMesh.elem_list, ge );
+            
+            Vec<Vec<double> > eps_tmp; eps_tmp.resize(eps_result.size());
+        for (int d = 0; d<eps_result.size(); d++){
+            eps_tmp[d].resize(ge.e.size());
+            for (int ne = 0; ne < ge.e.size(); ne++){
+                eps_tmp[d][ne] = ge.e[ne][d];
+            }
+            eps_result[d].resize(Mesh_Vector_input.size());
+            eps_result[d][num_mesh] = mean(eps_tmp[d]);
 	    }
 	    for (int d = 0; d<dep_result.size(); d++){
-		dep_result[d].resize(Mesh_Vector_input.size());
-		dep_result[d][num_mesh] = mean(dep_tmp[d]);
+            dep_result[d].resize(Mesh_Vector_input.size());
+            dep_result[d][num_mesh] = mean(dep_tmp[d]);
 	    }
-	    
-	    
 	}
 	
 	PRINT(eps_result);
