@@ -174,16 +174,14 @@ bool IdentificationWithAbaqusUpdater::run( MP mpid ) {
         }
         
         mpid["id_done"] = (char*)LMT::to_string(id_ok).c_str(); 
-        push_back_material_parameters(param, Prop_Mat);
+        push_back_material_parameters(param, Prop_Mat); mpid.flush();
         
         std::string report_address = root_dir + "/report";
         write_identification_report (report_address, Mesh_Vector_output, Prop_Mat, it_report, iterations, M_d_report, M_f_report, F_d_report, F_f_report, calc_force_report, meas_force_report, prop2id, ponderation_efforts, dif_report);
 
-        PRINT(Mesh_Vector_output.size());
         put_result_in_MP(Mesh_Vector_output, mpid, fs_output); // Sortie dans un FieldSet "calcul"
-         mpid.flush();
         add_message( mpid, ET_Info, "Result transmitted" );    mpid.flush();
-        
+        return 1;
     }
 }
 
