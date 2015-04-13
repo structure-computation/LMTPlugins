@@ -89,33 +89,163 @@ class TestSamirGraphItem extends TreeItem_Computable
 #                     top     : 40
 #                     bottom  : 10
                         
-                inst = undefined
-                for inst_i in app.selected_canvas_inst()
-#                     console.log inst_i
-                    inst = inst_i
+#                 inst = undefined
+#                 console.log app
+#                 console.log app.all_canvas_inst()
+              
                     
-                                
-                if (inst.divCanvas)?
-#                   Ptop   = TS_instance.getTop( inst.div )
-                  Ptop   = @getTop( inst.div )
-                  Pleft  = @getLeft( inst.div )  
-                  Pwidth = inst.divCanvas.offsetWidth
-                  Pheight = inst.divCanvas.offsetHeight
-                  Pheight = Pheight + 22
-                
-                else
-                  Ptop   = 100
-                  Pleft  = 100
-                  Pwidth = 800 
-                  Pheight = 500 
-                
+                #TODO A  remettre Debut
+#                 if (inst.divCanvas)?
+# #                   Ptop   = TS_instance.getTop( inst.div )
+#                   Ptop   = @getTop( inst.div )
+#                   Pleft  = @getLeft( inst.div )  
+#                   Pwidth = inst.divCanvas.offsetWidth
+#                   Pheight = inst.divCanvas.offsetHeight
+#                   Pheight = Pheight + 22
+#                 
+#                 else
+#                   Ptop   = 100
+#                   Pleft  = 100
+#                   Pwidth = 800 
+#                   Pheight = 500 
+                  #TODO A  remettre  Fin
+                  
 #                 p = new_popup "My graph", event: evt, child: @_container_global, top_x: Pleft, top_y: Ptop, width: Pwidth, height: Pheight, onclose: =>
 #                     @onPopupClose( app ) 
 #                   new GenericManagerPanelInstance( this, el, @app_data, undo_manager )
-
+                Ptop   = 100
+                Pleft  = 100
+                Pwidth = 800 
+                Pheight = 500
+                
                 el = undefined   
-                data = undefined # @data = new TreeAppData
-                @genericPanel_inst = new GenericManagerPanelInstance( el, data, title = "", elem_kind = "div", this )   
+#                 data = undefined # @data = new TreeAppData               
+                
+#                 sc_inst = app.selected_canvas_inst()
+#                 if sc_inst.length == 0
+#                     el = new_dom_element
+#                         parentNode: @bel
+#                         id        : "main_window"
+#                         style:
+#                             position: "absolute"
+#                             left    : 0
+#                             right   : 0
+#                             top     : "61px"
+#                             bottom  : 0
+#                 else
+#                     for inst_i in sc_inst
+#                         inst = inst_i
+#                     el= inst.divCanvas
+                
+                 #TODO               
+#                 NewLayoutManagerData = new LayoutManagerData.panel_id_of_term_panels
+                
+                panel_id_list = app.data.panel_id_list()# de type Array!
+                console.log panel_id_list
+                #output:  ["MainView"] 
+                # puis
+                #output: ["id_1", "id_6"] 
+                
+                panel_id_list0 = panel_id_list[0]
+                console.log panel_id_list0
+                #output: MainView
+                # puis
+                #output: id_1
+                
+                for panel_id_i in panel_id_list
+                    if panel_id_i == "MainView"
+                        console.log panel_id_i+"= "+panel_id_i.indexOf()
+                #output: MainView= -1 
+                
+                session = app.data.selected_session()
+                CurrentLayoutManager = app.layouts[ session.model_id ] 
+#                 console.log CurrentLayoutManager._pan_vs_id( "MainView")+"_pan_vs_id( 'MainView')" # panel instance for a given panel_id
+                # output:  not available
+                
+                console.log "CurrentLayoutManager.flat"
+                console.log CurrentLayoutManager.flat
+                # output LayoutManager.flat donne l'equivalent de LayoutManagerData._make_graph_rec
+                
+                display_settings = app.data.selected_display_settings()
+                console.log display_settings + "display_settings"
+                
+                CurrentLayoutManagerData = display_settings._layout
+                console.log CurrentLayoutManagerData
+                console.log "= CurrentLayoutManagerData"
+                
+                # output:  ContextBar,TreeView,EditView,id_1,id_6 panel
+                
+                border_size = CurrentLayoutManager.border_size
+                
+                CLM_make_info =CurrentLayoutManagerData.make_info( 200, 300, border_size )
+                #output similaire à flat
+                
+#                 console.log CurrentLayoutManagerData.find_item_with_panel_id+" find_item_with_panel_id"
+#                 console.log CurrentLayoutManagerData.find_parent_of_panel_id( id, data = @root )+" find_parent_of_panel_id( id, data = @root )" 
+#                 console.log CurrentLayoutManagerData.mk_split( d, s, id, c, new_panel_id = @_find_new_panel_id [] )+" mk_split( d, s, id, c, new_panel_id = @_find_new_panel_id [] )"
+#                 console.log CurrentLayoutManagerData.rm_panel: ( id )+" rm_panel: ( id )"
+#                 console.log CurLMData_t_ids+" panel_id_of_term_panels"
+                console.log CurrentLayoutManagerData.panel_ids()+"panel_ids()" 
+                # output:  id_2,ContextBar,id_3,id_4,TreeView,EditView,id_7,id_1,id_6
+#                 
+                console.log CurrentLayoutManagerData["root"]+" CurrentLayoutManagerData[root]"
+                
+                
+#                 sub_LayoutManager = new SUBLayoutManager(app.el, CurrentLayoutManagerData,?)
+#                 
+#                 sub_LayoutManager._pan_vs_id[panel_id]#panel_id pas directement de type string mais Str ?
+#                 sub_LayoutManager.set_message:
+#                 sub_LayoutManager.resize_div( obj, p_min, p_max )
+#                 sub_LayoutManager.getLeft
+#                 sub_LayoutManager.getTop
+                
+                #!!!!!!!!!!!!!!!
+#                 sub_LayoutManager.new_panel_instanceGeneric(data, "Generic" ) 
+                  #TODO #TEST a ressesser si pertient
+#                 CurLMData_t_ids = CurrentLayoutManagerData.panel_id_of_term_panels()
+#                 last_id = CurLMData_t_ids[CurLMData_t_ids.length-1]
+                console.log "last_id = "+last_id
+                
+                #TEST
+                  
+                  #TEST 1
+#                 @lm = new LayoutManager el, CurrentLayoutManagerData
+#                 @lm.new_panel_instance = ( data ) =>         
+#                     new GenericManagerPanelInstance( el, app.data, "Generic title", "div", this, true )   
+#                 @lm.show()
+                  #TEST 2 fin
+                  
+                sc_inst = app.selected_canvas_inst()
+#                 if sc_inst.length == 0
+#                   el = new_dom_element
+#                       parentNode: div
+#                       id        : "MainView"
+#                       style:
+#                           position: "absolute"
+#                           left    : 0
+#                           right   : 0
+#                           top     : "61px"
+#                           bottom  : 0
+#                 else
+#                     for inst_i in sc_inst
+#                         inst = inst_i
+#                     el= inst.divCanvas
+                  
+                last_id= inst.divCanvas  
+                CurrentLayoutManagerData.mk_split( 0, 0, id, 1, "GenericManagerPanelInstance" ) 
+#                 mk_split:
+#                 d = direction 1, s = up or down, id = panel_id, c = coeff
+                CurrentLayoutManager.model = CurrentLayoutManagerData
+                display_settings._layout = CurrentLayoutManagerData
+                
+                #TODO 
+#                 display_settings._layout.mk_split( 0, 0, last_id, 1, "id_GenericPanel" ) 
+                CurrentLayoutManager.new_panel_instance = ( data ) =>   
+                    el =undefined
+                    new GenericManagerPanelInstance( el, data, "Generic title", "div", this, true )                                  
+                CurrentLayoutManager.show()
+                app.data.update_associated_layout_data( display_settings )
+#                 @genericPanel_inst = new GenericManagerPanelInstance( el, app.data, "Generic title", "div", this, true )
 #                 graph_view = new TestSamirGraphView(
 #                                    this,
 #                                   @_container_global,
