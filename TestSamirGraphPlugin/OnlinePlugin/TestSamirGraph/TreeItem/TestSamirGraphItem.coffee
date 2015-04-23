@@ -1,28 +1,25 @@
 class TestSamirGraphItem extends TreeItem_Computable
-    constructor: (name = "Grapĥ") ->
+    constructor: (name = "Graph") ->
         super()
         
         # default values
         @_name.set name
-        @_viewable.set false
+        @_viewable.set true
         
         # attributes
         @add_attr
             _nb_values    : 361         #To see until 360    
             _vec_x        : new Vec
             _vec_y        : new Vec
+            _v1           : new Vec
+            _v2           : new Vec
+            _v3           : new Vec
+            _issimGraph   : new IssimGraph
             constrVal: new ConstrainedVal( 7, { min: 0, max: 15 } )
+            
         
         @fill_x_y()                 # TEST   TODO A remettre si onload non necessaire
-        #@add_child new ImgDirectorySetItem
-#         onload = =>
-#             @_signal_change()
-#             if @_vec_y.length == 0
-#                 @fill_x_y()
-                
-#         @bind =>
-#             if  @_vec_x.has_been_modified() or @_vec_y.has_been_modified() or @_nb_values.has_been_modified()
-#                 @make_mesh() #TODO
+
                 
     #TEST             
     cosDeg: (number, precision)->
@@ -65,7 +62,9 @@ class TestSamirGraphItem extends TreeItem_Computable
             catch error
                 return false      
         return true
-            
+    sub_canvas_items: ->
+        [ @_issimGraph ]      
+    
     display_suppl_context_actions: ( context_action )  ->
         context_action.push
             txt: "link"
@@ -75,189 +74,247 @@ class TestSamirGraphItem extends TreeItem_Computable
             siz: 1
             TS_instance : this
             fun: ( evt, app) =>
-                @_container_global = new_dom_element
-                    id        : "id_apps_container"
-                    className : "apps_container"
-#                     style     : #TODO A  remettre TODO
-                    height     : 30
-                    width      : "100%"
-                    border     : "1px solid blue"
-                    background : "#ffffff"
-#                     position: "absolute"
-#                     left    : 10
-#                     right   : 10
-#                     top     : 40
-#                     bottom  : 10
-                        
-#                 inst = undefined
-#                 console.log app
-#                 console.log app.all_canvas_inst()
-              
-                    
-                #TODO A  remettre Debut
-#                 if (inst.divCanvas)?
-# #                   Ptop   = TS_instance.getTop( inst.div )
-#                   Ptop   = @getTop( inst.div )
-#                   Pleft  = @getLeft( inst.div )  
-#                   Pwidth = inst.divCanvas.offsetWidth
-#                   Pheight = inst.divCanvas.offsetHeight
-#                   Pheight = Pheight + 22
-#                 
-#                 else
-#                   Ptop   = 100
-#                   Pleft  = 100
-#                   Pwidth = 800 
-#                   Pheight = 500 
-                  #TODO A  remettre  Fin
-                  
-#                 p = new_popup "My graph", event: evt, child: @_container_global, top_x: Pleft, top_y: Ptop, width: Pwidth, height: Pheight, onclose: =>
-#                     @onPopupClose( app ) 
-#                   new GenericManagerPanelInstance( this, el, @app_data, undo_manager )
-                Ptop   = 100
-                Pleft  = 100
-                Pwidth = 800 
-                Pheight = 500
-                
-                el = undefined   
-#                 data = undefined # @data = new TreeAppData               
-                
-#                 sc_inst = app.selected_canvas_inst()
-#                 if sc_inst.length == 0
-#                     el = new_dom_element
-#                         parentNode: @bel
-#                         id        : "main_window"
-#                         style:
-#                             position: "absolute"
-#                             left    : 0
-#                             right   : 0
-#                             top     : "61px"
-#                             bottom  : 0
-#                 else
-#                     for inst_i in sc_inst
-#                         inst = inst_i
-#                     el= inst.divCanvas
-                
-                 #TODO               
-#                 NewLayoutManagerData = new LayoutManagerData.panel_id_of_term_panels
-                
-                panel_id_list = app.data.panel_id_list()# de type Array!
-                console.log panel_id_list
-                #output:  ["MainView"] 
-                # puis
-                #output: ["id_1", "id_6"] 
-                
-                panel_id_list0 = panel_id_list[0]
-                console.log panel_id_list0
-                #output: MainView
-                # puis
-                #output: id_1
-                
-                for panel_id_i in panel_id_list
-                    if panel_id_i == "MainView"
-                        console.log panel_id_i+"= "+panel_id_i.indexOf()
-                #output: MainView= -1 
-                
-                session = app.data.selected_session()
-                CurrentLayoutManager = app.layouts[ session.model_id ] 
-#                 console.log CurrentLayoutManager._pan_vs_id( "MainView")+"_pan_vs_id( 'MainView')" # panel instance for a given panel_id
-                # output:  not available
-                
-                console.log "CurrentLayoutManager.flat"
-                console.log CurrentLayoutManager.flat
-                # output LayoutManager.flat donne l'equivalent de LayoutManagerData._make_graph_rec
-                
-                display_settings = app.data.selected_display_settings()
-                console.log display_settings + "display_settings"
-                
-                CurrentLayoutManagerData = display_settings._layout
-                console.log CurrentLayoutManagerData
-                console.log "= CurrentLayoutManagerData"
-                
-                # output:  ContextBar,TreeView,EditView,id_1,id_6 panel
-                
-                border_size = CurrentLayoutManager.border_size
-                
-                CLM_make_info =CurrentLayoutManagerData.make_info( 200, 300, border_size )
-                #output similaire à flat
-                
-#                 console.log CurrentLayoutManagerData.find_item_with_panel_id+" find_item_with_panel_id"
-#                 console.log CurrentLayoutManagerData.find_parent_of_panel_id( id, data = @root )+" find_parent_of_panel_id( id, data = @root )" 
-#                 console.log CurrentLayoutManagerData.mk_split( d, s, id, c, new_panel_id = @_find_new_panel_id [] )+" mk_split( d, s, id, c, new_panel_id = @_find_new_panel_id [] )"
-#                 console.log CurrentLayoutManagerData.rm_panel: ( id )+" rm_panel: ( id )"
-#                 console.log CurLMData_t_ids+" panel_id_of_term_panels"
-                console.log CurrentLayoutManagerData.panel_ids()+"panel_ids()" 
-                # output:  id_2,ContextBar,id_3,id_4,TreeView,EditView,id_7,id_1,id_6
-#                 
-                console.log CurrentLayoutManagerData["root"]+" CurrentLayoutManagerData[root]"
-                
-                
-#                 sub_LayoutManager = new SUBLayoutManager(app.el, CurrentLayoutManagerData,?)
-#                 
-#                 sub_LayoutManager._pan_vs_id[panel_id]#panel_id pas directement de type string mais Str ?
-#                 sub_LayoutManager.set_message:
-#                 sub_LayoutManager.resize_div( obj, p_min, p_max )
-#                 sub_LayoutManager.getLeft
-#                 sub_LayoutManager.getTop
-                
-                #!!!!!!!!!!!!!!!
-#                 sub_LayoutManager.new_panel_instanceGeneric(data, "Generic" ) 
-                  #TODO #TEST a ressesser si pertient
-#                 CurLMData_t_ids = CurrentLayoutManagerData.panel_id_of_term_panels()
-#                 last_id = CurLMData_t_ids[CurLMData_t_ids.length-1]
-                console.log "last_id = "+last_id
-                
-                #TEST
-                  
-                  #TEST 1
-#                 @lm = new LayoutManager el, CurrentLayoutManagerData
-#                 @lm.new_panel_instance = ( data ) =>         
-#                     new GenericManagerPanelInstance( el, app.data, "Generic title", "div", this, true )   
-#                 @lm.show()
-                  #TEST 2 fin
-                  
-                sc_inst = app.selected_canvas_inst()
-#                 if sc_inst.length == 0
-#                   el = new_dom_element
-#                       parentNode: div
-#                       id        : "MainView"
-#                       style:
-#                           position: "absolute"
-#                           left    : 0
-#                           right   : 0
-#                           top     : "61px"
-#                           bottom  : 0
-#                 else
-#                     for inst_i in sc_inst
-#                         inst = inst_i
-#                     el= inst.divCanvas
-                  
-                last_id= inst.divCanvas  
-                CurrentLayoutManagerData.mk_split( 0, 0, id, 1, "GenericManagerPanelInstance" ) 
-#                 mk_split:
-#                 d = direction 1, s = up or down, id = panel_id, c = coeff
-                CurrentLayoutManager.model = CurrentLayoutManagerData
-                display_settings._layout = CurrentLayoutManagerData
-                
-                #TODO 
-#                 display_settings._layout.mk_split( 0, 0, last_id, 1, "id_GenericPanel" ) 
-                CurrentLayoutManager.new_panel_instance = ( data ) =>   
-                    el =undefined
-                    new GenericManagerPanelInstance( el, data, "Generic title", "div", this, true )                                  
-                CurrentLayoutManager.show()
-                app.data.update_associated_layout_data( display_settings )
-#                 @genericPanel_inst = new GenericManagerPanelInstance( el, app.data, "Generic title", "div", this, true )
-#                 graph_view = new TestSamirGraphView(
-#                                    this,
-#                                   @_container_global,
-#                                   @_vec_x,
-#                                   @_vec_y,
-#                                   Pwidth,
-#                                   Pheight)
+                vec_arr = detect_vector()
+                         
 
                 app.active_key.set false
-               
-                ##TODO
+    
+    #TODO
+    draw: ( info ) ->        
+        Canvas_div = info.cm.canvas
+        width = Canvas_div.offsetWidth
+        height = Canvas_div.offsetHeight        
+        
+#         Vec_List = @attr_Veclist this #TODO
+        
+        Vec_List = detect_vector()
+        @_data = MatrixVecListInversion Vec_List       
+#         @_data= MatrixInversionMulti(@_vec_x, @vec_Y_tab)
+#         @_data= MatrixInversion(@_vec_x, @_vec_y)
+        
+        @_margin = {top: 20, right: 30, bottom: 30, left: 40}
+    #       @_margin = {top: @_top, right: 30, bottom: 30, left: @_left},     
+        @_width = width - @_margin.left - @_margin.right
+        @_height = height - @_margin.top - @_margin.bottom
+                   
+
+        [minVecX, maxVecX] = min_max_Vec [@_vec_x]
+        [minVecY, maxVecY] = min_max_Vec @vec_Y_tab
+        
+        @_x = d3.scale.linear()
+            .domain([minVecX, maxVecX])
+            .range([0, @_width])
+        a = d3     
+
+        @_y = d3.scale.linear()
+            .domain([minVecY, maxVecY])
+            .range([@_height, 0])
+
+        @_xAxis = d3.svg.axis()
+            .scale(@_x)
+            .orient("bottom")
+
+        @_yAxis = d3.svg.axis()
+            .scale(@_y)
+            .orient("left")
+
+        line = d3.svg.line()
+            .interpolate("monotone")
+#             .interpolate("basis")
+            .x( (d)=> @_x(d[0]))
+            .y( (d)=> @_y(d[1]))
                 
+          
+    #         @_svg = d3.select("."+@el.className).append("svg")
+          
+#           @_svg = d3.select("."+divCanvas.className).append("canvas")
+#           @_svg = d3.selectNode("canvas")
+          @_svg = d3.select("CANVAS").datum(@_data)
+                    .attr("width", @_width + @_margin.left + @_margin.right)
+#                     .attr("height", @_height + @_margin.top + @_margin.bottom)
+#                     .append("g")
+#                     .attr("transform", "translate(" + @_margin.left + "," + @_margin.top + ")") 
+                
+    detect_vector: ->
+        res= []
+        for child in @_children
+            if child instanceof TreeItem_vector
+                res.push child.vec
+        return res         
+
+        ##TODO
+    VecToList:(vec)->
+      LstRes = new Lst
+      LstRes[i] = vec[i] for i in [0..vec.length]
+      LstRes
+          
+    
+        #copied from ModelEditor:
+    attr_Veclist: ( model)->
+#         console.log "model.get_state()"+model.get_state()
+        res = {}
+        for name in model._attribute_names when model[name] instanceof Vec
+             console.log "\nmodel[name]: "+model[name]#TEST
+             console.log "\nmodel[name]._underlying_fs_type: "+model[name]._underlying_fs_type]#TEST
+             res[ name ] = model[ name ]
+        res
+    
+    VecToArray = (VectX)->
+      VectXlength = VectX.length-1         
+      x=[]
+      for i in [0..VectXlength]
+#             elem_i = VectX.slice(i, i+1)
+          elem_i = VectX[i]
+          data_i_n = elem_i.get()
+          data_i = data_i_n.valueOf()
+          x.push data_i
+      return x 
+    
+    
+    
+        # vec_tab is an array of Vec
+    # outputs: min and max values from vec_tab  
+    min_max_Vec = ( vec_tab  = [])->
+        resMin =[]
+        resMax =[]
+        vec_tabLength = vec_tab.length - 1
+        for i in [0..vec_tabLength]
+            vec=[]
+            vec[i] = VecToArray(vec_tab[i])
+            veciLength = vec[i].length - 1
+            vec[i].sort( (a,b) -> a - b)
+            resMin[i] = vec[i][0]
+            resMax[i] = vec[i][veciLength]
+        resMin.sort((a,b) -> a - b)     
+        resMax.sort((a,b) -> a - b)
+        resMaxLength = resMax.length - 1
+        min = resMin[0]
+        max = resMax[resMaxLength]
+        [min, max]    
+#         min_max_Vec Test
+#           y1 = [ 53, 66, 0, 38]    
+#           y2 = [ 87, 11, 4, 1, 12]
+#           y3 = [ 5, 6, 666]
+
+#           tt = min_max_Vec [y1, y2, y3]
+#           console.log "min= "+tt[0] 
+#           console.log "max= "+tt[1]     
+#       Outputs:
+#         min= 0
+#         max= 666
+#         [minVecX, maxVecX] = min_max_Vec [@_vec_x1, @_vec_x2, @_vec_x3]
+#         [minVecY, maxVecY] = min_max_Vec [@_vec_y1, @_vec_y2, @_vec_y3]
+    
+    
+    MatrixVecListInversion = (Vec_List)->     
+    VecListSize = 0 
+    for key, vector of Vec_List
+          VecListSize++
+          Vecmax = vector.length-1# TODO A Ameliorer car repetition
+          
+    res = new Array(Vecmax+1)
+    for i in [0..Vecmax]
+        res[i]= new Array(VecListSize)
+        j=0
+        for key, vector of Vec_List
+            res[i][j] = vector[i]
+            j++
+    res  
+    
+# Test: myVecY_List = { 
+#                 y1: [5, 56, 17, 9],
+#                 y2: [25, 46, 7, 4],
+#                 y3: [500, 60.2, 7111, 22] 
+#               }
+#              
+# m = MatrixVecListInversion(myVecY_List)
+# console.log m
+# console.log m[1]
+# console.log m[0]
+# console.log m[2]
+# Output 
+# 
+# [ [ 5, 25, 500 ],
+#   [ 56, 46, 60.2 ],
+#   [ 17, 7, 7111 ],
+#   [ 9, 4, 22 ] ]
+    
+    MatrixInversionMulti = (VecX, VecY_arr)->
+#         MatrixInversionMulti = (x, VecY_arr)->
+    # VecY or VecX empty # TODO
+    # VecY or VecX Not same size # TODO      
+    x = VecToArray(VecX) 
+    xmax = x.length-1
+    iVecYmax = VecY_arr.length-1
+    res = new Array(x.length)          
+    for i in [0..xmax]
+        res[i]= new Array(VecY_arr.length)
+        res[i][0] = x[i]
+        for j in [0..iVecYmax]
+            y = VecToArray(VecY_arr[j]) 
+            res[i][j+1] = y[i]  # We assume that x and yi have the same size
+#                 res[i][j+1] = VecY_arr[j][i] # TODO A retirer
+    return res
+            
+        
+ #TEST
+#       myVecY_arr = [ [5, 56, 17, 9], [25, 46, 7, 4], [500, 60.2, 7111, 22] ]
+#       m = MatrixInversionMulti([ 1, 2, 3], myVecY_arr)
+#       console.log m
+#       console.log m[1]
+#       console.log m[0]
+#       console.log m[2]
+#         Output:
+# [ [ 1, 5, 25, 500 ],
+#   [ 2, 56, 46, 60.2 ],
+#   [ 3, 17, 7, 7111 ],
+#   [ 5, 9, 4, 22 ] ]
+# [ 2, 56, 46, 60.2 ]
+# [ 1, 5, 25, 500 ]
+# [ 3, 17, 7, 7111 ]
+    
+    
+    
+    
+    MatrixInversion = (VecX, VecY)->
+      # VecY or VecX empty # TODO
+      # VecY or VecX Not same size # TODO
+      x = VecToArray(VecX)
+      y = VecToArray(VecY)    
+      xmax = x.length-1
+      res = []
+      res[i] = [x[i], y[i]] for i in [0..xmax]
+      return res           
+    #TEST
+    # m = MatrixInversion([ 1, 2, 3], [5, 6, 7])
+    # console.log m
+    # console.log m[1]
+    # console.log m[0]
+    # console.log m[2]
+    # Test Output 
+    # [ [ 1, 5 ], [ 2, 6 ], [ 3, 7 ] ]
+    # [ 2, 6 ]
+    # [ 1, 5 ]
+    # [ 3, 7 ] 
+      
+        
+#     onchange: ->#TODO 
+#         if @graphItem.has_been_directly_modified
+        #TODO A finir            
+#             block = new_dom_element
+#                 parentNode : @el
+#                 nodeName   : "span"
+#                 
+#         @clear_page(@container_global)
+#         if @app_data.selected_tree_items.has_been_directly_modified    
+      
+      
+      
+      
+      
+      
+      
+      
     # obtenir la position réelle dans le canvas
     getLeft: ( l ) ->
       if l.offsetParent?
@@ -265,7 +322,7 @@ class TestSamirGraphItem extends TreeItem_Computable
       else
           return l.offsetLeft
 
-# obtenir la position réelle dans le canvas
+    # obtenir la position réelle dans le canvas
     getTop: ( l ) ->
         if l.offsetParent?
             return l.offsetTop + @getTop( l.offsetParent )
@@ -278,13 +335,7 @@ class TestSamirGraphItem extends TreeItem_Computable
         
         #TODO A completer
     accept_child: ( ch ) ->
-        ch instanceof FieldItem
-        ch instanceof MaskItem or 
-        ch instanceof DiscretizationItem or
-        ch instanceof SketchItem or 
-        ch instanceof ImgSetItem or
-#         ch instanceof Graph or
-        ch instanceof Vec
+        ch instanceof TreeItem_vector
     
 #     sub_canvas_items: -> #TODO A remettre
 #         [ @_graph= new TestSamirGraphView(
