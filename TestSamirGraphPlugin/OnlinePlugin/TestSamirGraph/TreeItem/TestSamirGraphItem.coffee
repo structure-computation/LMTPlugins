@@ -6,25 +6,25 @@ class TestSamirGraphItem extends TreeItem_Computable
         @_name.set name
         @_viewable.set true
         
-         @_nb_values    : 361         #To see until 360    
-         @_vec_x        : new Vec
-         @_vec_y        : new Vec
+        @_nb_values    = 361         #To see until 360    
+        @_vec_x        = new Vec
+        @_vec_y        = new Vec
         
         @fill_x_y()                 # TEST   TODO A remettre si onload non necessaire
         
-        treeItem_x = new TreeItem_vector("EssaiAbscisse", @_vec_x)
-        treeItem_y = new TreeItem_vector("EssaiOrdonnée", @_vec_y)
-        @mod_attr
-            _children  : [treeItem_x, treeItem_y]
+        treeItem_x = new TreeItem_vector(@_vec_x, "EssaiAbscisse")
+        treeItem_y = new TreeItem_vector(@_vec_y, "EssaiOrdonnée")
+
+        @mod_attr @_children, [treeItem_x, treeItem_y]
         # attributes
         @add_attr
+            _issimGraph   : new IssimGraph
+            constrVal: new ConstrainedVal( 7, { min: 0, max: 15 } )
 #             _vec_x        : new Vec
 #             _vec_y        : new Vec
 #             _v1           : new Vec
 #             _v2           : new Vec
 #             _v3           : new Vec
-            _issimGraph   : new IssimGraph
-            constrVal: new ConstrainedVal( 7, { min: 0, max: 15 } )
             
         
 
@@ -41,16 +41,16 @@ class TestSamirGraphItem extends TreeItem_Computable
         @_vec_x.clear()
         @_vec_y.clear()
         
-        for i in [ 0 ... @_nb_values.get() ]
+        for i in [ 0 ... @_nb_values]#.get() ]
             try
                 @_vec_x.push 0
                 @_vec_y.push 0
-                @_vec_x[ i ].set new Number(i).valueOf()                             
+                @_vec_x[ i ]= new Number(i).valueOf()                             
 
 #                 if typeof(cosDeg(i)) != "number"
 #                     alert cosDeg(i)+"is not a number"
                 if csd_i <0 and csd_i > -2e-16        
-                    @_vec_y[ i ].set zero
+                    @_vec_y[ i ]= zero
 #                 if (i == 270) 
 #                     @_vec_y[ i ].set zero ### #TODO A retirer!!! TODO
 #                 else 
@@ -59,7 +59,7 @@ class TestSamirGraphItem extends TreeItem_Computable
 # #                         alert "i == 90 a changé"+@_vec_y[ i ].get()
                 else
                     csd_i = cosDeg(i)
-                    @_vec_y[ i ].set new Number(csd_i).valueOf()
+                    @_vec_y[ i ] =  new Number(csd_i).valueOf()
                 
          #TODO A retirer!!! TODO
 #                     alert "csd_i: "+csd_i
