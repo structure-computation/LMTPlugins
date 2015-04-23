@@ -6,19 +6,27 @@ class TestSamirGraphItem extends TreeItem_Computable
         @_name.set name
         @_viewable.set true
         
+         @_nb_values    : 361         #To see until 360    
+         @_vec_x        : new Vec
+         @_vec_y        : new Vec
+        
+        @fill_x_y()                 # TEST   TODO A remettre si onload non necessaire
+        
+        treeItem_x = new TreeItem_vector("EssaiAbscisse", @_vec_x)
+        treeItem_y = new TreeItem_vector("EssaiOrdonnée", @_vec_y)
+        @mod_attr
+            _children  : [treeItem_x, treeItem_y]
         # attributes
         @add_attr
-            _nb_values    : 361         #To see until 360    
-            _vec_x        : new Vec
-            _vec_y        : new Vec
-            _v1           : new Vec
-            _v2           : new Vec
-            _v3           : new Vec
+#             _vec_x        : new Vec
+#             _vec_y        : new Vec
+#             _v1           : new Vec
+#             _v2           : new Vec
+#             _v3           : new Vec
             _issimGraph   : new IssimGraph
             constrVal: new ConstrainedVal( 7, { min: 0, max: 15 } )
             
         
-        @fill_x_y()                 # TEST   TODO A remettre si onload non necessaire
 
                 
     #TEST             
@@ -129,7 +137,7 @@ class TestSamirGraphItem extends TreeItem_Computable
           
 #           @_svg = d3.select("."+divCanvas.className).append("canvas")
 #           @_svg = d3.selectNode("canvas")
-          @_svg = d3.select("CANVAS").datum(@_data)
+        @_svg = d3.select("CANVAS").datum(@_data)
                     .attr("width", @_width + @_margin.left + @_margin.right)
 #                     .attr("height", @_height + @_margin.top + @_margin.bottom)
 #                     .append("g")
@@ -144,9 +152,9 @@ class TestSamirGraphItem extends TreeItem_Computable
 
         ##TODO
     VecToList:(vec)->
-      LstRes = new Lst
-      LstRes[i] = vec[i] for i in [0..vec.length]
-      LstRes
+        LstRes = new Lst
+        LstRes[i] = vec[i] for i in [0..vec.length]
+        LstRes
           
     
         #copied from ModelEditor:
@@ -155,20 +163,20 @@ class TestSamirGraphItem extends TreeItem_Computable
         res = {}
         for name in model._attribute_names when model[name] instanceof Vec
              console.log "\nmodel[name]: "+model[name]#TEST
-             console.log "\nmodel[name]._underlying_fs_type: "+model[name]._underlying_fs_type]#TEST
+             console.log "\nmodel[name]._underlying_fs_type: "+model[name]._underlying_fs_type#TEST
              res[ name ] = model[ name ]
         res
     
     VecToArray = (VectX)->
-      VectXlength = VectX.length-1         
-      x=[]
-      for i in [0..VectXlength]
-#             elem_i = VectX.slice(i, i+1)
-          elem_i = VectX[i]
-          data_i_n = elem_i.get()
-          data_i = data_i_n.valueOf()
-          x.push data_i
-      return x 
+        VectXlength = VectX.length-1         
+        x=[]
+        for i in [0..VectXlength]
+  #             elem_i = VectX.slice(i, i+1)
+            elem_i = VectX[i]
+            data_i_n = elem_i.get()
+            data_i = data_i_n.valueOf()
+            x.push data_i
+        return x 
     
     
     
@@ -207,19 +215,19 @@ class TestSamirGraphItem extends TreeItem_Computable
     
     
     MatrixVecListInversion = (Vec_List)->     
-    VecListSize = 0 
-    for key, vector of Vec_List
-          VecListSize++
-          Vecmax = vector.length-1# TODO A Ameliorer car repetition
-          
-    res = new Array(Vecmax+1)
-    for i in [0..Vecmax]
-        res[i]= new Array(VecListSize)
-        j=0
+        VecListSize = 0 
         for key, vector of Vec_List
-            res[i][j] = vector[i]
-            j++
-    res  
+            VecListSize++
+            Vecmax = vector.length-1# TODO A Ameliorer car repetition
+              
+        res = new Array(Vecmax+1)
+        for i in [0..Vecmax]
+            res[i]= new Array(VecListSize)
+            j=0
+            for key, vector of Vec_List
+                res[i][j] = vector[i]
+                j++
+        res  
     
 # Test: myVecY_List = { 
 #                 y1: [5, 56, 17, 9],
@@ -241,20 +249,20 @@ class TestSamirGraphItem extends TreeItem_Computable
     
     MatrixInversionMulti = (VecX, VecY_arr)->
 #         MatrixInversionMulti = (x, VecY_arr)->
-    # VecY or VecX empty # TODO
-    # VecY or VecX Not same size # TODO      
-    x = VecToArray(VecX) 
-    xmax = x.length-1
-    iVecYmax = VecY_arr.length-1
-    res = new Array(x.length)          
-    for i in [0..xmax]
-        res[i]= new Array(VecY_arr.length)
-        res[i][0] = x[i]
-        for j in [0..iVecYmax]
-            y = VecToArray(VecY_arr[j]) 
-            res[i][j+1] = y[i]  # We assume that x and yi have the same size
-#                 res[i][j+1] = VecY_arr[j][i] # TODO A retirer
-    return res
+        # VecY or VecX empty # TODO
+        # VecY or VecX Not same size # TODO      
+        x = VecToArray(VecX) 
+        xmax = x.length-1
+        iVecYmax = VecY_arr.length-1
+        res = new Array(x.length)          
+        for i in [0..xmax]
+            res[i]= new Array(VecY_arr.length)
+            res[i][0] = x[i]
+            for j in [0..iVecYmax]
+                y = VecToArray(VecY_arr[j]) 
+                res[i][j+1] = y[i]  # We assume that x and yi have the same size
+    #                 res[i][j+1] = VecY_arr[j][i] # TODO A retirer
+        return res
             
         
  #TEST
@@ -277,14 +285,14 @@ class TestSamirGraphItem extends TreeItem_Computable
     
     
     MatrixInversion = (VecX, VecY)->
-      # VecY or VecX empty # TODO
-      # VecY or VecX Not same size # TODO
-      x = VecToArray(VecX)
-      y = VecToArray(VecY)    
-      xmax = x.length-1
-      res = []
-      res[i] = [x[i], y[i]] for i in [0..xmax]
-      return res           
+        # VecY or VecX empty # TODO
+        # VecY or VecX Not same size # TODO
+        x = VecToArray(VecX)
+        y = VecToArray(VecY)    
+        xmax = x.length-1
+        res = []
+        res[i] = [x[i], y[i]] for i in [0..xmax]
+        return res           
     #TEST
     # m = MatrixInversion([ 1, 2, 3], [5, 6, 7])
     # console.log m
@@ -317,10 +325,10 @@ class TestSamirGraphItem extends TreeItem_Computable
       
     # obtenir la position réelle dans le canvas
     getLeft: ( l ) ->
-      if l.offsetParent?
-          return l.offsetLeft + @getLeft( l.offsetParent )
-      else
-          return l.offsetLeft
+        if l.offsetParent?
+            return l.offsetLeft + @getLeft( l.offsetParent )
+        else
+            return l.offsetLeft
 
     # obtenir la position réelle dans le canvas
     getTop: ( l ) ->
