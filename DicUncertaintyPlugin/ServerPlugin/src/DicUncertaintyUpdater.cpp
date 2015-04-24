@@ -11,7 +11,7 @@
 #include <mesh/make_mesh_from_mask.h>
 #include <correlation/DicCPU.h>
 #include <sstream>
-#include <string.h>
+// #include <string.h>
 #include "dec_image.h"
 #include "make_fields.h"
 #include "soda_mesh_from_lmtpp_mesh.h"
@@ -217,18 +217,74 @@ bool DicUncertaintyUpdater::run( MP mp ) {
     PRINT(UncY);
     PRINT(ErrY);
     MP pos = MP::new_lst( "Vec" );
+
+    //TEST
+//     make_vector(&Dimp, &pos, &mp, "vec_Dimp");
+//     make_vector(&UncX, &pos, &mp, "vec_UncX");
+//     make_vector(&UncY, &pos, &mp, "vec_UncY");
+//     make_vector(&ErrX, &pos, &mp, "vec_ErrX");
+//     make_vector(&ErrY, &pos, &mp, "vec_ErrY");
+    
+    for( int i = 0; i < Dimp.size(); ++i ) {
+            pos << Dimp[ i ];
+            pos << 0;
+            mp[ "vec_Dimp" ] << pos;
+        }
+
+    pos = MP::new_lst( "Vec" );
+
     for( int i = 0; i < UncX.size(); ++i ) {
-        pos << Dimp[ i ];
-        pos << UncX[ i ];
-        pos << 0;
-        mp[ "_graph.points" ] << pos;
-    }
+            pos << UncX[ i ];
+            pos << 0;
+            mp[ "vec_UncX" ] << pos;
+        }
+
+    pos = MP::new_lst( "Vec" );
+
+
+    for( int i = 0; i < UncY.size(); ++i ) {
+            pos << UncY[ i ];
+            pos << 0;
+            mp[ "vec_UncY" ] << pos;
+        }
+
+    pos = MP::new_lst( "Vec" );
+
+
+    for( int i = 0; i < ErrX.size(); ++i ) {
+            pos << ErrX[ i ];
+            pos << 0;
+            mp[ "vec_ErrX" ] << pos;
+        }
+
+    pos = MP::new_lst( "Vec" );
+
+    for( int i = 0; i < ErrY.size(); ++i ) {
+            pos << ErrY[ i ];
+            pos << 0;
+            mp[ "vec_ErrY" ] << pos;
+        }
+
+//    for( int i = 0; i < UncX.size(); ++i ) {
+//        pos << Dimp[ i ];
+//        pos << UncX[ i ];
+//        pos << 0;
+//        mp[ "_graph.points" ] << pos;
+//    }
     mp.flush();
     // Calculate difference between results and imposed displacement or strain
 
     // Plot graphs
     
 }
-
+// void DicUncertaintyUpdater::make_vector(Vec<double> &vec, MP * ppos, MP * pmp, char* name){
+//     for( int i = 0; i < vec.size(); ++i ) {
+//             *ppos << vec[ i ];
+//             *ppos << 0;
+//             *pmp[ name ] << *ppos;
+//         }
+//   
+//   
+// }
 
 
