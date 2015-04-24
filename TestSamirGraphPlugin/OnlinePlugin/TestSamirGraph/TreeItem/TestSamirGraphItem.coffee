@@ -7,19 +7,22 @@ class TestSamirGraphItem extends TreeItem_Computable
         @_viewable.set true
         
         @_nb_values    = 361         #To see until 360    
-        @_vec_x        = new Vec
-        @_vec_y        = new Vec
-        
-        @fill_x_y()                 # TEST   TODO A remettre si onload non necessaire
-        
-        treeItem_x = new TreeItem_vector(@_vec_x, "EssaiAbscisse")
-        treeItem_y = new TreeItem_vector(@_vec_y, "EssaiOrdonnée")
-
-        @mod_attr @_children, [treeItem_x, treeItem_y]
+        @_vec_x        = new Vec [1, 72, 3, 24]
+        @_vec_y        = new Vec [45, 2, 3, 0]
         # attributes
+        
+#         @fill_x_y()                 # TEST   TODO A remettre si onload non necessaire
+        
+        treeItem_x = new TreeItem_Vector(@_vec_x, "EssaiAbscissa")
+        treeItem_y = new TreeItem_Vector(@_vec_y, "EssaiOrdinate")
+
+#         @mod_attr @_children, [treeItem_x, treeItem_y]
+        @add_child treeItem_x
+        @add_child treeItem_y
         @add_attr
             _issimGraph   : new IssimGraph
             constrVal: new ConstrainedVal( 7, { min: 0, max: 15 } )
+        
 #             _vec_x        : new Vec
 #             _vec_y        : new Vec
 #             _v1           : new Vec
@@ -71,7 +74,7 @@ class TestSamirGraphItem extends TreeItem_Computable
                 return false      
         return true
     sub_canvas_items: ->
-        [ @_issimGraph ]      
+        [ @_issimGraph ]     
     
     display_suppl_context_actions: ( context_action )  ->
         context_action.push
@@ -88,16 +91,18 @@ class TestSamirGraphItem extends TreeItem_Computable
                 app.active_key.set false
     
     #TODO
-    draw: ( info ) ->        
+    draw: ( info ) =>        
         Canvas_div = info.cm.canvas
         width = Canvas_div.offsetWidth
         height = Canvas_div.offsetHeight        
         
 #         Vec_List = @attr_Veclist this #TODO
         
-        Vec_List = detect_vector()
-        @_data = MatrixVecListInversion Vec_List       
-#         @_data= MatrixInversionMulti(@_vec_x, @vec_Y_tab)
+        Vec_List = @_detect_vector()
+        @_vec_x = Vec_List[0] #TEST
+        @vec_Y_tab = Vec_List[1..]
+#         @_data = MatrixVecListInversion Vec_List       
+        @_data= MatrixInversionMulti(@_vec_x, @vec_Y_tab)
 #         @_data= MatrixInversion(@_vec_x, @_vec_y)
         
         @_margin = {top: 20, right: 30, bottom: 30, left: 40}
@@ -143,10 +148,10 @@ class TestSamirGraphItem extends TreeItem_Computable
 #                     .append("g")
 #                     .attr("transform", "translate(" + @_margin.left + "," + @_margin.top + ")") 
                 
-    detect_vector: ->
+    _detect_vector: ->
         res= []
         for child in @_children
-            if child instanceof TreeItem_vector
+            if child instanceof TreeItem_Vector
                 res.push child.vec
         return res         
 
@@ -343,7 +348,7 @@ class TestSamirGraphItem extends TreeItem_Computable
         
         #TODO A completer
     accept_child: ( ch ) ->
-        ch instanceof TreeItem_vector
+        ch instanceof TreeItem_Vector
     
 #     sub_canvas_items: -> #TODO A remettre
 #         [ @_graph= new TestSamirGraphView(
