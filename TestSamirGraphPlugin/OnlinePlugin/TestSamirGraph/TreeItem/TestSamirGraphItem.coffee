@@ -1,3 +1,20 @@
+# Copyright 2012 Structure Computation  www.structure-computation.com
+# Copyright 2012 Hugo Leclerc
+#
+# This file is part of Soda.
+#
+# Soda is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Soda is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+# You should have received a copy of the GNU General Public License
+# along with Soda. If not, see <http://www.gnu.org/licenses/>.
+
 class TestSamirGraphItem extends TreeItem_Computable
     constructor: (name = "Graph") ->
         super()
@@ -11,17 +28,19 @@ class TestSamirGraphItem extends TreeItem_Computable
         @_vec_y        = new Vec [45, 2, 3, 0]
         # attributes
         
-#         @fill_x_y()                 # TEST   TODO A remettre si onload non necessaire
+#         @fill_x_y()                 # TEST  A remettre si onload non necessaire
         
-        treeItem_x = new TreeItem_Vector(@_vec_x, "EssaiAbscissa")
-        treeItem_y = new TreeItem_Vector(@_vec_y, "EssaiOrdinate")
-
+#         treeItem_x = new TreeItem_Vector(@_vec_x, "EssaiAbscissa")
+#         treeItem_y = new TreeItem_Vector(@_vec_y, "EssaiOrdinate")
+        treeItem_x = new TreeItem_Vector(@_vec_x)
+        treeItem_y = new TreeItem_Vector(@_vec_y)
 #         @mod_attr @_children, [treeItem_x, treeItem_y]
-        @add_child treeItem_x
-        @add_child treeItem_y
         @add_attr
             _issimGraph   : new IssimGraph
             constrVal: new ConstrainedVal( 7, { min: 0, max: 15 } )
+
+        @add_child treeItem_x
+        @add_child treeItem_y        
         
 #             _vec_x        : new Vec
 #             _vec_y        : new Vec
@@ -29,8 +48,6 @@ class TestSamirGraphItem extends TreeItem_Computable
 #             _v2           : new Vec
 #             _v3           : new Vec
             
-        
-
                 
     #TEST             
     cosDeg: (number, precision)->
@@ -88,67 +105,283 @@ class TestSamirGraphItem extends TreeItem_Computable
                 vec_arr = detect_vector()
                          
 
-                app.active_key.set false
-    
-    #TODO
-    draw: ( info ) =>        
-        Canvas_div = info.cm.canvas
-        width = Canvas_div.offsetWidth
-        height = Canvas_div.offsetHeight        
-        
-#         Vec_List = @attr_Veclist this #TODO
-        
-        Vec_List = @_detect_vector()
-        @_vec_x = Vec_List[0] #TEST
-        @vec_Y_tab = Vec_List[1..]
-#         @_data = MatrixVecListInversion Vec_List       
-        @_data= MatrixInversionMulti(@_vec_x, @vec_Y_tab)
-#         @_data= MatrixInversion(@_vec_x, @_vec_y)
-        
-        @_margin = {top: 20, right: 30, bottom: 30, left: 40}
-    #       @_margin = {top: @_top, right: 30, bottom: 30, left: @_left},     
-        @_width = width - @_margin.left - @_margin.right
-        @_height = height - @_margin.top - @_margin.bottom
-                   
+                app.active_key.set false 
 
-        [minVecX, maxVecX] = min_max_Vec [@_vec_x]
-        [minVecY, maxVecY] = min_max_Vec @vec_Y_tab
-        
-        @_x = d3.scale.linear()
-            .domain([minVecX, maxVecX])
-            .range([0, @_width])
-        a = d3     
-
-        @_y = d3.scale.linear()
-            .domain([minVecY, maxVecY])
-            .range([@_height, 0])
-
-        @_xAxis = d3.svg.axis()
-            .scale(@_x)
-            .orient("bottom")
-
-        @_yAxis = d3.svg.axis()
-            .scale(@_y)
-            .orient("left")
-
-        line = d3.svg.line()
-            .interpolate("monotone")
-#             .interpolate("basis")
-            .x( (d)=> @_x(d[0]))
-            .y( (d)=> @_y(d[1]))
                 
+    draw: ( info ) =>        
+        SingSVG = SingletonSVG.getInstance()
+        SingSVG.drawing_SVG.drawSVG(info)
+        return true
+
+
+# #         info.cm._init_ctx()
+# #         Canvas_div = info.cm.canvas
+#         
+#         v1 = new Vec [1, 72, 3, 24]
+#         v2 = new Vec [45, 2, 3, 0]
+#         Vec_List = [] #TEST 
+#         Vec_List.push v1
+#         Vec_List.push v2
+#         
+#         width = info.w  #Canvas_div.offsetWidth
+#         height = info.h #Canvas_div.offsetHeight        
+# 
+# #         Vec_List = @_detect_vector()        
+#         @_vec_x = Vec_List[0] 
+#         @_vec_y = Vec_List[1]        
+#         
+#                 
+#         @_data= MatrixInversion(@_vec_x, @_vec_y)
+# #         @vec_Y_tab = Vec_List[1..]
+# #         @_data= MatrixInversionMulti(@_vec_x, @vec_Y_tab)
+# #         Vec_List = @attr_Veclist this
+# #         @_data = MatrixVecListInversion Vec_List       
+#         
+#     #       @_margin = {top: @_top, right: 30, bottom: 30, left: @_left},     
+#         @_margin = {top: 20, right: 30, bottom: 30, left: 40}
+#         @_width = width - @_margin.left - @_margin.right
+#         @_height = height - @_margin.top - @_margin.bottom
+#     
+# #         [minVecY, maxVecY] = min_max_Vec @vec_Y_tab
+#         [minVecY, maxVecY] = min_max_Vec [@_vec_y] 
+#         [minVecX, maxVecX] = min_max_Vec [@_vec_x]
+#         
+#         @_x = d3.scale.linear()
+#             .domain([minVecX, maxVecX])
+#             .range([0, @_width])
+#             @_y = d3.scale.linear()@_svg = d3.select info.ctx_svg()
+#             @_svg.style "background-color", "white"
+#             .domain([minVecY, maxVecY])
+#             .range([@_height, 0])
+#             
+#         @_xAxis = d3.svg.axis()
+#             .scale(@_x)
+#             .orient("bottom")
+# 
+#         @_yAxis = d3.svg.axis()
+#             .scale(@_y)
+#             .orient("left")
+#         
+#         line = d3.svg.line()
+#             .interpolate("monotone")
+# #             .interpolate("basis")
+#             .x( (d)=> @_x(d[0]))
+#             .y( (d)=> @_y(d[1]))
+#         
+# #         @_svg = d3.select(ctx).append("svgGraph")
+#         
+#         @_svg = d3.select info.ctx_svg()
+#         @_svg.style "background-color", "white"
+#         @_svg.append("svg")
+#             .datum(@_data)
+#             .attr("width", @_width + @_margin.left + @_margin.right)
+#             .attr("height", @_height + @_margin.top + @_margin.bottom)
+#             .append("g")
+#             .attr("transform", "translate(" + @_margin.left + "," + @_margin.top + ")")    
+#         
+# #         @_svg.append("rect")
+# #             .attr("width", "100%")
+# #             .attr("height", "100%")
+# #             .attr("fill", "white");
+#             
+# #         @_svg.append("g")
+# #             .attr("class", "x axis")
+# #             .attr("transform", "translate(0," + @_height + ")")
+# #             .call(@_xAxis)
+# # 
+# #         @_svg.append("g")
+# #             .attr("class", "y axis")
+# #             .call(@_yAxis)
+# # 
+# #         @_svg.append("path")
+# #             .attr("class", "line")
+# #             .attr("d", line)
+# # 
+# # #         newFormat = d3.format(",.4") #TEST
+# #             
+# #         @_svg.selectAll(".dot")
+# #             .data(@_data)
+# #             .enter().append("circle")
+# #             .attr("class", "dot")
+# # #             .attr("cx", newFormat line.x())#TEST
+# # #             .attr("cy", newFormat line.y())
+# #             .attr("cx", line.x())
+# #             .attr("cy", line.y())
+# #             .attr("r", 3.5)
+#         return true
+ 
           
-    #         @_svg = d3.select("."+@el.className).append("svg")
+#         @_svg = d3.select("."+@el.className).append("svg")
           
 #           @_svg = d3.select("."+divCanvas.className).append("canvas")
 #           @_svg = d3.selectNode("canvas")
-        @_svg = d3.select("CANVAS").datum(@_data)
-                    .attr("width", @_width + @_margin.left + @_margin.right)
+#         @_svg = d3.selectNode("CANVAS")
+#         range = document.createRange()
+#         add_class info.cm.canvas, "Graph_div"#TODO
+#         @_svg = d3.select("Graph_div")
+#         @_svg = d3.select("."+Canvas_div.className).append("Graph_div")
+
+#         d3.select("div.SelectedCanvas")#TODO TODO
+#         @_svg = d3.select("canvas.Graph_div").append("svg")
+#         @_svg = d3.select("div.SelectedCanvas").append("svg")#TODO 
+
+#         Canvas_div = new_dom_element
+#             parentNode: info.cm.canvas
+#             nodeName  : 'div'
+#         
+#         add_class Canvas_div, "Graph_div"
+        
+#         @_svg = d3.select("div.Graph_div").append("svg")
+        
+#         d3.select("div").insert("svg", "canvas")
+        
+            
+        #background for svg
+            
+            
+         
+            
+            
+            
+#         SVG_selection = d3.select(".Graph_div")
+#         @_svg = SVG_selection   
+          
+#         @_svg = d3.select("."+Canvas_div.className).append("Graph_div")
+#                     .attr("width", @_width + @_margin.left + @_margin.right)
 #                     .attr("height", @_height + @_margin.top + @_margin.bottom)
 #                     .append("g")
 #                     .attr("transform", "translate(" + @_margin.left + "," + @_margin.top + ")") 
-                
-    _detect_vector: ->
+# **********************
+#         width = ctx.w  #Canvas_div.offsetWidth
+#         height = ctx.h #Canvas_div.offsetHeight        
+#         
+#         
+# #         Vec_List = @_detect_vector()
+#         v1 = new Vec [1, 72, 3, 24]
+#         v2 = new Vec [45, 2, 3, 0]
+#         Vec_List = [] #TEST
+#         Vec_List.push v1
+#         Vec_List.push v2
+#         
+#         @_vec_x = Vec_List[0] 
+#         @_vec_y = Vec_List[1]        
+#         
+#         @_data= MatrixInversion(@_vec_x, @_vec_y)
+# #         @vec_Y_tab = Vec_List[1..]
+# #         @_data= MatrixInversionMulti(@_vec_x, @vec_Y_tab)
+# #         Vec_List = @attr_Veclist this
+# #         @_data = MatrixVecListInversion Vec_List       
+#         
+#         @_margin = {top: 20, right: 30, bottom: 30, left: 40}
+#     #       @_margin = {top: @_top, right: 30, bottom: 30, left: @_left},     
+#         @_width = width - @_margin.left - @_margin.right
+#         @_height = height - @_margin.top - @_margin.bottom
+#                    
+# 
+# #         [minVecY, maxVecY] = min_max_Vec @vec_Y_tab
+#         [minVecY, maxVecY] = min_max_Vec [@_vec_y] 
+#         [minVecX, maxVecX] = min_max_Vec [@_vec_x]
+#         
+#         @_x = d3.scale.linear()
+#             .domain([minVecX, maxVecX])
+#             .range([0, @_width])
+# #         a = d3     
+# 
+#         @_y = d3.scale.linear()
+#             .domain([minVecY, maxVecY])
+#             .range([@_height, 0])
+# 
+#         @_xAxis = d3.svg.axis()
+#             .scale(@_x)
+#             .orient("bottom")
+# 
+#         @_yAxis = d3.svg.axis()
+#             .scale(@_y)
+#             .orient("left")
+# 
+#         line = d3.svg.line()
+#             .interpolate("monotone")
+# #             .interpolate("basis")
+#             .x( (d)=> @_x(d[0]))
+#             .y( (d)=> @_y(d[1]))
+#                 
+#           
+# #         @_svg = d3.select("."+@el.className).append("svg")
+#           
+# #           @_svg = d3.select("."+divCanvas.className).append("canvas")
+# #           @_svg = d3.selectNode("canvas")
+# #         @_svg = d3.selectNode("CANVAS")
+# #         range = document.createRange()
+# #         add_class info.cm.canvas, "Graph_div"#TODO
+# #         @_svg = d3.select("Graph_div")
+# #         @_svg = d3.select("."+Canvas_div.className).append("Graph_div")
+# 
+# #         d3.select("div.SelectedCanvas")#TODO TODO
+# #         @_svg = d3.select("canvas.Graph_div").append("svg")
+# #         @_svg = d3.select("div.SelectedCanvas").append("svg")#TODO 
+# 
+# #         Canvas_div = new_dom_element
+# #             parentNode: info.cm.canvas
+# #             nodeName  : 'div'
+# #         
+# #         add_class Canvas_div, "Graph_div"
+#         
+# #         @_svg = d3.select("div.Graph_div").append("svg")
+#         
+# #         d3.select("div").insert("svg", "canvas")
+#         
+#         @_svg = d3.select(ctx).append("svgGraph")
+#             .datum(@_data)
+#             .attr("width", @_width + @_margin.left + @_margin.right)
+#             .attr("height", @_height + @_margin.top + @_margin.bottom)
+#             .append("g")
+#             .attr("transform", "translate(" + @_margin.left + "," + @_margin.top + ")")    
+#             
+#         #background for svg
+#         @_svg.append("rect")
+#             .attr("width", "100%")
+#             .attr("height", "100%")
+#             .attr("fill", "white");
+#             
+#         @_svg.append("g")
+#             .attr("class", "x axis")
+#             .attr("transform", "translate(0," + @_height + ")")
+#             .call(@_xAxis)
+# 
+#         @_svg.append("g")
+#             .attr("class", "y axis")
+#             .call(@_yAxis)
+# 
+#         @_svg.append("path")
+#             .attr("class", "line")
+#             .attr("d", line)
+# 
+# #         newFormat = d3.format(",.4") #TEST
+#             
+#         @_svg.selectAll(".dot")
+#             .data(@_data)
+#             .enter().append("circle")
+#             .attr("class", "dot")
+# #             .attr("cx", newFormat line.x())#TEST
+# #             .attr("cy", newFormat line.y())
+#             .attr("cx", line.x())
+#             .attr("cy", line.y())
+#             .attr("r", 3.5)    
+#             
+#          
+#             
+#             
+#             
+# #         SVG_selection = d3.select(".Graph_div")
+# #         @_svg = SVG_selection   
+#           
+# #         @_svg = d3.select("."+Canvas_div.className).append("Graph_div")
+# #                     .attr("width", @_width + @_margin.left + @_margin.right)
+# #                     .attr("height", @_height + @_margin.top + @_margin.bottom)
+# #                     .append("g")
+# #                     .attr("transform", "translate(" + @_margin.left + "," + @_margin.top + ")") 
+# **********************
+    _detect_vector: =>
         res= []
         for child in @_children
             if child instanceof TreeItem_Vector
@@ -172,38 +405,38 @@ class TestSamirGraphItem extends TreeItem_Computable
              res[ name ] = model[ name ]
         res
     
-    VecToArray = (VectX)->
-        VectXlength = VectX.length-1         
-        x=[]
-        for i in [0..VectXlength]
-  #             elem_i = VectX.slice(i, i+1)
-            elem_i = VectX[i]
-            data_i_n = elem_i.get()
-            data_i = data_i_n.valueOf()
-            x.push data_i
-        return x 
+#     VecToArray = (VectX)->
+#         VectXlength = VectX.length-1         
+#         x=[]
+#         for i in [0..VectXlength]
+#   #             elem_i = VectX.slice(i, i+1)
+#             elem_i = VectX[i]
+#             data_i_n = elem_i
+#             data_i = data_i_n.valueOf()
+#             x.push data_i
+#         return x 
     
     
     
         # vec_tab is an array of Vec
     # outputs: min and max values from vec_tab  
-    min_max_Vec = ( vec_tab  = [])->
-        resMin =[]
-        resMax =[]
-        vec_tabLength = vec_tab.length - 1
-        for i in [0..vec_tabLength]
-            vec=[]
-            vec[i] = VecToArray(vec_tab[i])
-            veciLength = vec[i].length - 1
-            vec[i].sort( (a,b) -> a - b)
-            resMin[i] = vec[i][0]
-            resMax[i] = vec[i][veciLength]
-        resMin.sort((a,b) -> a - b)     
-        resMax.sort((a,b) -> a - b)
-        resMaxLength = resMax.length - 1
-        min = resMin[0]
-        max = resMax[resMaxLength]
-        [min, max]    
+#     min_max_Vec = ( vec_tab  = [])->
+#         resMin =[]
+#         resMax =[]
+#         vec_tabLength = vec_tab.length - 1
+#         for i in [0..vec_tabLength]
+#             vec=[]
+#             vec[i] = VecToArray(vec_tab[i])
+#             veciLength = vec[i].length - 1
+#             vec[i].sort( (a,b) -> a - b)
+#             resMin[i] = vec[i][0]
+#             resMax[i] = vec[i][veciLength]
+#         resMin.sort((a,b) -> a - b)     
+#         resMax.sort((a,b) -> a - b)
+#         resMaxLength = resMax.length - 1
+#         min = resMin[0]
+#         max = resMax[resMaxLength]
+#         [min, max]    
 #         min_max_Vec Test
 #           y1 = [ 53, 66, 0, 38]    
 #           y2 = [ 87, 11, 4, 1, 12]
@@ -289,15 +522,15 @@ class TestSamirGraphItem extends TreeItem_Computable
     
     
     
-    MatrixInversion = (VecX, VecY)->
-        # VecY or VecX empty # TODO
-        # VecY or VecX Not same size # TODO
-        x = VecToArray(VecX)
-        y = VecToArray(VecY)    
-        xmax = x.length-1
-        res = []
-        res[i] = [x[i], y[i]] for i in [0..xmax]
-        return res           
+#     MatrixInversion = (VecX, VecY)->
+#         # VecY or VecX empty # TODO
+#         # VecY or VecX Not same size # TODO
+#         x = VecToArray(VecX)
+#         y = VecToArray(VecY)    
+#         xmax = x.length-1
+#         res = []
+#         res[i] = [x[i], y[i]] for i in [0..xmax]
+#         return res           
     #TEST
     # m = MatrixInversion([ 1, 2, 3], [5, 6, 7])
     # console.log m
@@ -309,23 +542,6 @@ class TestSamirGraphItem extends TreeItem_Computable
     # [ 2, 6 ]
     # [ 1, 5 ]
     # [ 3, 7 ] 
-      
-        
-#     onchange: ->#TODO 
-#         if @graphItem.has_been_directly_modified
-        #TODO A finir            
-#             block = new_dom_element
-#                 parentNode : @el
-#                 nodeName   : "span"
-#                 
-#         @clear_page(@container_global)
-#         if @app_data.selected_tree_items.has_been_directly_modified    
-      
-      
-      
-      
-      
-      
       
       
     # obtenir la position réelle dans le canvas
