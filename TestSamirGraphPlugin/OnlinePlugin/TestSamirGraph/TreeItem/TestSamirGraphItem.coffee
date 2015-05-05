@@ -34,23 +34,23 @@ class TestSamirGraphItem extends TreeItem_Computable
 #             _vec_x        : new Vec [1, 2, 3, 4, 5]
 #             _vec_y        : new Vec [45, 23, 3, 0, 7]
             
-        @_vec_x        = new Vec [1, 2, 3, 4, 5]
-        @_vec_y        = new Vec [0, 23, 3, 0, 7]
+        @_vec_x        = new Vec [0.5, 1, 2, 3, 4, 5]
+        @_vec_y        = new Vec [5, 0, 23, 3, 0, 7]
         # attributes
         
 #         @fill_x_y()                 # TEST  A remettre si onload non necessaire
         
 #         treeItem_x = new TreeItem_Vector(@_vec_x, "EssaiAbscissa")
 #         treeItem_y = new TreeItem_Vector(@_vec_y, "EssaiOrdinate")
-#         treeItem_x = new TreeItem_Vector(@_vec_x)
-#         treeItem_y = new TreeItem_Vector(@_vec_y)
+        treeItem_x = new TreeItem_Vector(@_vec_x)
+        treeItem_y = new TreeItem_Vector(@_vec_y)
 # #         @mod_attr @_children, [treeItem_x, treeItem_y]
         @add_attr
             _issimGraph   : new IssimGraph
             constrVal: new ConstrainedVal( 7, { min: 0, max: 15 } )
 # 
-#         @add_child treeItem_x
-#         @add_child treeItem_y        
+        @add_child treeItem_x
+        @add_child treeItem_y        
         
 #             _vec_x        : new Vec
 #             _vec_y        : new Vec
@@ -141,6 +141,9 @@ class TestSamirGraphItem extends TreeItem_Computable
                 
     draw: ( info ) ->        
         SingSVG = SingletonSVG.getInstance()
+        Vec_List = []
+        Vec_List = @_detect_vector()                
+        
         console.log @_vec_x+" "+@_vec_y
         SingSVG.drawing_SVG.drawSVG(info, @_vec_x, @_vec_y, @firstDrawing )
         if not @firstDrawing? 
@@ -153,14 +156,13 @@ class TestSamirGraphItem extends TreeItem_Computable
 #         
 #         v1 = new Vec [1, 72, 3, 24]
 #         v2 = new Vec [45, 2, 3, 0]
-#         Vec_List = [] #TEST 
 #         Vec_List.push v1
+#         Vec_List = [] #TEST 
 #         Vec_List.push v2
 #         
 #         width = info.w  #Canvas_div.offsetWidth
 #         height = info.h #Canvas_div.offsetHeight        
 # 
-# #         Vec_List = @_detect_vector()        
 #         @_vec_x = Vec_List[0] 
 #         @_vec_y = Vec_List[1]        
 #         
@@ -415,7 +417,7 @@ class TestSamirGraphItem extends TreeItem_Computable
 # #                     .append("g")
 # #                     .attr("transform", "translate(" + @_margin.left + "," + @_margin.top + ")") 
 # **********************
-    _detect_vector: =>
+    _detect_vector: ->
         res= []
         for child in @_children
             if child instanceof TreeItem_Vector
