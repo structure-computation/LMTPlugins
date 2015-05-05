@@ -18,29 +18,39 @@
 class TestSamirGraphItem extends TreeItem_Computable
     constructor: (name = "Graph") ->
         super()
+        @firstDrawing = undefined
+#         @add_attr
+#             _v1           : new Vec
+#             _v2           : new Vec
         
+#         @fill_v1_v2()    
+            
         # default values
         @_name.set name
         @_viewable.set true
         
-        @_nb_values    = 361         #To see until 360    
-        @_vec_x        = new Vec [1, 72, 3, 24]
-        @_vec_y        = new Vec [45, 2, 3, 0]
+        @_nb_values    = 361         #To see until 360
+#         @add_attr
+#             _vec_x        : new Vec [1, 2, 3, 4, 5]
+#             _vec_y        : new Vec [45, 23, 3, 0, 7]
+            
+        @_vec_x        = new Vec [1, 2, 3, 4, 5]
+        @_vec_y        = new Vec [0, 23, 3, 0, 7]
         # attributes
         
 #         @fill_x_y()                 # TEST  A remettre si onload non necessaire
         
 #         treeItem_x = new TreeItem_Vector(@_vec_x, "EssaiAbscissa")
 #         treeItem_y = new TreeItem_Vector(@_vec_y, "EssaiOrdinate")
-        treeItem_x = new TreeItem_Vector(@_vec_x)
-        treeItem_y = new TreeItem_Vector(@_vec_y)
-#         @mod_attr @_children, [treeItem_x, treeItem_y]
+#         treeItem_x = new TreeItem_Vector(@_vec_x)
+#         treeItem_y = new TreeItem_Vector(@_vec_y)
+# #         @mod_attr @_children, [treeItem_x, treeItem_y]
         @add_attr
             _issimGraph   : new IssimGraph
             constrVal: new ConstrainedVal( 7, { min: 0, max: 15 } )
-
-        @add_child treeItem_x
-        @add_child treeItem_y        
+# 
+#         @add_child treeItem_x
+#         @add_child treeItem_y        
         
 #             _vec_x        : new Vec
 #             _vec_y        : new Vec
@@ -54,8 +64,28 @@ class TestSamirGraphItem extends TreeItem_Computable
         console.log number*(Math.PI/180)
         parseFloat (Math.cos(number*(Math.PI/180))).toPrecision(5)
 
-
-    fill_x_y: ()->
+    fill_v1_v2: () ->
+            @_v1.clear()
+            @_v2.clear()
+            #alert @_f_t + " " + @_tmin + " " + @_tmax + " " + @_nb_values
+            
+            for i in [ 0 ... @_nb_values.get() ]
+                @_v1.push 0
+                @_v2.push 0
+                @_v1[ i ].set (@_tmin.get() + i * (@_tmax.get() - @_tmin.get())/(@_nb_values.get()-1))
+            
+            #alert @_v1
+            for i in [ 0 ... @_nb_values.get() ]
+                t = @_v1[ i ]
+                str = "t=" + t + "; val_t = " + @_f_t + ";"
+                #alert str
+                val_f = eval(str)
+                #alert val_f
+                #alert val_t
+                @_v2[ i ].set val_t
+                
+                
+    fill_x_y_cos: ()->
         zero = new Number(0).valueOf()
         
         @_vec_x.clear()
@@ -90,8 +120,9 @@ class TestSamirGraphItem extends TreeItem_Computable
             catch error
                 return false      
         return true
-    sub_canvas_items: ->
-        [ @_issimGraph ]     
+        
+#     sub_canvas_items: ->
+#         [ @_issimGraph ]     
     
     display_suppl_context_actions: ( context_action )  ->
         context_action.push
@@ -102,15 +133,18 @@ class TestSamirGraphItem extends TreeItem_Computable
             siz: 1
             TS_instance : this
             fun: ( evt, app) =>
-                vec_arr = detect_vector()
-                         
+#                 vec_arr = detect_vector()
+                new NewCanvasPanelAdder         
 
                 app.active_key.set false 
 
                 
-    draw: ( info ) =>        
+    draw: ( info ) ->        
         SingSVG = SingletonSVG.getInstance()
-        SingSVG.drawing_SVG.drawSVG(info)
+        console.log @_vec_x+" "+@_vec_y
+        SingSVG.drawing_SVG.drawSVG(info, @_vec_x, @_vec_y, @firstDrawing )
+        if not @firstDrawing? 
+            @firstDrawing = false
         return true
 
 
