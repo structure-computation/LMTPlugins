@@ -17,16 +17,24 @@
 
 class DrawingSVG
     constructor: ()->
+#         firstDrawing = undefined
        
-    drawSVG: ( info ) ->    
+    drawSVG: ( info, vector1, vector2, firstDrawing ) ->
+        if not firstDrawing? 
+            @initDrawing( info, vector1, vector2 )
+            
+            
+            
         #         info.cm._init_ctx()
         #         Canvas_div = info.cm.canvas
         
-        v1 = new Vec [1, 72, 3, 24]
-        v2 = new Vec [45, 2, 3, 0]
+#         v1 = new Vec [1, 72, 3, 24]
+#         v2 = new Vec [45, 2, 3, 0]
+
+    initDrawing: ( info, vector1, vector2 ) ->    
         Vec_List = [] #TEST 
-        Vec_List.push v1
-        Vec_List.push v2
+        Vec_List.push vector1
+        Vec_List.push vector2
         
         #         Vec_List = @_detect_vector()        
         @_vec_x = Vec_List[0] 
