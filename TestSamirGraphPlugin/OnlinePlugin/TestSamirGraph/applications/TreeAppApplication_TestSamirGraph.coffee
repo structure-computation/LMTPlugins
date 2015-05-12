@@ -10,7 +10,10 @@ class TreeAppApplication_TestSamirGraph extends TreeAppApplication
             
         @actions.push
             ico: "img/testGraphs_bouton.png"
+#             ico: "../../LMTPlugins/TestSamirGraphPlugin/OnlinePlugin/TestSamirGraph/img/testGraphs_bouton.png"
+#             ico: "../../../../LMTPlugins/TestSamirGraphPlugin/OnlinePlugin/TestSamirGraph/img/TestSamirImg.png"
             siz: 1
+#             vis: false
             txt: "Tests"
             ina: _ina
             fun: ( evt, app ) =>
