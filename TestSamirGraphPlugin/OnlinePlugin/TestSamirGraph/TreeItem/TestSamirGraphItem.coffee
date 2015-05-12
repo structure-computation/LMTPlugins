@@ -1,62 +1,55 @@
-# Copyright 2012 Structure Computation  www.structure-computation.com
-# Copyright 2012 Hugo Leclerc
-#
-# This file is part of Soda.
-#
-# Soda is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# Soda is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Lesser General Public License for more details.
-# You should have received a copy of the GNU General Public License
-# along with Soda. If not, see <http://www.gnu.org/licenses/>.
+
 
 class TestSamirGraphItem extends TreeItem_Computable
     constructor: (name = "Graph") ->
         super()
-        @firstDrawing = undefined
-#         @add_attr
-#             _v1           : new Vec
-#             _v2           : new Vec
         
-#         @fill_v1_v2()    
-            
-        # default values
         @_name.set name
+#         @_ico.set "../../LMTPlugins/TestSamirGraphPlugin/OnlinePlugin/TestSamirGraph/img/testGraphs_bouton.png"
+        @_ico.set "img/testGraphs_bouton.png"
         @_viewable.set true
         
-        @_nb_values    = 361         #To see until 360
+        @firstDrawing = undefined
+        
+        @add_attr
+            _allowToDraw : false
+        
+        @add_attr
+            vecteur_abscisse           : new Vec
+            vecteur_ordonnee           : new Vec
+        
+#         @fill_v1_v2()    
+#         @_nb_values    = 361         #To see until 360
+    
+        # default values
+
+        
+
 #         @add_attr
 #             _vec_x        : new Vec [1, 2, 3, 4, 5]
 #             _vec_y        : new Vec [45, 23, 3, 0, 7]
             
-        @_vec_x        = new Vec [0.5, 1, 2, 3, 4, 5]
-        @_vec_y        = new Vec [5, 0, 23, 3, 0, 7]
+        @_vec_x        = new Vec [10, 1, 2, 3, 4, 5]
+        @_vec_y        = new Vec [15, 0, 23, 3, 0, 7]
+
         # attributes
         
 #         @fill_x_y()                 # TEST  A remettre si onload non necessaire
         
 #         treeItem_x = new TreeItem_Vector(@_vec_x, "EssaiAbscissa")
 #         treeItem_y = new TreeItem_Vector(@_vec_y, "EssaiOrdinate")
+
         treeItem_x = new TreeItem_Vector(@_vec_x)
         treeItem_y = new TreeItem_Vector(@_vec_y)
+
 # #         @mod_attr @_children, [treeItem_x, treeItem_y]
         @add_attr
             _issimGraph   : new IssimGraph
             constrVal: new ConstrainedVal( 7, { min: 0, max: 15 } )
 # 
-        @add_child treeItem_x
+        @add_child treeItem_x#TEST
         @add_child treeItem_y        
         
-#             _vec_x        : new Vec
-#             _vec_y        : new Vec
-#             _v1           : new Vec
-#             _v2           : new Vec
-#             _v3           : new Vec
             
                 
     #TEST             
@@ -125,27 +118,47 @@ class TestSamirGraphItem extends TreeItem_Computable
 #         [ @_issimGraph ]     
     
     display_suppl_context_actions: ( context_action )  ->
+        instance = this
         context_action.push
-            txt: "link"
+            txt: "Display your graphs"
             ico: "img/TestSamirImg.png"
+            fun: ( evt, app ) =>
+#                 instance._allowToDraw.set true
+                CurCanvasManager = app.selected_canvas_inst()?[ 0 ]?.cm
+                if CurCanvasManager?
+                    thislikeItem = CurCanvasManager.items.detect ( x ) -> x instanceof TestSamirGraphItem #TODO +modif le selected+faire == this 
+                    thislikeItem._allowToDraw.set true
+                    CurCanvasManager.draw()
+#                 vec_arr = detect_vector()
+#                 new NewCanvasPanelAdder         
+                
+#             ico: "../../LMTPlugins/TestSamirGraphPlugin/OnlinePlugin/TestSamirGraph/img/TestSamirImg.png"               
+#             ico: "img/TestSamirImg.png"
 #             ico: "../../../../LMTPlugins/TestSamirGraphPlugin/OnlinePlugin/TestSamirGraph/img/TestSamirImg.png"
 #             ico: "~/LMTLabsScetup/software_library/LMTPlugins/TestSamirGraphPlugin/OnlinePlugin/TestSamirGraph/img/TestSamirImg.png"
-            siz: 1
-            TS_instance : this
-            fun: ( evt, app) =>
-#                 vec_arr = detect_vector()
-                new NewCanvasPanelAdder         
-
-                app.active_key.set false 
+#             siz: 1
+#             vis:true
+#             TS_instance : this
 
                 
     draw: ( info ) ->        
         SingSVG = SingletonSVG.getInstance()
         Vec_List = []
-        Vec_List = @_detect_vector()                
         
         console.log @_vec_x+" "+@_vec_y
-        SingSVG.drawing_SVG.drawSVG(info, @_vec_x, @_vec_y, @firstDrawing )
+        if not @firstDrawing?
+            Vec_List = @_detect_vector()                
+        else
+            Vec_List.push @_vec_x
+            Vec_List.push @_vec_y
+        alert "detected vec: "+Vec_List.join "\n"     
+        @vecteur_abscisse =  Vec_List[0]   
+        @vecteur_ordonnee =  Vec_List[1]
+        
+        
+        if @_allowToDraw
+            SingSVG.drawing_SVG.drawSVG(info, @vecteur_abscisse, @vecteur_ordonnee, @firstDrawing )
+        
         if not @firstDrawing? 
             @firstDrawing = false
         return true
@@ -422,6 +435,7 @@ class TestSamirGraphItem extends TreeItem_Computable
         for child in @_children
             if child instanceof TreeItem_Vector
                 res.push child.vec
+#                 alert "Vector detect"+
         return res         
 
         ##TODO
@@ -618,3 +632,4 @@ class TestSamirGraphItem extends TreeItem_Computable
 
 #     disp_only_in_model_editor: -> TODO A mettre ?
 #         @mesh    
+
