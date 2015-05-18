@@ -18,6 +18,7 @@ int main( int argc, char **argv ) {
     sc.reg_type( "DicUncertaintyItem" );
     sc.reg_type( "FieldExportItem" );
     sc.reg_type( "VirtualGaugeItem" );
+    sc.reg_type( "ReaderINPItem" );
 //     sc.reg_type( "StepReaderToNurbsItem" );
     sc.reg_type( "File" );
     sc.reg_type( "Img" );
