@@ -38,9 +38,12 @@ class DrawingSVG
         
         #         Vec_List = @_detect_vector()        
         @_vec_x = Vec_List[0] 
-        @_vec_y = Vec_List[1]        
-        @_data= MatrixTranspose(@_vec_x, @_vec_y)
+        @_vec_y = Vec_List[1] 
+        XArray = VecToArray(@_vec_x)
+        XYArray = MatrixTranspose(@_vec_x, @_vec_y)
+        @_data= OrderAccordingAbscisse(XArray, XYArray)
         
+        @_data = MatrixTranspose(@_vec_x, @_vec_y)
         width = info.w  #Canvas_div.offsetWidth
         height = info.h #Canvas_div.offsetHeight        
         #       @_margin = {top: @_top, right: 30, bottom: 30, left: @_left},     
@@ -149,7 +152,7 @@ class DrawingSVG
             x.push data_i
         return x 
      
-     min_max_Vec = ( vec_tab  = [])->
+    min_max_Vec = ( vec_tab  = [])->
         resMin =[]
         resMax =[]
         vec_tabLength = vec_tab.length - 1
@@ -166,6 +169,24 @@ class DrawingSVG
         min = resMin[0]
         max = resMax[resMaxLength]
         [min, max]    
+        
+        
+    # X =   [10, 1, 3, 2, 4, 5]
+    # Y =  [15, 0, 23, 3, 0, 7]
+    # 
+    # XY = [ [10, 15], [1, 0], [3, 23], [ 2, 3], [ 4, 0], [ 5, 7]]
+    # output:
+
+    # [ [ 1, 0 ], [ 2, 3 ], [ 3, 23 ], [ 4, 0 ], [ 5, 7 ], [ 10, 15 ] ]
+
+    OrderAccordingAbscisse = (XAbscisseArray, XYArray)->
+        XMax = XAbscisseArray.length-1
+        Xbuff=[]
+        Xbuff = XAbscisseArray#.slice(0)
+#         Xbuff[i].sort((a,b) -> a - b ) for i in [0..XMax]  
+        Xbuff.sort((a,b) -> a - b )
+        Res =[]
+        Res = XYArray[XAbscisseArray.indexOf(Xbuff[i])] for i in [0..XMax]       
         
         #         @_svgD3.append("rect")
         #             .attr("width", "100%")

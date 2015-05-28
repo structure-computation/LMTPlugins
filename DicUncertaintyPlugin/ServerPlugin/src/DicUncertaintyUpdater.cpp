@@ -242,51 +242,51 @@ bool DicUncertaintyUpdater::run( MP mp ) {
     msg[ "Writing TreeItem_Vector: " ] = res ;//TEST
     mp[ "_messages" ] << msg;
     
-//     mp[ "_output" ][0].clear();
-//     mp[ "_output" ][1].clear();
-//     mp[ "_output" ][2].clear();
-//     mp[ "_output" ][3].clear();
-//     mp[ "_output" ][4].clear();
+    mp[ "_output" ][0].clear();
+    mp[ "_output" ][1].clear();
+    mp[ "_output" ][2].clear();
+    mp[ "_output" ][3].clear();
+    mp[ "_output" ][4].clear();
+    
+    set_vecToTreeItemVec(Dimp, DimpMPVec, mp[ "_output" ][0], "Imposed Displacement");
+    set_vecToTreeItemVec(UncX, UncXMPVec, mp[ "_output" ][1], "Uncertainty of X");
+    set_vecToTreeItemVec(UncY, UncYMPVec, mp[ "_output" ][2], "Uncertainty of Y");
+    set_vecToTreeItemVec(ErrX, ErrXMPVec, mp[ "_output" ][3], "Error of X");
+    set_vecToTreeItemVec(ErrY, ErrYMPVec, mp[ "_output" ][4], "Error of Y");    
+    
+    qDebug()  << mp[ "_output" ][0];
+    qDebug(" ");
+    qDebug()  << mp[ "_output" ][1];
+    qDebug(" ");
+    qDebug()  << mp[ "_output" ][2];
+    qDebug(" ");
+    qDebug()  << mp[ "_output" ][3];
+    qDebug(" ");
+    qDebug()  << mp[ "_output" ][4];
+    qDebug(" ");
+    
+//     mp[ "_output[0]"].clear();
+//     mp[ "_output[1]"].clear();
+//     mp[ "_output[2]"].clear();
+//     mp[ "_output[3]"].clear();
+//     mp[ "_output[4]"].clear();
 //     
-//     set_vecToTreeItemVec(Dimp, DimpMPVec, mp[ "_output" ][0], "Imposed Displacement");
-//     set_vecToTreeItemVec(UncX, UncXMPVec, mp[ "_output" ][1], "Uncertainty of X");
-//     set_vecToTreeItemVec(UncY, UncYMPVec, mp[ "_output" ][2], "Uncertainty of Y");
-//     set_vecToTreeItemVec(ErrX, ErrXMPVec, mp[ "_output" ][3], "Error of X");
-//     set_vecToTreeItemVec(ErrY, ErrYMPVec, mp[ "_output" ][4], "Error of Y");    
+//     set_vecToTreeItemVec(Dimp, DimpMPVec, mp[ "_output[0]"], "Imposed Displacement");
+//     set_vecToTreeItemVec(UncX, UncXMPVec, mp[ "_output[1]"], "Uncertainty of X");
+//     set_vecToTreeItemVec(UncY, UncYMPVec, mp[ "_output[2]"], "Uncertainty of Y");
+//     set_vecToTreeItemVec(ErrX, ErrXMPVec, mp[ "_output[3]"], "Error of X");
+//     set_vecToTreeItemVec(ErrY, ErrYMPVec, mp[ "_output[4]"], "Error of Y");    
 //     
-//     qDebug()  << mp[ "_output" ][0];
+//     qDebug()  << mp[ "_output[0]"];
 //     qDebug(" ");
-//     qDebug()  << mp[ "_output" ][1];
+//     qDebug()  << mp[ "_output[1]"];
 //     qDebug(" ");
-//     qDebug()  << mp[ "_output" ][2];
+//     qDebug()  << mp[ "_output[2]"];
 //     qDebug(" ");
-//     qDebug()  << mp[ "_output" ][3];
+//     qDebug()  << mp[ "_output[3]"];
 //     qDebug(" ");
-//     qDebug()  << mp[ "_output" ][4];
+//     qDebug()  << mp[ "_output[4]"];
 //     qDebug(" ");
-    
-    mp[ "_output[0]"].clear();
-    mp[ "_output[1]"].clear();
-    mp[ "_output[2]"].clear();
-    mp[ "_output[3]"].clear();
-    mp[ "_output[4]"].clear();
-    
-    set_vecToTreeItemVec(Dimp, DimpMPVec, mp[ "_output[0]"], "Imposed Displacement");
-    set_vecToTreeItemVec(UncX, UncXMPVec, mp[ "_output[1]"], "Uncertainty of X");
-    set_vecToTreeItemVec(UncY, UncYMPVec, mp[ "_output[2]"], "Uncertainty of Y");
-    set_vecToTreeItemVec(ErrX, ErrXMPVec, mp[ "_output[3]"], "Error of X");
-    set_vecToTreeItemVec(ErrY, ErrYMPVec, mp[ "_output[4]"], "Error of Y");    
-    
-    qDebug()  << mp[ "_output[0]"];
-    qDebug(" ");
-    qDebug()  << mp[ "_output[1]"];
-    qDebug(" ");
-    qDebug()  << mp[ "_output[2]"];
-    qDebug(" ");
-    qDebug()  << mp[ "_output[3]"];
-    qDebug(" ");
-    qDebug()  << mp[ "_output[4]"];
-    qDebug(" ");
     
     // Calculate difference between results and imposed displacement or strain
 
