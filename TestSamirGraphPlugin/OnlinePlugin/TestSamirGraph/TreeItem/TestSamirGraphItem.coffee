@@ -39,8 +39,8 @@ class TestSamirGraphItem extends TreeItem_Computable
 #         treeItem_x = new TreeItem_Vector(@_vec_x, "EssaiAbscissa")
 #         treeItem_y = new TreeItem_Vector(@_vec_y, "EssaiOrdinate")
 
-        treeItem_x = new TreeItem_Vector(@_vec_x)
-        treeItem_y = new TreeItem_Vector(@_vec_y)
+        treeItem_x = new TreeItem_Vector(@_vec_x, "abscisse")
+        treeItem_y = new TreeItem_Vector(@_vec_y, "ordonnee ")
 
 # #         @mod_attr @_children, [treeItem_x, treeItem_y]
         @add_attr
@@ -142,29 +142,53 @@ class TestSamirGraphItem extends TreeItem_Computable
 
                 
     draw: ( info ) ->        
-        SingSVG = SingletonSVG.getInstance()
-        Vec_List = []
-        
-        console.log @_vec_x+" "+@_vec_y
-        if not @firstDrawing?
-            Vec_List = @_detect_vector()                
-        else
-            Vec_List.push @_vec_x
-            Vec_List.push @_vec_y
-        alert "detected vec: "+Vec_List.join "\n"     
-        @vecteur_abscisse =  Vec_List[0]   
-        @vecteur_ordonnee =  Vec_List[1]
-        
-        
-        if @_allowToDraw
+        if @_allowToDraw.get() == true
+            SingSVG = SingletonSVG.getInstance()
+            Vec_List = []            
+    #         console.log @_vec_x+" "+@_vec_y
+            if not @firstDrawing?
+                Vec_List = @_detect_vector()                
+            else
+                Vec_List.push @_vec_x#TODO TEST A retirer 
+                Vec_List.push @_vec_y#TODO TEST A retirer
+    #         alert "detected vec: "+Vec_List.join "\n"     
+            @vecteur_abscisse =  Vec_List[0]   
+            @vecteur_ordonnee =  Vec_List[1]
+              
             SingSVG.drawing_SVG.drawSVG(info, @vecteur_abscisse, @vecteur_ordonnee, @firstDrawing )
-        
-        if not @firstDrawing? 
-            @firstDrawing = false
+            
+            if not @firstDrawing? 
+                @firstDrawing = false
         return true
 
+    _detect_vector: ->
+        res= []
+        for child in @_children
+            if child instanceof TreeItem_Vector
+                res.push child.vec
+#                 alert "Vector detect"+
+        return res         
 
-# #         info.cm._init_ctx()
+        ##TODO
+    VecToList:(vec)->
+        LstRes = new Lst
+        LstRes[i] = vec[i] for i in [0..vec.length]
+        LstRes
+          
+    
+        #copied from ModelEditor:
+    attr_Veclist: ( model)->
+#         console.log "model.get_state()"+model.get_state()
+        res = {}
+        for name in model._attribute_names when model[name] instanceof Vec
+             console.log "\nmodel[name]: "+model[name]#TEST
+             console.log "\nmodel[name]._underlying_fs_type: "+model[name]._underlying_fs_type#TEST
+             res[ name ] = model[ name ]
+        res
+
+        
+#*********        
+        # #         info.cm._init_ctx()
 # #         Canvas_div = info.cm.canvas
 #         
 #         v1 = new Vec [1, 72, 3, 24]
@@ -430,31 +454,7 @@ class TestSamirGraphItem extends TreeItem_Computable
 # #                     .append("g")
 # #                     .attr("transform", "translate(" + @_margin.left + "," + @_margin.top + ")") 
 # **********************
-    _detect_vector: ->
-        res= []
-        for child in @_children
-            if child instanceof TreeItem_Vector
-                res.push child.vec
-#                 alert "Vector detect"+
-        return res         
-
-        ##TODO
-    VecToList:(vec)->
-        LstRes = new Lst
-        LstRes[i] = vec[i] for i in [0..vec.length]
-        LstRes
-          
-    
-        #copied from ModelEditor:
-    attr_Veclist: ( model)->
-#         console.log "model.get_state()"+model.get_state()
-        res = {}
-        for name in model._attribute_names when model[name] instanceof Vec
-             console.log "\nmodel[name]: "+model[name]#TEST
-             console.log "\nmodel[name]._underlying_fs_type: "+model[name]._underlying_fs_type#TEST
-             res[ name ] = model[ name ]
-        res
-    
+#*********        
 #     VecToArray = (VectX)->
 #         VectXlength = VectX.length-1         
 #         x=[]
