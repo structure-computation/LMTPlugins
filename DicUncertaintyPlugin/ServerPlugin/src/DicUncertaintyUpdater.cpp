@@ -239,8 +239,8 @@ bool DicUncertaintyUpdater::run( MP mp ) {
     MP mpErrXTreeItem_Vec = MP::new_obj( "TreeItem_Vector" );//TEST
     MP mpErrYTreeItem_Vec = MP::new_obj( "TreeItem_Vector" );//TEST
 
-    msg[ "Writing TreeItem_Vector: " ] = res ;//TEST
-    mp[ "_messages" ] << msg;
+   // msg[ "Writing TreeItem_Vector: " ] = res ;//TEST TODO A corriger car produit erreur et bloque chargement lab.html 
+    //mp[ "_messages" ] << msg;
     
     mp[ "_output" ][0].clear();
     mp[ "_output" ][1].clear();
