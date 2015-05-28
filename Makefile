@@ -6,7 +6,8 @@ LIBRARIES = \
 	FieldExportPlugin \
 	IdentificationWithCode_AsterPlugin \
 	VirtualGaugePlugin \
-	CorreliPlugin
+	CorreliPlugin \
+	ReaderINPPlugin
 
 
 SHELL = /bin/bash
