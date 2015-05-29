@@ -9,21 +9,20 @@ class TestSamirGraphItem extends TreeItem_Computable
         @_ico.set "img/testGraphs_bouton.png"
         @_viewable.set true
         
-        @firstDrawing = undefined
+        @firstDrawing = undefined  #ensures that only one single svg will be drawn at any mouse event occurring during the drawing, ie when _allowToDraw = true  
         
         @add_attr
             _allowToDraw : false
         
-        @add_attr
-            vecteur_abscisse           : new Vec
-            vecteur_ordonnee           : new Vec
-        
+#         @add_attr
+#             vecteur_abscisse           : new Vec
+#             vecteur_ordonnee           : new Vec
+        vecteur_abscisse           = new Vec
+        vecteur_ordonnee           = new Vec 
 #         @fill_v1_v2()    
 #         @_nb_values    = 361         #To see until 360
     
         # default values
-
-        
 
 #         @add_attr
 #             _vec_x        : new Vec [1, 2, 3, 4, 5]
@@ -36,13 +35,14 @@ class TestSamirGraphItem extends TreeItem_Computable
         
 #         @fill_x_y()                 # TEST  A remettre si onload non necessaire
         
-#         treeItem_x = new TreeItem_Vector(@_vec_x, "EssaiAbscissa")
-#         treeItem_y = new TreeItem_Vector(@_vec_y, "EssaiOrdinate")
 
-        treeItem_x = new TreeItem_Vector(@_vec_x, "abscisse")
-        treeItem_y = new TreeItem_Vector(@_vec_y, "ordonnee ")
-
+#         treeItem_x = new TreeItem_Vector(@_vec_x, "abscisse")
+#         treeItem_y = new TreeItem_Vector(@_vec_y, "ordonnee ")
+        treeItem_x = new TreeItem_SingleData("abscisse")
+        treeItem_y = new TreeItem_SingleData("ordonnee")
+        
 # #         @mod_attr @_children, [treeItem_x, treeItem_y]
+        
         @add_attr
             _issimGraph   : new IssimGraph
             constrVal: new ConstrainedVal( 7, { min: 0, max: 15 } )
@@ -127,6 +127,7 @@ class TestSamirGraphItem extends TreeItem_Computable
                 CurCanvasManager = app.selected_canvas_inst()?[ 0 ]?.cm
                 if CurCanvasManager?
                     thislikeItem = CurCanvasManager.items.detect ( x ) -> x instanceof TestSamirGraphItem #TODO +modif le selected+faire == this 
+#                     thislikeItem._firstDrawing.set undefined TODO
                     thislikeItem._allowToDraw.set true
                     CurCanvasManager.draw()
 #                 vec_arr = detect_vector()
@@ -145,12 +146,11 @@ class TestSamirGraphItem extends TreeItem_Computable
         if @_allowToDraw.get() == true
             SingSVG = SingletonSVG.getInstance()
             Vec_List = []            
-    #         console.log @_vec_x+" "+@_vec_y
             if not @firstDrawing?
                 Vec_List = @_detect_vector()                
-            else
-                Vec_List.push @_vec_x#TODO TEST A retirer 
-                Vec_List.push @_vec_y#TODO TEST A retirer
+#             else
+#                 Vec_List.push @_vec_x#TEST A retirer 
+#                 Vec_List.push @_vec_y#TEST A retirer
     #         alert "detected vec: "+Vec_List.join "\n"     
             @vecteur_abscisse =  Vec_List[0]   
             @vecteur_ordonnee =  Vec_List[1]
@@ -159,16 +159,29 @@ class TestSamirGraphItem extends TreeItem_Computable
             
             if not @firstDrawing? 
                 @firstDrawing = false
+            @_allowToDraw = false
         return true
+
+#     detect_vector: ->
+#         res= []
+#         for child in @_children
+#             if child instanceof TreeItem_Vector
+#                 res.push child.vec
+#         return res         
 
     _detect_vector: ->
         res= []
         for child in @_children
-            if child instanceof TreeItem_Vector
-                res.push child.vec
-#                 alert "Vector detect"+
+            if child instanceof TreeItem_SingleData
+                if child._children[0] instanceof TreeItem_Vector 
+                    detectedVec = child._children[0].vec
+                    if not detectedVec?
+                        detectedVec = new Vec [0]# return Vector zero, TODO put an alert
+                    res.push detectedVec  #TODO verifier le type de children et try ca
+    #                 alert "Vector detect"+
         return res         
-
+        
+        
         ##TODO
     VecToList:(vec)->
         LstRes = new Lst
@@ -186,7 +199,38 @@ class TestSamirGraphItem extends TreeItem_Computable
              res[ name ] = model[ name ]
         res
 
+    addNewCanvasPanel : (app)->
+#         TODO mettre les variables locales en parametres
+#     getCurrentDisplaySettingsItem:->
+        display_settings = app.data.selected_display_settings()
+#         session = @data.selected_session()
+#     getCurrentLayoutManager:->
+        currentLayoutManagerData = display_settings._layout        
+        newPanelStrengthCoeff = 1 #TEST        
+        visiblePanels = currentLayoutManagerData.panel_id_of_term_panels()
+        lastVisiblePanels = visiblePanels.length-1
+        idLastVisibleCanvas = lastVisiblePanels[visiblePanels.length-1]
+        isHorizontal = 0 # 0: vertical
+        isNewPanelOnRightSide = 1
+        currentLayoutManagerData.mk_split( isHorizontal, isNewPanelOnRightSide, idLastVisibleCanvas, newPanelStrengthCoeff)
+        idGraphCanvas = lastVisiblePanels[visiblePanels.length]
+        return idGraphCanvas
         
+#         curLmRoot = CurrentLayoutManagerData.root
+#     
+# #     VisiblePanels = getVisiblePanels: ->
+#         visiblePanels = curLmRoot.panel_id_of_term_panels()
+#                         
+# #     add_panel_id to curLmRoot                    #at the end !!
+#   
+# 
+# #         create a newLayoutManagerData
+# #         curLmRoot
+# #         
+# #     { panel_id: "id_0" }
+# #         setCurrentDisplaySettingsItem(newLayoutManagerData)
+
+
 #*********        
         # #         info.cm._init_ctx()
 # #         Canvas_div = info.cm.canvas
