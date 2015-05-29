@@ -21,7 +21,8 @@ class DicUncertaintyUpdater : public Updater {
 protected:
     bool run( MP mp );
     virtual QString type() const { return "DicUncertaintyUpdater"; }
-    void set_vecToTreeItemVec(const Vec<double> &vec, MP MPvec, MP mpTreeItem_Vec, QString attrName);
+//     void set_vecToTreeItemVec(const Vec<double> &vec, MP MPvec, MP mpTreeItem_Vec, QString attrName);
+    void set_vecToTreeItemVec(const Vec<double> &vec, MP mpp, int index, QString attrName);
     
 public:
     SodaClient *sc;
