@@ -54,22 +54,22 @@ class Launcher : public QObject {
               commande = "../AbaqusComputationPlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " + temp_str ;
               output = std::system(commande.c_str());
           }
-          else if(mp.type() == "Code_Aster_ComputationItem" ){
-              commande = "../Code_Aster_ComputationPlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " + temp_str ;
-              output = std::system(commande.c_str());
-          }
+           else if(mp.type() == "Code_Aster_ComputationItem" ){
+               commande = "../Code_Aster_ComputationPlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " + temp_str ;
+               output = std::system(commande.c_str());
+           }
           else if(mp.type() == "IdentificationWithAbaqusItem" ){
               commande = "../IdentificationWithAbaqusPlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " + temp_str ;
               output = std::system(commande.c_str());
           }
-          else if(mp.type() == "IdentificationWithCode_AsterItem" ){
-              commande = "../IdentificationWithCode_AsterPlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " + temp_str ;
-              output = std::system(commande.c_str());
-          }
-          else if(mp.type() == "TestRenoItem" ){
-              commande = "../TestRenoPlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " + temp_str ;
-              output = std::system(commande.c_str());
-          }
+           else if(mp.type() == "IdentificationWithCode_AsterItem" ){
+               commande = "../IdentificationWithCode_AsterPlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " + temp_str ;
+               output = std::system(commande.c_str());
+           }
+//           else if(mp.type() == "TestRenoItem" ){
+//               commande = "../TestRenoPlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " + temp_str ;
+//               output = std::system(commande.c_str());
+//           }
           else if(mp.type() == "FieldExportItem"  ){
               commande = "../FieldExportPlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " + temp_str ;
               output = std::system(commande.c_str());
@@ -90,11 +90,15 @@ class Launcher : public QObject {
               commande = "../DicUncertaintyPlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " + temp_str ;
               output = std::system(commande.c_str());
           }
-          else if(mp.type() == "StepReaderToNurbsItem" ){
-              commande = "../StepReaderToNurbsPlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " +
-temp_str ;
+          else if(mp.type() == "ReaderINPItem"  ){
+              commande = "../ReaderINPPlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " + temp_str ;
               output = std::system(commande.c_str());
           }
+//           else if(mp.type() == "StepReaderToNurbsItem" ){
+//               commande = "../StepReaderToNurbsPlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " +
+// temp_str ;
+//               output = std::system(commande.c_str());
+//           }
           
           qDebug() << "----------------- output : " << output;
 //           if(output){

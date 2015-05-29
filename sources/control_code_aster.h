@@ -96,7 +96,7 @@ void Write_export_file (std::string root_file){
     exp << "P rep_trav /tmp/mathieu-marsannay-batch.12746\n";
     exp << "P soumbtc oui\n";
     exp << "P tpsjob 2640\n";
-    exp << "P version 11.5\n";
+    exp << "P version 11.7\n";
     exp << "A args \n";
     exp << "A memjeveux 750.0\n";
     exp << "A tpmax 158400\n";
@@ -149,11 +149,11 @@ void Write_comm_file (std::string root_file, Vec<TM> mesh, Vec < Vec < std::stri
     comm << "                            PHENOMENE = 'MECANIQUE',\n";
     comm << "                            MODELISATION = ";
     if (computation_type == "2DPS")
-      comm << "'C_PLAN',),\n";
+        comm << "'C_PLAN',),\n";
     else if (computation_type == "2DPE")
-      comm << "'D_PLAN',),\n";
+        comm << "'D_PLAN',),\n";
     if ((computation_type == "2DPS") and (thelaw == "Powerlaw"))
-      PRINT("!!!!!!!! CODE ASTER DOES NOT ACCEPT PLANE STRESS ELEMENTS WITH A 'POWER'-TYPE HARDENING LAW !!!!!!!!!!!!!!!!");
+        PRINT("!!!!!!!! CODE ASTER DOES NOT ACCEPT PLANE STRESS ELEMENTS WITH A 'POWER'-TYPE HARDENING LAW !!!!!!!!!!!!!!!!");
     comm << "                        ),\n";
     comm << "                );\n";
     comm << "\n";
@@ -163,31 +163,31 @@ void Write_comm_file (std::string root_file, Vec<TM> mesh, Vec < Vec < std::stri
     comm << "# Units : m, MPa\n";
     comm << "\n";
     
-    if (thelaw == "Elas_iso"){
-	comm << "NU__     = " << Prop_Mat[2][1] << ";\n";
-	comm << "E__      = " << Prop_Mat[1][1] << ";\n";
+    if (thelaw == "Isotropic elastic"){
+        comm << "NU__     = " << Prop_Mat[2][1] << ";\n";
+        comm << "E__      = " << Prop_Mat[1][1] << ";\n";
         comm << "\n";
-	comm << "MAT = DEFI_MATERIAU(ELAS = _F(E = E__,\n";
-	comm << "				      NU = NU__,\n";
-	comm << "				      ALPHA = 0.), \n";
-	comm << "				);\n";
-	comm << "    \n";
+        comm << "MAT = DEFI_MATERIAU(ELAS = _F(E = E__,\n";
+        comm << "				      NU = NU__,\n";
+        comm << "				      ALPHA = 0.), \n";
+        comm << "				);\n";
+        comm << "    \n";
     }
     else if (thelaw == "Powerlaw"){
-	comm << "E__      = " << Prop_Mat[1][1] << ";\n";
-	comm << "NU__     = " << Prop_Mat[2][1] << ";\n";
-	comm << "A_PUIS__ = " << Prop_Mat[3][1] << ";\n";
-	comm << "N_PUIS__ = " << Prop_Mat[4][1] << ";\n";
-	comm << "SY__     = " << Prop_Mat[5][1] << ";\n";
+        comm << "E__      = " << Prop_Mat[1][1] << ";\n";
+        comm << "NU__     = " << Prop_Mat[2][1] << ";\n";
+        comm << "SY__     = " << Prop_Mat[3][1] << ";\n";
+        comm << "A_PUIS__ = " << Prop_Mat[4][1] << ";\n";
+        comm << "N_PUIS__ = " << Prop_Mat[5][1] << ";\n";
         comm << "\n";
-	comm << "MAT = DEFI_MATERIAU(ELAS = _F(E = E__,\n";
-	comm << "				      NU = NU__,\n";
-	comm << "				      ALPHA = 0.), \n";
-	comm << "			 ECRO_PUIS = _F(SY = SY__,\n";
-	comm << "				       A_PUIS = A_PUIS__, \n";
-	comm << "				       N_PUIS = N_PUIS__), \n";
-	comm << "				);\n";
-	comm << "    \n";
+        comm << "MAT = DEFI_MATERIAU(ELAS = _F(E = E__,\n";
+        comm << "				      NU = NU__,\n";
+        comm << "				      ALPHA = 0.), \n";
+        comm << "			 ECRO_PUIS = _F(SY = SY__,\n";
+        comm << "				       A_PUIS = A_PUIS__, \n";
+        comm << "				       N_PUIS = N_PUIS__), \n";
+        comm << "				);\n";
+        comm << "    \n";
     }
     comm << "CHMAT = AFFE_MATERIAU(MAILLAGE = MAIL,\n";
     comm << "			  AFFE=_F(TOUT = 'OUI',\n";
@@ -258,7 +258,7 @@ void Write_comm_file (std::string root_file, Vec<TM> mesh, Vec < Vec < std::stri
     comm << "                    CHAM_MATER = CHMAT,\n";
     comm << "                    EXCIT = (\n";
     comm << "                             _F(CHARGE = TRAC1,),),\n";
-    if (thelaw == "Elas_iso")
+    if (thelaw == "Isotropic elastic")
 	comm << "		    COMP_ELAS=_F(RELATION='ELAS', DEFORMATION='GROT_GDEP',),\n";
     else if (thelaw == "Powerlaw")
 	comm << "		    COMP_INCR=_F(RELATION='VMIS_ISOT_PUIS', DEFORMATION='SIMO_MIEHE',),\n";
@@ -454,10 +454,10 @@ std::string launch_calc_code_aster_for_id(Vec<TM> &m_ref, Vec<double> constraine
     inp << "#!/bin/bash\n";
     inp << " \n";
     inp << "/opt/aster/bin/as_run " + root_file + ".export > " + root_file + "result.txt"<< "\n";
-    inp << "touch " << root_file << "/ok_" << num << ".txt\n";
+    inp << "touch " << root_dir << "/ok_" << num << ".txt\n";
     inp.close();
     
-    int res_sys = system((filename + " &").c_str());
+    int res_sys = system(("bash " + filename + " &").c_str());
              
     return root_file;
 }

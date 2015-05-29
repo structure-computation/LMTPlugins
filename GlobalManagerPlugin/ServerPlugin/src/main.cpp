@@ -11,17 +11,18 @@ int main( int argc, char **argv ) {
 
     // type d'item observé
     sc.reg_type( "AbaqusComputationItem" ); 
-    sc.reg_type( "Code_Aster_ComputationItem" ); 
+     sc.reg_type( "Code_Aster_ComputationItem" ); 
     sc.reg_type( "IdentificationWithAbaqusItem" );
     sc.reg_type( "IdentificationWithCode_AsterItem" );
-    //sc.reg_type( "CorrelationItem" );
+    sc.reg_type( "CorrelationItem" );
     sc.reg_type( "DicUncertaintyItem" );
     sc.reg_type( "FieldExportItem" );
     sc.reg_type( "VirtualGaugeItem" );
-    sc.reg_type( "StepReaderToNurbsItem" );
-//     sc.reg_type( "File" );
-//     sc.reg_type( "Img" );
-//     sc.reg_type( "ServerAssistedVisualization" );
+    sc.reg_type( "ReaderINPItem" );
+//     sc.reg_type( "StepReaderToNurbsItem" );
+    sc.reg_type( "File" );
+    sc.reg_type( "Img" );
+    sc.reg_type( "ServerAssistedVisualization" );
     
     //liste des job en cours
     JobList job_list;
