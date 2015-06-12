@@ -43,4 +43,3 @@ class SingletonSVG #extends DrawingSVG###
 #     
 #     _SingletonSVG getInstance:->
 #         return _SingletonHolder.INSTANCE
-    

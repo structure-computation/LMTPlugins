@@ -5,37 +5,32 @@ class TestSamirGraphItem extends TreeItem_Computable
         super()
         @_name.set name
 #         @_ico.set "../../LMTPlugins/TestSamirGraphPlugin/OnlinePlugin/TestSamirGraph/img/testGraphs_bouton.png"
-        @_ico.set "img/testGraphs_bouton.png"
+#         @_ico.set "img/testGraphs_bouton.png"
         @_viewable.set true
         
         @firstDrawing = undefined  #ensures that only one single svg will be drawn at any mouse event occurring during the drawing, ie when _allowToDraw = true  
         
         @add_attr
             _allowToDraw : false
-        
-        vecteur_abscisse           = new Vec
-        vecteur_ordonnee           = new Vec 
-#         @fill_v1_v2()    
-#         @_nb_values    = 361         #To see until 360
-    
-        # default values
-#         @add_attr
-#             _vec_x        : new Vec [1, 2, 3, 4, 5]
-#             _vec_y        : new Vec [45, 23, 3, 0, 7]
             
-        @_vec_x        = new Vec [10, 1, 2, 3, 4, 5]
-        @_vec_y        = new Vec [15, 0, 23, 3, 0, 7]
-                       
-        # attributes 
-#         @fill_x_y()                 # TEST  A remettre si onload non necessaire
+#         @add_attr
+#             curves: new Choice 
+
+#         @add_attr
+#             graphSettings: new GraphSettings
+            
+#         @curve_courbe.lst.push    TODO   
+                             
+        treeItem_x = new TreeItem_SingleData("abscissa")
+        treeItem_y = new TreeItem_SingleData("ordinate")
+
+#         @add_attr
+#             _issimGraph   : new IssimGraph
         
-        treeItem_x = new TreeItem_SingleData("abscisse")
-        treeItem_y = new TreeItem_SingleData("ordonnee")
-
-        @add_attr
-            _issimGraph   : new IssimGraph
-            constrVal: new ConstrainedVal( 7, { min: 0, max: 15 } )
-
+        
+        
+        @add_child new TreeItem_GraphSettings
+        @add_child new TreeItem_Curves
         @add_child treeItem_x#TEST
         @add_child treeItem_y           
           
@@ -118,8 +113,7 @@ class TestSamirGraphItem extends TreeItem_Computable
                     idGraphCanvas = newCanPanAdder.addNewCanvasPanel(app)#TEST1 TEST 2
                     graphPanManagerInstIndex = all_canvas_inst.length-1
                     graphCanvasManagerPanelInstance = all_canvas_inst[graphPanManagerInstIndex]
-                    graphCanvasManagerPanelInstance.title = "graphCanvasManagerPanelIns" 
-                    
+                    graphCanvasManagerPanelInstance.title = "graphCanvasManagerPanelIns"                     
                 else
                     graphCanvasManagerPanelInstance = all_canvas_inst.detect ( x ) -> x.title.equals "graphCanvasManagerPanelIns"
                 
@@ -129,8 +123,8 @@ class TestSamirGraphItem extends TreeItem_Computable
                 console.log graphCanvasManagerPanelInstance
                 graphCanvasManager = graphCanvasManagerPanelInstance.cm# TODO auto_fit 
 #                 TODO graphCanvasManager.allow_gl.set false
-                @newInfo = graphCanvasManager.info
-                      
+                @newInfo = graphCanvasManager.cam_info
+#                 @newInfo.w = @newInfo.w/ 2.0      
 #                 graphPanManagerInstIndex = all_canvas_inst.length-1
 #                 graphCanvasManager = all_canvas_inst[graphPanManagerInstIndex].cm
                 #TODO LayoutManager._pan_vs_id(idGraphCanvas).cm
@@ -147,6 +141,18 @@ class TestSamirGraphItem extends TreeItem_Computable
                     console.log thislikeItem
                     console.log "@newInfo:"
                     console.log @newInfo
+                    
+#                     display_settings = app.data.selected_display_settings()
+#                     layout = display_settings._layout 
+                    
+#                     console.log " @graphSettings:"
+#                     console.log  @graphSettings
+#                     
+#                     console.log " layout:"
+#                     console.log  layout
+#                     @graphSettings.margin.top.set layout.getTop()
+#                     @graphSettings.margin.left.set layout.getLeft()
+                    
                     thislikeItem._allowToDraw.set true                   
                     graphCanvasManager.draw(@newInfo)
                          
@@ -159,46 +165,76 @@ class TestSamirGraphItem extends TreeItem_Computable
 #             TS_instance : this
                 
     draw: ( info ) -> 
-        console.log " 'this' in draw() (should be ..graphItem:"
-        console.log this
+# cf GraphViewItem
         
-        console.log "@_allowToDraw.get():"
-        console.log @_allowToDraw.get()
-        if @_allowToDraw.get() == true
-            SingSVG = SingletonSVG.getInstance()
-            Vec_List = []            
-            if not @firstDrawing?
-                Vec_List = @detect_vector()                
-    
-            @vecteur_abscisse =  Vec_List[0]   
-            @vecteur_ordonnee =  Vec_List[1]
-              
-            SingSVG.drawing_SVG.drawSVG(info, @vecteur_abscisse, @vecteur_ordonnee, @firstDrawing )
-            
-            if not @firstDrawing? 
-                @firstDrawing = false
-            @_allowToDraw.set false
-        return true
-
-#     detect_vector: ->
+    has_nothing_to_draw: ->
+        true
+   
+#  used by GraphViewItem        
+#     detect_vector: (isAllowedMultiVectors = false)->
 #         res= []
 #         for child in @_children
-#             if child instanceof TreeItem_Vector
-#                 res.push child.vec
+#             if child instanceof TreeItem_SingleData
+#                 if child._children[0] instanceof TreeItem_Vector 
+#                     detectedVec = child._children[0].vec
+#                     if not detectedVec?
+#                         detectedVec = new Vec [0]# return Vector zero, TODO put an alert
+#                     res.push detectedVec  #TODO verifier le type de children et try ca
 #         return res         
-
+ 
+# used by GraphViewItem        
     detect_vector: ->
-        res= []
+#         res= []
+        res= new Lst
+        i = 0
         for child in @_children
             if child instanceof TreeItem_SingleData
-                if child._children[0] instanceof TreeItem_Vector 
-                    detectedVec = child._children[0].vec
-                    if not detectedVec?
-                        detectedVec = new Vec [0]# return Vector zero, TODO put an alert
-                    res.push detectedVec  #TODO verifier le type de children et try ca
-    #                 alert "Vector detect"+
+                if child._children.length == 0
+                    alert child._name+" is empty"
+                    return res #TODO 
+                for ch_child in child._children   
+                    if ch_child instanceof TreeItem_Vector 
+                        #res.push ch_child.vec
+                        console.log "child instanceof TreeItem_Vector:"
+                        console.log child
+                        if child._name.get() == "ordinate"               
+                            ord_name = ch_child._name.get()
+                            ord_vec = ch_child.vec.get()
+                            num = ++i
+                            console.log "num for numero courbe:"
+                            console.log num
+                            curve = new Curve(ord_name, ord_vec, abs_name, abs_vec, num)
+                            console.log "curve.number:"
+                            console.log curve.number.get()
+                            curve.name.set "curve "+curve.number.get()
+                            console.log "curve.name.get():"
+                            console.log curve.name.get()
+                            
+                            res.push curve 
+                        if child._name.get() == "abscissa"
+                            abs_vec = ch_child.vec
+                            abs_name = ch_child._name
+                            break # The first abscissa is only read                           
+        for c in res 
+            c.abscissa_name.set abs_name
+            c.abscissa_vec.set abs_vec
+        return res  
+
+# used by GraphViewItem        
+    detect_vector_Simple: ->#TODO TEST 
+#         res= []
+        res= new Lst
+        for child in @_children
+            if child instanceof TreeItem_SingleData
+                if child._children.length == 0
+                    alert child._name+" is empty"
+                    return res #TODO 
+                for ch_child in child._children   
+                    if ch_child instanceof TreeItem_Vector 
+                        res.push ch_child.vec
+                        if child._name == "abscissa"
+                            break
         return res         
-        
         
         ##TODO
     VecToList:(vec)->
@@ -206,7 +242,6 @@ class TestSamirGraphItem extends TreeItem_Computable
         LstRes[i] = vec[i] for i in [0..vec.length]
         LstRes
           
-    
         #copied from ModelEditor:
     attr_Veclist: ( model)->
 #         console.log "model.get_state()"+model.get_state()
@@ -217,108 +252,15 @@ class TestSamirGraphItem extends TreeItem_Computable
              res[ name ] = model[ name ]
         res
 
-    
-    
-    MatrixVecListInversion = (Vec_List)->     
-        VecListSize = 0 
-        for key, vector of Vec_List
-            VecListSize++
-            Vecmax = vector.length-1# TODO A Ameliorer car repetition
-              
-        res = new Array(Vecmax+1)
-        for i in [0..Vecmax]
-            res[i]= new Array(VecListSize)
-            j=0
-            for key, vector of Vec_List
-                res[i][j] = vector[i]
-                j++
-        res  
-    
-# Test: myVecY_List = { 
-#                 y1: [5, 56, 17, 9],
-#                 y2: [25, 46, 7, 4],
-#                 y3: [500, 60.2, 7111, 22] 
-#               }
-#              
-# m = MatrixVecListInversion(myVecY_List)
-# console.log m
-# console.log m[1]
-# console.log m[0]
-# console.log m[2]
-# Output 
-# 
-# [ [ 5, 25, 500 ],
-#   [ 56, 46, 60.2 ],
-#   [ 17, 7, 7111 ],
-#   [ 9, 4, 22 ] ]
-    
-    MatrixInversionMulti = (VecX, VecY_arr)->
-#         MatrixInversionMulti = (x, VecY_arr)->
-        # VecY or VecX empty # TODO
-        # VecY or VecX Not same size # TODO      
-        x = VecToArray(VecX) 
-        xmax = x.length-1
-        iVecYmax = VecY_arr.length-1
-        res = new Array(x.length)          
-        for i in [0..xmax]
-            res[i]= new Array(VecY_arr.length)
-            res[i][0] = x[i]
-            for j in [0..iVecYmax]
-                y = VecToArray(VecY_arr[j]) 
-                res[i][j+1] = y[i]  # We assume that x and yi have the same size
-    #                 res[i][j+1] = VecY_arr[j][i] # TODO A retirer
-        return res
-            
-        
- #TEST
-#       myVecY_arr = [ [5, 56, 17, 9], [25, 46, 7, 4], [500, 60.2, 7111, 22] ]
-#       m = MatrixInversionMulti([ 1, 2, 3], myVecY_arr)
-#       console.log m
-#       console.log m[1]
-#       console.log m[0]
-#       console.log m[2]
-#         Output:
-# [ [ 1, 5, 25, 500 ],
-#   [ 2, 56, 46, 60.2 ],
-#   [ 3, 17, 7, 7111 ],
-#   [ 5, 9, 4, 22 ] ]
-# [ 2, 56, 46, 60.2 ]
-# [ 1, 5, 25, 500 ]
-# [ 3, 17, 7, 7111 ]
-    
-    
-    
-    
-#     MatrixInversion = (VecX, VecY)->
-#         # VecY or VecX empty # TODO
-#         # VecY or VecX Not same size # TODO
-#         x = VecToArray(VecX)
-#         y = VecToArray(VecY)    
-#         xmax = x.length-1
-#         res = []
-#         res[i] = [x[i], y[i]] for i in [0..xmax]
-#         return res           
-    #TEST
-    # m = MatrixInversion([ 1, 2, 3], [5, 6, 7])
-    # console.log m
-    # console.log m[1]
-    # console.log m[0]
-    # console.log m[2]
-    # Test Output 
-    # [ [ 1, 5 ], [ 2, 6 ], [ 3, 7 ] ]
-    # [ 2, 6 ]
-    # [ 1, 5 ]
-    # [ 3, 7 ] 
       
-      
-    # obtenir la position réelle dans le canvas
+#     obtenir la position réelle dans le canvas
     getLeft: ( l ) ->
         if l.offsetParent?
             return l.offsetLeft + @getLeft( l.offsetParent )
         else
             return l.offsetLeft
 
-    # obtenir la position réelle dans le canvas
+#     obtenir la position réelle dans le canvas
     getTop: ( l ) ->
         if l.offsetParent?
             return l.offsetTop + @getTop( l.offsetParent )
@@ -329,7 +271,7 @@ class TestSamirGraphItem extends TreeItem_Computable
         document.onkeydown = undefined
         app.active_key.set true
         
-        #TODO A completer
+#         TODO A completer
     accept_child: ( ch ) ->
         ch instanceof TreeItem_Vector
     
