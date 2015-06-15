@@ -63,10 +63,80 @@ class DICCITVirtualGaugeItem_v1 extends TreeItem_Computable
         instance = this
         context_action.push
             txt: "get normal"
-            ico: "img/LinkTo.png"
+            ico: "img/Normal_plan.png"
             fun: ( evt, app ) =>
                 instance.calcul_normale()
                 
+        context_action.push
+            txt: "link"
+            ico: "img/graph_icon.png"
+            fun: ( evt, app ) =>
+                container_global = new_dom_element
+                    id        : "id_graph_container"
+                    style     :
+                        #height     : 30
+                        #width      : "100%"
+                        #border     : "1px solid blue"
+                        background : "#ffffff"
+                        position: "absolute"
+                        left    : 10
+                        right   : 10
+                        top     : 40
+                        bottom  : 10
+                        
+                inst = undefined
+                for inst_i in app.selected_canvas_inst()
+                    inst = inst_i
+                
+                
+                if (inst.divCanvas)?
+                  Ptop   = @getTop( inst.div )  
+                  Pleft  = @getLeft( inst.div )  
+                  Pwidth = inst.divCanvas.offsetWidth
+                  Pheight = inst.divCanvas.offsetHeight
+                  Pheight = Pheight + 22
+                
+                else
+                  Ptop   = 100
+                  Pleft  = 100
+                  Pwidth = 800 
+                  Pheight = 500 
+                
+                p = new_popup "My graph", event: evt, no_popup_closer: true, child: container_global, background:"#ffffff", top_x: Pleft, top_y: Ptop, width: Pwidth, height: Pheight, onclose: =>
+                    @onPopupClose( app )
+                app.active_key.set false
+                
+                data = new Lst 
+                data.push instance._v1
+                data.push instance._v1_scale
+                data.push instance._v2_scale
+                
+                data_name = new Lst 
+                data_name.push "_v1"
+                data_name.push "_v1_scale"
+                data_name.push "_v2_scale"
+                
+                graph_view = new GoogleChartView container_global, data, data_name
+    
+    # obtenir la position réelle dans le canvas
+    getLeft: ( l ) ->
+      if l.offsetParent?
+          return l.offsetLeft + @getLeft( l.offsetParent )
+      else
+          return l.offsetLeft
+
+    # obtenir la position réelle dans le canvas
+    getTop: ( l ) ->
+        if l.offsetParent?
+            return l.offsetTop + @getTop( l.offsetParent )
+        else
+            return l.offsetTop
+          
+    # fermer la popup    
+    onPopupClose: ( app ) =>
+        document.onkeydown = undefined
+        app.active_key.set true
+    
     
     calcul_normale:() ->
         #calcul de la normale moyenne à l'ensemble des éléments du maillage
@@ -99,6 +169,7 @@ class DICCITVirtualGaugeItem_v1 extends TreeItem_Computable
             YN = Y/NN
             ZN = Z/NN 
             
+            #somme pour le calcul ultérieur de la moyenne
             XM_temp += XN
             YM_temp += YN
             ZM_temp += ZN
