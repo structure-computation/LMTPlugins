@@ -48,8 +48,7 @@ class DrawingSVG
 #             if i == 0
 #                 vec = @curvesList[0]?.abscissa_vec
 #             else
-#                 vec = @curvesList[i]?.ordinate_vec
-                    
+#                 vec = @curvesList[i]?.ordinate_vec                 
                     
         vec_Lst = new Lst
         vec_Lst.push @curvesList[0]?.abscissa_vec.get()
@@ -73,19 +72,22 @@ class DrawingSVG
         console.log "@_data:"
         console.log @_data
 #         @_data = d3.transpose(vec_Lst)
-        
-#         console.log "transposed Matrix (first coordinate is abscissa)"
-#         console.log + vec_Lst.join ','
+
+        console.log "info :"
+        console.log info
+
         width = info.w 
         height = info.h
+        console.log "width = info.w :"
+        console.log width
+        
+        console.log "height = info.h :"
+        console.log height
+        
         m= @GS.margin
         @_margin = {top: m.top, right: m.right, bottom: m.bottom, left: m.left}        
-        console.log "@_margin:"
-        console.log @_margin
-        #         @vec_Y_tab = Vec_List[1..]
-        #         @_data= matrixTransposeMulti(@_vec_x, @vec_Y_tab)
-        #         Vec_List = @attr_Veclist this
-        #         @_data = matrixVecListTranspose Vec_List       
+#         console.log "@_margin:"
+#         console.log @_margin
         
         @_widthSVG = width - @_margin.left - @_margin.right
         @_heightSVG = height - @_margin.top - @_margin.bottom
@@ -94,9 +96,12 @@ class DrawingSVG
         console.log @_widthSVG
         
         [minVecY, maxVecY] = min_max_Vec vec_Lst        # essayer avec D3.extent qui donne min et max tableau
-#         [minVecY, maxVecY] = min_max_Vec [@_vec_y] 
-#         [minVecX, maxVecX] = min_max_Vec [@_vec_x]
         
+        console.log "minVecY:"
+        console.log minVecY
+        console.log "maxVecY:"
+        console.log maxVecY
+       
         @_x = d3.scale.linear()
 #         .domain([minVecX, maxVecX])
         .range([0, @_widthSVG])
@@ -118,8 +123,8 @@ class DrawingSVG
         .scale(@_y)
         .orient(@GS.Y_orient)# TEST should be "right"
         
-        console.log "@GS.interpolation:"
-        console.log @GS.interpolation
+#         console.log "@GS.interpolation:"
+#         console.log @GS.interpolation
         
         line = d3.svg.line()
         .interpolate(@GS.interpolation)    # TEST should be "monotone"
@@ -128,17 +133,19 @@ class DrawingSVG
                   return @_x(d[keys[0]]))
         .y( (d)=>
                 keys = (k for own k of d)
-                return @_x(d[keys[1]]))
+                return @_y(d[keys[1]]))
 
+        console.log "line:"
+        console.log line
         
         @_svgD3 = d3.select( info.ctx_svg()).append("svg")
         .datum(@_data)
         .attr("width", @_widthSVG + @_margin.left + @_margin.right)
         .attr("height", @_heightSVG + @_margin.top + @_margin.bottom)
-        .style('position','absolute')
+#         .style('position','absolute')
         .append("g")
         .attr("transform", "translate(" + @_margin.left + "," + @_margin.top + ")")    
-        
+         
         #background for svg
         @_svgD3.append("rect")
         .attr("width", "100%")
@@ -158,31 +165,32 @@ class DrawingSVG
                                     console.log "vecIndexMax:"
                                     console.log vecIndexMax
                                     return res_c = 
-                                            name : c.name.get(), #TEST sinon curvesIndex only
+                                            name : c._name.get(), #TEST sinon curvesIndex only
                                             values: @_data.map (d) =>  
                                                                     key_abs = c.abscissa_name.get()
                                                                     key_ord = c.ordinate_name.get()
                                                                     res = {}
                                                                     res[key_abs] = d[0]# equivalent to d.date
-                                                                    res[key_ord] = d[curvesIndex+1]
-                                                                    if not res[key_ord]?
-                                                                        console.log "d:"
-                                                                        console.log d
-                                                                        console.log "vecIndexMax:"
-                                                                        console.log vecIndexMax
-                                                                        console.log "d[vecIndexMax+1]:"
-                                                                        console.log d[vecIndexMax+1]
-                                                                        
-                                                                    console.log "res:"
-                                                                    console.log res
+                                                                    res[key_ord] = d[curvesIndex+1]                                                                       
+#                                                                     console.log "res:"
+#                                                                     console.log res
                                                                     return res
+                                
 
-#                                              foo    = 'asdf'
-#                                              h      = { }
-#                                              h[foo] = 'bar'                               
-#                                          "#{ 1 + 2 }": 3                                 
-
-        @_x.domain(d3.extent(@_data, (d) -> d[0]))
+        @_x.domain(d3.extent(@_data, (d) ->
+                                            console.log "d[0]:"
+                                            console.log d[0]
+                                            d[0]))
+            
+        console.log "y domain min"
+        console.log d3.min(curves, (c)-> d3.min(c.values, (v) ->
+                                                  keys = (k for own k of v)
+                                                  return v[keys[1]]))
+        console.log "y domain max"
+        console.log d3.max(curves, (c)-> d3.max(c.values, (v) -> 
+                                                  keys = (k for own k of v)
+                                                  return v[keys[1]]))
+           
         @_y.domain([
           d3.min(curves, (c)-> d3.min(c.values, (v) ->
                                                   keys = (k for own k of v)
@@ -191,34 +199,31 @@ class DrawingSVG
                                                   keys = (k for own k of v)
                                                   return v[keys[1]]))
           ])
-        
-        console.log "curves:"
-        console.log curves
+          
+        console.log  "@_heightSVG"
+        console.log  @_heightSVG
         
         @_svgD3.append("g")
             .attr("class", "x axis")
             .attr("transform", "translate(0," + @_heightSVG + ")")
             .call(@_xAxis)
-        console.log "1:"
 
         @_svgD3.append("g")
         .attr("class", "y axis")
         .call(@_yAxis)
-        console.log "2:"
 # TODO a remettre
-#         @_svgD3.selectAll(".dot")
-#         .data(@_data)
-#         .enter().append("circle")
-#         .attr("class", "dot")
-#         .attr("cx", line.x())
-#         .attr("cy", line.y())
-#         .attr("r", 3.5)
+        @_svgD3.selectAll(".dot")
+        .data(@_data)
+        .enter().append("circle")
+        .attr("class", "dot")
+        .attr("cx", line.x())
+        .attr("cy", line.y())
+        .attr("r", 3.5)
 
         curve = @_svgD3.selectAll(".curve")
         .data(curves)
         .enter().append("g")
         .attr("class", "curve")
-        console.log "3:"
         
 #         @_svgD3.append("path")
         curve.append("path")
@@ -229,27 +234,26 @@ class DrawingSVG
                 line(d.values))
 #         .attr("d", line)
         .style("stroke", (d)-> color(d.name))
+
         
-        console.log "4:"
-        
-#         curve.append("text")
-#         .datum((d)-> 
-#                     console.log "d final:"
-#                     console.log d
-#                     {name: d.name, value: d.values[d.values.length - 1]})
-#         .attr("transform",(d)-> 
-#                         dvalue = d.value
-#                         keys = (k for own k of dvalue)
-#                         console.log "keys:"
-#                         console.log keys
-#                         console.log "d.value:"
-#                         console.log d.value
-#                         return "translate(" + @_x(dvalue[keys[0]]) + "," + @_y(dvalue[keys[1]]) + ")")
-# #         .attr("transform",(d)-> "translate(" + @_x(d.value.date) + "," + @_y(d.value.temperature) + ")"
-#         .attr("x",  @GS.xTextPosition)
-#         .attr("dy", @GS.dyTextOffset)
-#         .text((d) -> d.name)  
-        console.log "5:"
+        curve.append("text")
+        .datum((d)-> 
+                    console.log "d final:"
+                    console.log d
+                    {name: d.name, value: d.values[d.values.length - 1]})
+        .attr("transform",(d)-> 
+                        dvalue = d.value
+                        keys = (k for own k of dvalue)
+                        console.log "keys:"
+                        console.log keys
+                        console.log "d.value:"
+                        console.log d.value
+                        return "translate(" + @_x(dvalue[keys[0]]) + "," + @_y(dvalue[keys[1]]) + ")")
+#         .attr("transform",(d)-> "translate(" + @_x(d.value.date) + "," + @_y(d.value.temperature) + ")"
+        .attr("x",  @GS.xTextPosition)
+        .attr("dy", @GS.dyTextOffset)
+        .text((d) -> d.name)  
+ 
 #     drawSVG_MultiVec_WithoutCurves:( info, vec_Lst, firstDrawing, GraphSetting ) ->
 #         if not firstDrawing? 
 #         @initDrawing_MultiVec( info, vec_Lst )
@@ -447,6 +451,7 @@ class DrawingSVG
  
         #         info.cm._init_ctx()
         #         Canvas_div = info.cm.canvas
+       
         
 #         v1 = new Vec [1, 72, 3, 24]
 #         v2 = new Vec [45, 2, 3, 0]
