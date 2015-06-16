@@ -47,8 +47,6 @@ bool DicUncertaintyUpdater::run( MP mp ) {
     // output
     //MP output_field = mp[ "_output[ 0 ]" ];
     
-    
-    
     for( int i = 0; i < ch.size(); ++i ) {
         MP c = ch[ i ];
         qDebug() <<  c.type() ;
@@ -271,27 +269,83 @@ bool DicUncertaintyUpdater::run( MP mp ) {
 //TEST
 void DicUncertaintyUpdater::set_vecToTreeItemVec(const Vec<double> &vec, MP mpp, const int index, QString attrName){ 
     mpp["_output"][index].clear();  
-    MP MPvec = MP::new_lst( "Vec" );
-    MP constVal = MP::new_lst( "ConstOrNotModel" ); 
+    MP mpvec = MP::new_lst( "Vec" );
+    MP mpvec_temp = MP::new_lst( "Vec" );
+//     MP constVal = MP::new_lst( "ConstOrNotModel" ); 
     mpp["_output"][index]["_name"]= attrName; 
+//     mpp["_output"][index]["vec"]["bool"]= false; // for making the vector constant
+//     mpp["_output"][index]["vec"]["model"]= MP::new_lst( "Vec" );    
+//     mpp["_output"][index]["vec"]["check_disabled"]= true;
     int i;
     for(i=0; i<vec.size(); i++){
-        MPvec << vec[i];
-        mpp["_output"][index]["vec"]<<MPvec[i];    
-//         mpp["_output"][index]["model"]["vec"]<<MPvec[i];        
-//         mpp[ "_output" ][index]["vec"]<<MPvec[i];     
+//         MP mpVal = MP::new_obj( "Val" );
+//         mpVal[ "_data" ] =  vec[i]; 
+//         mpVal[ "_data" ].exp = 
+//         mpVal[ "_data" ].man =
+
+// TEST debut
+        double value_i = vec.get(i);
+        
+        qDebug("value_i: ");
+        qDebug() << value_i;
+        double roundedValue_i;
+        roundedValue_i =round_to_digits(value_i, 6);// 6 significant digits
+        Vec<double> vec_temp;
+        //vec_temp.push_back(value_i);// = vec[i];
+        
+        qDebug("roundedValue_i: ");
+        qDebug() << roundedValue_i;
+        
+//         qDebug("vec_temp: ");
+//         qDebug() << vec_temp;
+        vec_temp.push_back(vec[i]);
+//         qDebug("vec_temp: ");
+//         qDebug() << vec_temp;
+        
+        vec_temp.set(i, roundedValue_i);
+//         qDebug("vec_temp: ");
+//         qDebug() << vec_temp;
+        
+        qDebug("vec_temp[i]: ");
+        qDebug() << vec_temp[i];
+        
+//         mpvec_temp << vec_temp[i];//mpConstVal;
+//         MP mpConstVal = MP::new_obj( "ConstOrNotModel" );
+//         mpConstVal["bool"]= true;
+//         mpConstVal["model"]= mpvec_temp;//vec[i];
+        mpvec << vec_temp[i];
+
+// TEST fin
+        
+//         Change just after:
+//         mpvec << vec[i];
+        
+        qDebug("mpvec[i]: ");
+        qDebug() << mpvec[i];
+//         mpp["_output"][index]["vec"]["model"]<<mpvec[i];  TEST TODO      
+        mpp[ "_output" ][index]["vec"]<<mpvec[i];     
     }
-    qDebug()  <<  "mpp[_output][index]:" << mpp["_output"][index];
-    qDebug(" ");
+//     qDebug()  <<  "mpp[_output][index]:" << mpp["_output"][index];
+//     qDebug(" ");
 }
 
-// void DicUncertaintyUpdater::set_vecToTreeItemVec(const Vec<double> &vec, MP MPvec, MP mpTreeItem_Vec, QString attrName){ 
+double DicUncertaintyUpdater::round_to_digits(const double value, const int digits)
+{
+    double temp = value;
+    temp  = value * pow(10.0, digits);
+    temp = round(temp);
+    temp = temp / pow(10.0, digits);
+    return temp;
+}
+
+
+// void DicUncertaintyUpdater::set_vecToTreeItemVec(const Vec<double> &vec, MP mpvec, MP mpTreeItem_Vec, QString attrName){ 
 //     mpTreeItem_Vec[ "_name" ]= attrName;
 //     
 //     int i;
 //     for(i=0; i<vec.size(); i++){
-//         MPvec << vec[i];
-//         mpTreeItem_Vec["vec"]<<MPvec[i];     
+//         mpvec << vec[i];
+//         mpTreeItem_Vec["vec"]<<mpvec[i];     
 //     }
 // }
 
@@ -328,3 +382,37 @@ void DicUncertaintyUpdater::set_vecToTreeItemVec(const Vec<double> &vec, MP mpp,
 //     qDebug(" ");
 //     qDebug()  << mp[ "_output[4]"];
 //     qDebug(" ");
+
+
+// //TEST
+// void DicUncertaintyUpdater::set_vecToTreeItemVec(const Vec<double> &vec, MP mpp, const int index, QString attrName){ 
+//     mpp["_output"][index].clear();  
+//     MP MPvec = MP::new_lst( "Vec" );
+//     MP constVal = MP::new_lst( "ConstOrNotModel" ); 
+//     mpp["_output"][index]["_name"]= attrName; 
+//     int i;
+//     for(i=0; i<vec.size(); i++){
+// //         MP mpVal = MP::new_obj( "Val" );
+// //         mpVal[ "_data" ] =  vec[i]; 
+// //         mpVal[ "_data" ].exp = 
+// //         mpVal[ "_data" ].man =
+// 
+// // TEST debut
+//         vec[i] = round_to_digits(vec[i], 6);
+//         mpConstVal = MP::new_obj( "ConstOrNotModel" );
+//         mpConstVal["bool"]= true
+//         mpConstVal["model"]= vec[i]
+//         mpConstVal["model"]= vec[i]
+//         MPvec << mpConstVal
+// 
+// // TEST fin
+//         
+// //         Change just after:
+// //         MPvec << vec[i];
+//         mpp["_output"][index]["vec"]<<MPvec[i];    
+// //         mpp["_output"][index]["model"]["vec"]<<MPvec[i];        
+// //         mpp[ "_output" ][index]["vec"]<<MPvec[i];     
+//     }
+//     qDebug()  <<  "mpp[_output][index]:" << mpp["_output"][index];
+//     qDebug(" ");
+// }
