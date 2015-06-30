@@ -22,13 +22,15 @@ protected:
     bool run( MP mp );
     virtual QString type() const { return "DicUncertaintyUpdater"; }
 //     void set_vecToTreeItemVec(const Vec<double> &vec, MP MPvec, MP mpTreeItem_Vec, QString attrName);
+    double round_to_digits(const double value, const int digits);
     void set_vecToTreeItemVec(const Vec<double> &vec, MP mpp, int index, QString attrName);
     
 public:
     SodaClient *sc;
     void new_lst(const char* arg1);
     void print(const char* arg1);
-    //void qDebug(const char* arg1);
+    int vec_temp();
+//     void qDebug(const char* arg1);
   //  void PRINT(Vec< double > ErrY);
 //     void mean(Vec< double > Ux);
 //double mean(Vec< double > Ux);//TEST

@@ -271,12 +271,21 @@ void DicUncertaintyUpdater::set_vecToTreeItemVec(const Vec<double> &vec, MP mpp,
     mpp["_output"][index].clear();  
     MP mpvec = MP::new_lst( "Vec" );
     MP mpvec_temp = MP::new_lst( "Vec" );
-//     MP constVal = MP::new_lst( "ConstOrNotModel" ); 
     mpp["_output"][index]["_name"]= attrName; 
 //     mpp["_output"][index]["vec"]["bool"]= false; // for making the vector constant
 //     mpp["_output"][index]["vec"]["model"]= MP::new_lst( "Vec" );    
 //     mpp["_output"][index]["vec"]["check_disabled"]= true;
     int i;
+//     Vec<double> vec_test;
+//     vec_test.push_back(vec[i]);
+//     vec_test.set(i, roundedValue_i);
+    
+    //TEST
+//     qDebug("vec_temp[i]: ");
+//     for (int k=0; k<vec_temp.size(); k++)
+//         qDebug() << vec_temp[k];
+    //TEST fin
+    
     for(i=0; i<vec.size(); i++){
 //         MP mpVal = MP::new_obj( "Val" );
 //         mpVal[ "_data" ] =  vec[i]; 
@@ -285,9 +294,14 @@ void DicUncertaintyUpdater::set_vecToTreeItemVec(const Vec<double> &vec, MP mpp,
 
 // TEST debut
         double value_i = vec.get(i);
+        qDebug("vec.get(i): ");
+        qDebug() << vec.get(i);
+        qDebug("vec[i]: ");
+        qDebug() << vec[i];
         
         qDebug("value_i: ");
         qDebug() << value_i;
+        
         double roundedValue_i;
         roundedValue_i =round_to_digits(value_i, 6);// 6 significant digits
         Vec<double> vec_temp;
@@ -314,7 +328,12 @@ void DicUncertaintyUpdater::set_vecToTreeItemVec(const Vec<double> &vec, MP mpp,
 //         mpConstVal["bool"]= true;
 //         mpConstVal["model"]= mpvec_temp;//vec[i];
         mpvec << vec_temp[i];
-
+// old correct
+//      int i;
+//     for(i=0; i<vec.size(); i++){
+//         MPvec << vec[i];
+//         mpTreeItem_Vec["vec"]<<MPvec[i]; 
+        
 // TEST fin
         
 //         Change just after:
@@ -327,6 +346,7 @@ void DicUncertaintyUpdater::set_vecToTreeItemVec(const Vec<double> &vec, MP mpp,
     }
 //     qDebug()  <<  "mpp[_output][index]:" << mpp["_output"][index];
 //     qDebug(" ");
+
 }
 
 double DicUncertaintyUpdater::round_to_digits(const double value, const int digits)
