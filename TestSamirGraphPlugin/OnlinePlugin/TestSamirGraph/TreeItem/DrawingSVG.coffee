@@ -21,16 +21,17 @@ class DrawingSVG
     constructor: ->    
     #nothing for now
     
-    drawSVG_MultiVec:( app_data, info, @curvesList, firstDrawing, allowToDraw, graphSetting ) ->
-        console.log "fonctiondrawSVG_MultiVec, firstDrawing:", firstDrawing
-        
+    drawSVG_MultiVec:( app_data, info, @curvesList, notfirstDrawing, allowToDraw, graphSetting ) ->
+        console.log "In Drawing, au début allowToDraw.get():", allowToDraw.get()
 #         if not firstDrawing? #TEST
-        @initDrawing_MultiVec(app_data, info, @curvesList, allowToDraw, graphSetting )
+        @initDrawing_MultiVec(app_data, info, @curvesList, notfirstDrawing, allowToDraw, graphSetting )
 
-    initDrawing_MultiVec:(app_data, info, @curvesList, allowToDraw, graphSetting )  ->    
-
+    initDrawing_MultiVec:(app_data, info, @curvesList, notfirstDrawing, allowToDraw, graphSetting )  ->    
+        console.log "@curvesList"
+        console.log @curvesList
+        
         @GS = graphSetting        
-        console.log "@GS:", @GS           
+#         console.log "@GS:", @GS           
                     
         vec_Lst = new Lst
         vec_Lst.push @curvesList[0]?.abscissa_vec.get()
@@ -77,6 +78,9 @@ class DrawingSVG
         .scale(@_y)
         .orient(@GS.Y_orient)# TEST should be "right"
         
+        console.log "d3.svg.line()!!!"
+        console.log d3.svg.line() 
+        
         line = d3.svg.line()
         .interpolate(@GS.interpolation)    # TEST should be "monotone"
         .x( (d)=>
@@ -86,30 +90,24 @@ class DrawingSVG
                   return @_x(d[keys[0]]))
         .y( (d)=>
                 keys = (k for own k of d)
-                return @_y(d[keys[1]]))
-# TEST        
-#         .x( (d)=>
-#                   console.log "d in line:"
-#                   console.log d
-#                   keys = subk for own subk of k (k for own k of d)
-#                   return @_x(d[k[keys[0]]]))
-#         .y( (d)=>
-#                 keys = subk for own subk of k (k for own k of d)
-#                 return @_y(d[k[keys[1]]]))
-#       TEST          
-        
-#         console.assert(
-        @_svgD3 = d3.select( info.ctx_svg()).style("background","white")
-#         .style('position','relative')
-#         .datum(@_data)
+                return @_y(d[keys[1]]))  
+
+        console.log "notfirstDrawing in drawing before appending svg"
+        console.log notfirstDrawing
+    
+        if notfirstDrawing
+            d3.selectAll("svg#svg_id").remove()
+
+        @_svgD3 = d3.select( info.ctx_svg()).style("background","white")           
         .append("svg")
+        .attr("id", "svg_id")
         .attr("width", @_widthSVG + @_margin.left + @_margin.right)
         .attr("height", @_heightSVG + @_margin.top + @_margin.bottom)
         .append("g")
-        .attr("transform", "translate(#{@_margin.left},#{@_margin.top})") 
-        
-#         @_svgD3.append("g")
-#         .attr("transform", "translate(#{@_margin.left},#{@_margin.top})")  
+        .attr("transform", "translate(#{@_margin.left},#{@_margin.top})")            
+
+        console.log "@_svgD3 after appending svg"
+        console.log @_svgD3
         
 # TEST à remettre         
 #         .append("rect")
@@ -119,7 +117,10 @@ class DrawingSVG
 # TEST à remettre final
 
         curvesListIndexMax = @curvesList.length-1
-        color.domain( [0..curvesListIndexMax])             
+        color.domain( [0..curvesListIndexMax])    
+        console.log "color:"                                                          
+        console.log color
+        
         curves = color.domain().map (curvesIndex)=>
                                     c = @curvesList[curvesIndex]
                                     vecIndexMax = c.ordinate_vec.length-1
@@ -151,7 +152,6 @@ class DrawingSVG
 
         @_svgD3.append("g")
             .attr("class", "x axis")
-#             .attr("transform", "translate(#{@_margin.left},#{@_margin.top})") 
             .attr("transform", "translate(0," + @_heightSVG+ ")")
             .call(@_xAxis)
             #TEST
@@ -162,183 +162,147 @@ class DrawingSVG
             .attr("dx", ".71em")
             .style("text-anchor", "end")
             .text(@curvesList[0].abscissa_name.get())
-# .append("text")
-#         .attr("transform",(d)=> 
-#                         dvalue = d.value
-#                         keys = (k for own k of dvalue)
-#                         return "translate(" + @_x(dvalue[keys[0]]) + "," + @_y(dvalue[keys[1]])+ ")")
-# #         .attr("transform",(d)-> "translate(" + @_x(d.value.date) + "," + @_y(d.value.temperature) + ")"
-#         .attr("x",  @GS.xTextPosition)
-#         .attr("dy", @GS.dyTextOffset)
-#         .text((d) -> 
-#                 keys = (k for own k of d.value)
-#                 keys[1]+":"+d.name)
-        
                 
         @_svgD3.append("g")
-#             .attr("transform", "translate(#{@_margin.left},#{@_margin.top})") 
             .attr("class", "y axis")
             .call(@_yAxis)
-#         .append("text")
-#             .attr("transform", "rotate(-90)")
-#             .attr("y", 6)
-#             .attr("dy", ".71em")
-#             .style("text-anchor", "end")
-#             .text("Temperature (oF)")
-        
-# # TODO a remettre
 
-#         console.log "@_data:" 
-#         console.log @_data
-#         
-#         @_svgD3.selectAll(".dot")
-#         .data(@_data)
-#         .enter().append("circle")
-#         
-#         .attr("class", "dot")
-#         .attr("cx", line.x())
-#         .attr("cy", line.y())
-#         .attr("r", 3.5)
-        
         sessionItem = app_data.tree_items.detect ( x ) -> x instanceof SessionItem
         graphti = sessionItem._children.detect ( x ) -> x instanceof TestSamirGraphItem 
         @tic = graphti._children.detect ( x ) -> x instanceof TreeItem_Curves
         console.log "tic",@tic
         
-        
         curve = @_svgD3.selectAll(".curve")
         .data(curves)
         .enter().append("g")
-#         .attr("transform", "translate(#{@_margin.left},#{@_margin.top})") 
         .attr("class", "curve")
               
         curve.append("path")
         .attr("class", "line")
         .attr("d", (d) -> 
                 line(d.values))
-        .style("stroke", (d)=>                      
-                        col = @hexToRgb(color(d.name).toString())
-                        for curv in @tic._curves_List when curv._name.equals d.name
-                            curv.color.color.set new Color col.r, col.g, col.b
-#                             curv.color.r.set col.r
-#                             curv.color.g.set col.g
-#                             curv.color.b.set col.b
-                        for cs in @tic.curves.lst when cs.aggregate.name.equals d.name
-#                             cs.aggregate.color.lst.clear()
-#                             col = @hexToRgb(color(d.name).toString())
-
-#                             cs.aggregate.color.set new Color col.r, col.g, col.b
-#                             TEST a remettre
-#                             cs.aggregate.color.r.set col.r
-#                             cs.aggregate.color.g.set col.g
-#                             cs.aggregate.color.b.set col.b
-#                             remove: ( item ) ->
-#                             unshift: ( element ) ->
-#                             has: ( f ) ->
-#                             indexOf: ( v ) ->
-#                             cs.aggregate.color.unshift()
-                            
-                            colorD3JS = new ColorD3JS
-                            searchedColor = key+"" for own key, value of colorD3JS.colors when value == color(d.name)
-                            for own key, value of colorD3JS.colors when value == color(d.name)
+        .style("stroke", (d)=>   
+                        colorD3JS = new ColorD3JS
+                        searchedColor = key+"" for own key, value of colorD3JS.colors when value == color(d.name)
+                        for own key, value of colorD3JS.colors when value == color(d.name)
                                 console.log "value"
                                 console.log value
                                 console.log "color(d.name)"
                                 console.log color(d.name)
-                                
-#                                 TEST
-#                             try 
-#                                 cs.aggregate.color.remove(searchedColor) 
-#                                 cs.aggregate.color.unshift(searchedColor)#TODO amelioration
-#                             catch error
-#                                 console.error()
-#                                 TEST final
-
-#                             cs.aggregate.color.lst.push new Color col.r, col.g, col.b
-#                             TODO cs.aggregate.gradient.add_color col.r, col.g, col.b
-                            console.log "color.range():", color.range()
-#                       TEST à remettre debut + le clear au dessus 
-#                             for co in color.range() when co != color(d.name)
-#                                 console.log "co.toString():"
-#                                 console.log co.toString()
-#                                 c = @hexToRgb(co.toString())
-#     #                             c = @hexToRgb(d3_rgbNumber(co))
-#                                 console.log "c:"Lst.co
-#                                 console.log c
-#                                 cs.aggregate.color.lst.push new Color c.r, c.g, c.b
-#                       TEST fin
-#                                 TODO cs.aggregate.gradient.add_color c.r, c.g, c.b
-                        return color(d.name))#only this line is mandatory TODO faire une fonction pour le reste
-#         .data((d)->d.values)
-
-#         .attr('marker-mid', (d,i)=> 'url(#marker_' + @tic._curves_List[i].marker.get()  + ')' )
-              
-#         curve.append("g")
-#               .attr("d", (d)->circle(d.values))
-#               .append("circle")
-#               .attr("class", "dot")
-#               .attr("cx", line.x())
-#               .attr("cy", line.y())
-#               .attr("r", 3.5)  
-                
-        
-#         @_svgD3.selectAll("path")
-# #               .data(curves)
-# #             .enter()
-#               .append("circle")
-#               .attr("class", "dot")
-#               .attr("cx", line.x())
-#               .attr("cy", line.y())
-#               .attr("r", 3.5)  
                         
-#         .style({'stroke': 'black', 'stroke-width': 2})
-#         console.log "hello08"
-#         @markerConv = {"dot": "circle"}
-#         @attribute = ""
-        console.log "hello09"
-        
-#         circle = @_svgD3
-#         .append("g")
-# #         .attr("transform", "translate(#{@_margin.left},#{@_margin.top})")
-#         .selectAll(".dot").data(curves)
-#         
-#         circle.exit().remove()
-# 
-#         circle.enter().append("circle")#"circle"
-#         .attr("class", "dot")#"dot")
-#         .attr("cx", line.x((d)->d.values))
-#         .attr("cy", line.y((d)->d.values))
-#         .attr("r", 3.5)
-#         .style("stroke", "black") 
-#         .style("fill", "bleu")
-#         console.log curve.selectAll("path").data("path.data.values")=> TEST peut etre lu
-#         console.log "curve.selectAll('path').data('path.data')"  => !! path existe aussi pour x_axis et y_axis  
-#         console.log curve.selectAll('path').data('path.data')
-        
-#         console.log "curve.selectAll('g.line')"#.data(d)"    => tableau vide
-#         console.log curve.selectAll('g.line')#.data(d)
-        
-        console.log "curve.selectAll(curve.values).data((d)->d)"   
-        console.log curve.selectAll("curve.values").data((d)->d)
-        
-        curve.selectAll("curve.values").data((d)->d)
-  #------------------------black      
-        console.log "curve.selectAll(.dot).data(curve.values"   
-        console.log curve.selectAll(".dot").data("curve.values")
-        
-        curve.selectAll(".curve").data((d)->d.values)
-        .enter().append("circle")
-        .style("stroke", "black")
-        .attr("fill", (d)-> "black")
-        .attr("cx", (d)=>
-                        keys = (k for own k of d)
-                        return @_x(d[keys[0]]))
-        .attr("cy",  (d)=>
-                        keys = (k for own k of d)
-                        return @_y(d[keys[1]]))
-        .attr("r", 3.5)
+                        col = @hexToRgb(color(d.name).toString())
+                        for curv in @tic._curves_List when curv._name.equals d.name
+                            curve_color = new Color col.r, col.g, col.b
+                            curv.color.set curve_color
+                            curv.colorName.set searchedColor
 
-        curve#.append("text")
+                       
+                        for cs in @tic.curves.lst when cs.aggregate.name.equals d.name
+                            console.log "color.range():", color.range()
+
+                        return color(d.name))#only this line is mandatory TODO faire une fonction pour le reste
+
+     
+#         curve.selectAll(".curve").data((d)->d.values)
+#         .enter().append("circle")
+#         .style("stroke", "black")
+#         .attr("fill", (d)-> "black")
+#         .attr("cx", (d)=>
+#                         keys = (k for own k of d)
+#                         return @_x(d[keys[0]]))
+#         .attr("cy",  (d)=>
+#                         keys = (k for own k of d)
+#                         return @_y(d[keys[1]]))
+#         .attr("r",3.5)
+
+#         switch day
+#           when "Mon" then go work
+#           when "Tue" then go relax
+#           when "Thu" then go iceFishing
+#           when "Fri", "Sat"
+#             if day is bingoDay
+#               go bingo
+#               go dancing
+#           when "Sun" then go church
+#           else go work
+# score = 76
+# grade = switch
+#   when score < 60 then 'F'
+#   when score < 70 then 'D'
+#   when score < 80 then 'C'
+#   when score < 90 then 'B'
+#   else 'A'
+
+#TEST .call pour d3js func
+
+# ****************MARKER *************************************
+#         markerWidth = 3.5
+#         markerHeight = 3.5
+#         curve.selectAll(".curve").data((d)->d.values)
+#         .enter()
+#         .append("g")
+# #         .attr("id", "rectangle")
+#         .append("rect")
+#         .style("stroke", "black")
+#         .attr("fill", (d)-> "red")
+#         .attr("x", (d)=>
+#                         keys = (k for own k of d)
+#                         leftTopcornerXrec= @_x(d[keys[0]])
+#                         return leftTopcornerXrec - (markerWidth/2)
+#                         )
+#         .attr("y",  (d)=>
+#                         keys = (k for own k of d)
+#                         leftTopcornerYrec=  @_y(d[keys[1]])
+#                         return leftTopcornerYrec - (markerHeight/2)
+#                         )
+# #         .attr("transform", "rotate(-90)")
+#         .attr("width",3.5)
+#         .attr("height",3.5)
+        @markerWidth = 3.5  #TODO mettre dans graphSetting 
+        @markerHeight = 3.5
+                
+        curve.selectAll(".curve").call(@makeCircle)
+
+#         curve.selectAll(".curve").call(@makeRectangle)
+        
+        
+#********************************************************************
+        
+#         curve.selectAll(".curve").data((d)->d.values)
+#         .enter()
+#         .append("g")
+#         .attr("transform", "translate(-"+ (markerWidth)/2+",-"+ (markerHeight)/2+")")
+# #         .attr("id", "rectangle")
+# #         .attr("transform", "rotate(-90)")
+#         .append("rect")
+#         .style("stroke", "black")
+#         .attr("fill", (d)-> "red")
+#         .attr("x", (d)=>
+#                         keys = (k for own k of d)
+#                         leftTopcornerXrec= @_x(d[keys[0]])
+#                         return leftTopcornerXrec 
+#                         )
+#         .attr("y",  (d)=>
+#                         keys = (k for own k of d)
+#                         leftTopcornerYrec=  @_y(d[keys[1]])
+#                         return leftTopcornerYrec
+#                         )
+#         .attr("transform", (d)=>
+#                         keys = (k for own k of d)
+#                         leftTopcornerXrec= @_x(d[keys[0]])
+#                         leftTopcornerYrec=  @_y(d[keys[1]])
+#                         return "rotate(-90, "+leftTopcornerXrec+","+ leftTopcornerYrec+")"
+#                         )
+#         .attr("width",3.5)
+#         .attr("height",3.5)
+        
+#********************************************************************         
+        
+#         @.SelectAll("#rectangle")
+#         .attr("transform", "rotate(" + Math.PI * 90 + ")")
+        
+#       ********************** TEXT
+        curve
         .datum((d)-> 
                     console.log "d final:", d
                     {name: d.name, value: d.values[d.values.length - 1]})
@@ -347,37 +311,62 @@ class DrawingSVG
                         dvalue = d.value
                         keys = (k for own k of dvalue)
                         return "translate(" + @_x(dvalue[keys[0]]) + "," + @_y(dvalue[keys[1]])+ ")")
-#         .attr("transform",(d)-> "translate(" + @_x(d.value.date) + "," + @_y(d.value.temperature) + ")"
         .attr("x",  @GS.xTextPosition)
+        .attr("y",  20)
         .attr("dy", @GS.dyTextOffset)
         .text((d) -> 
                 keys = (k for own k of d.value)
                 keys[1]+":"+d.name)  
 
         allowToDraw.set false #TEST
-        firstDrawing= false
+        console.log "At the end of Drawing, (should be false) allowToDraw.get():", allowToDraw.get()
+        notfirstDrawing= true
     
-    #         defs =  @_svgD3.append("defs")
-#         markers = [   { id: 0, name: 'circle', path: 'M 0, 0  m -5, 0  a 5,5 0 1,0 10,0  a 5,5 0 1,0 -10,0', viewbox: '-6 -6 12 12' }
-#                     , { id: 1, name: 'square', path: 'M 0,0 m -5,-5 L 5,-5 L 5,5 L -5,5 Z', viewbox: '-5 -5 10 10' }
-#                     , { id: 2, name: 'arrow', path: 'M 0,0 m -5,-5 L 5,0 L -5,5 Z', viewbox: '-5 -5 10 10' }
-#                     , { id: 2, name: 'stub', path: 'M 0,0 m -1,-5 L 1,-5 L 1,5 L -1,5 Z', viewbox: '-1 -5 2 10' } ]             
-#         
-#         marker = defs.selectAll('marker')
-#           .data(markers)
-#           .enter()
-#           .append('svg:marker')
-#             .attr('id', (d)->return 'marker_' + d.name)
-#             .attr('markerHeight', 5)
-#             .attr('markerWidth', 5)
-#             .attr('markerUnits', 'strokeWidth')
-#             .attr('orient', 'auto')
-#             .attr('refX', 0)
-#             .attr('refY', 0)
-#             .attr('viewBox', (d)-> return d.viewbox )
-#             .append('svg:path')
-#             .attr('d', (d)-> return d.path )
-#               .attr('fill', (d,i) -> return color(i))
+    makeCircle:(selection)=>
+        selection
+            .data((d)->d.values)
+            .enter().append("circle")
+            .style("stroke", "black")
+            .attr("fill", (d)-> "black")
+            .attr("cx", (d)=>
+                            keys = (k for own k of d)
+                            return @_x(d[keys[0]]))
+            .attr("cy",  (d)=>
+                            keys = (k for own k of d)
+                            return @_y(d[keys[1]]))
+            .attr("r",3.5)
+                
+                
+    makeRectangle:(selection)=>
+        selection
+            .data((d)->d.values)
+            .enter()
+            .append("g")
+            .attr("transform", "translate(-"+ (markerWidth)/2+",-"+ (markerHeight)/2+")")
+    #         .attr("id", "rectangle")
+    #         .attr("transform", "rotate(-90)")
+            .append("rect")
+            .style("stroke", "black")
+            .attr("fill", (d)-> "red")
+            .attr("x", (d)=>
+                            keys = (k for own k of d)
+                            leftTopcornerXrec= @_x(d[keys[0]])
+                            return leftTopcornerXrec 
+                            )
+            .attr("y",  (d)=>
+                            keys = (k for own k of d)
+                            leftTopcornerYrec=  @_y(d[keys[1]])
+                            return leftTopcornerYrec
+                            )
+            .attr("transform", (d)=>
+                            keys = (k for own k of d)
+                            leftTopcornerXrec= @_x(d[keys[0]])
+                            leftTopcornerYrec=  @_y(d[keys[1]])
+                            return "rotate(-90, "+leftTopcornerXrec+","+ leftTopcornerYrec+")"
+                            )
+            .attr("width",3.5)
+            .attr("height",3.5)
+    
     
     
     wr: (d, message=d)-> 
@@ -458,14 +447,7 @@ class DrawingSVG
                 .attr("class", "line")
                 .attr("d", line)
         
-#         @_svgD3.selectAll(".dot")
-#               .data(@_data)
-#             .enter().append("circle")
-#               .attr("class", "dot")
-#               .attr("cx", line.x())
-#               .attr("cy", line.y())
-#               .attr("r", 3.5)        
-    
+
     hexToRgb:(hex)->
         result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
         if result? 
