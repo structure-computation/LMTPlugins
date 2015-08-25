@@ -19,36 +19,27 @@ class NewCanvasPanelAdder
     constructor: ()->
     
     addNewCanvasPanel : (app)->
-#         TODO mettre les variables locales en parametres
-#         display_settings = app.data.selected_display_settings()
-#         session = @data.selected_session()
-#         idOfVisiblePanels = currentLayoutManagerData.panel_id_of_term_panels()
-#         console.log "idOfVisiblePanels:"
-#         console.log idOfVisiblePanels
-#         
-#         lastVisiblePanelindex = idOfVisiblePanels.length-1
-        #TODO if lastVisiblePanelindex is zero
-        # app.data.last_canvas_pan
-#         idLastVisibleCanvas = idOfVisiblePanels[lastVisiblePanelindex]
-#         console.log "idLastVisibleCanvas:"
-#         console.log idLastVisibleCanvas
-        
-#         display_settings = session._children.detect ( x ) -> x instanceof DisplaySettingsItem      
+   
         display_settings = app.data.selected_display_settings()
         layout = display_settings._layout        
-#         console.log "layout avant "
-#         console.log layout
+        console.log "layout avant "
+        console.log layout
         
-        newPanelStrengthCoeff = 0.5 #TEST            
+        newPanelStrengthCoeff = 1 #TEST            
         isHorizontal = 0 # 0: vertical
         isNewPanelOnRightSide = 1
         new_panel_id = "Graph_id"
-#         idGraphCanvas = currentLayoutManagerData.mk_split( isHorizontal, isNewPanelOnRightSide, idLastVisibleCanvas, newPanelStrengthCoeff)
         
         for panel_id in app.data.selected_canvas_pan
+#             app._next_view_item_cam = cam
+#             app._next_view_item_child = child
             idGraphCanvas = layout.mk_split( isHorizontal, isNewPanelOnRightSide, panel_id, newPanelStrengthCoeff, new_panel_id)
-#         console.log "layout après "
-#         console.log layout
+        console.log "layout après "
+        console.log layout
+        
+        idOfVisiblePanels = layout.panel_id_of_term_panels()
+        console.log "idOfVisiblePanels:"
+        console.log idOfVisiblePanels
 #         TEST du 03.06.2015
 #         lm = new LayoutManager app.el, display_settings._layout #TEST TODO si probleme essayer layout
 #         lm.new_panel_instance = ( app.data ) => @_new_panel_instance display_settings, app.data
@@ -136,3 +127,5 @@ class NewCanvasPanelAdder
 # #             alert "windows is not well displayed"
 # #         idGraphCanvas = idOfVisiblePanels[lastVisiblePanelindex]
 #         return idGraphCanvas
+
+

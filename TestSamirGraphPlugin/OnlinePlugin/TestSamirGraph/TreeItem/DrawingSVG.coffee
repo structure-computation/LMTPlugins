@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Soda. If not, see <http://www.gnu.org/licenses/>.
 
-# from mbostock’s block #3884955
 
 class DrawingSVG
     constructor: ->    
@@ -51,7 +50,7 @@ class DrawingSVG
         console.log "height = info.h :", height
         
         m= @GS.margin
-        @_margin = {top: m.top, right: m.right, bottom: m.bottom, left: m.left} #TODO +40 correspond à la partie haute de la fenetre avec des possiblité de spliter       
+        @_margin = {top: m.top, right: m.right, bottom: m.bottom, left: m.left} 
         
         @_widthSVG = width - @_margin.left - @_margin.right
         @_heightSVG = height - @_margin.top - @_margin.bottom
@@ -69,29 +68,84 @@ class DrawingSVG
         @_y = d3.scale.linear()
         .range([@_heightSVG, 0])
 
-        color = d3.scale.category20()
+
+#         TEST 1 # imitation de d3.scale.category20() avec des noms de couleurs reconnues par D3
+        # une boucle infinie est constatée pour la mise à jour de l'attribut couleur de l'objetCurve 
+        d3_Issim_category20 = [ "darkblue",  "blue", 
+                                "darkorange", "orange",
+                                "green", "springgreen",
+                                "red", "antiquewhite",
+                                "purple", "violet",
+                                "maroon", "sandybrown",
+                                "pink", "salmon",
+                                "darkgrey", "darkslategray",    
+                                "yellowgreen", "yellow",
+                                "cyan", "indigo"]        
+        color = d3.scale.ordinal().range(d3_Issim_category20)
+#         
+#         #TEST 2
+#         #color = d3.scale.category20()
+#         #trouver les noms des couleurs sur internet 
+      
+        #TEST 3
+#         color = d3.scale.category20() 
+#         #noms provisoires des couleurs
+#         Category20ColorNames=
+#         {"#1f77b4":"blue+",
+#         "#aec7e8":"blue-",
+#         "#ff7f0e":"orange+",
+#         "#ffbb78":"orange-",
+#         "#2ca02c":"green+",
+#         "#98df8a":"green-",
+#         "#d62728":"red+",
+#         "#ff9896":"red-",
+#         "#9467bd":"purple+",
+#         "#c5b0d5":"purple-",
+#         "#8c564b":"brown+",
+#         "#c49c94":"brown-",
+#         "#e377c2":"pink+",
+#         "#f7b6d2":"pink-",
+#         "#7f7f7f":"grey+",
+#         "#c7c7c7":"grey-",
+#        translate "en fonction de" "#bcbd22":"yellow+",
+#         "#dbdb8d":"yellow-",
+#         "#17becf":"skyblue+",
+#         "#9edae5":"skyblue-"}
+        
+        
         @_xAxis = d3.svg.axis()
         .scale(@_x)
         .orient(@GS.X_orient)# TEST should be "bottom"
         
+        
         @_yAxis = d3.svg.axis()
         .scale(@_y)
         .orient(@GS.Y_orient)# TEST should be "right"
-        
-        console.log "d3.svg.line()!!!"
+     
+        console.log "d3.svg.line() before !!!"
         console.log d3.svg.line() 
         
+        console.log "d3.svg.line() before !!!"
+        console.log d3.svg.line()
+        
+        console.log "graphSettings.interpolation"
+        console.log @GS.interpolation
+        
+        
         line = d3.svg.line()
-        .interpolate(@GS.interpolation)    # TEST should be "monotone"
+        .interpolate(@GS.interpolation)                # TEST should be "monotone"
         .x( (d)=>
-                  console.log "d in line:"
-                  console.log d
+#                   console.log "d in line:"
+#                   console.log d
                   keys = (k for own k of d)
                   return @_x(d[keys[0]]))
         .y( (d)=>
                 keys = (k for own k of d)
-                return @_y(d[keys[1]]))  
-
+                return @_y(d[keys[1]]))            
+                
+        console.log "d3.svg.line() after !!!"
+        console.log d3.svg.line()         
+                
         console.log "notfirstDrawing in drawing before appending svg"
         console.log notfirstDrawing
     
@@ -104,6 +158,7 @@ class DrawingSVG
         .attr("width", @_widthSVG + @_margin.left + @_margin.right)
         .attr("height", @_heightSVG + @_margin.top + @_margin.bottom)
         .append("g")
+        .attr("id", "Issim_chart")
         .attr("transform", "translate(#{@_margin.left},#{@_margin.top})")            
 
         console.log "@_svgD3 after appending svg"
@@ -150,25 +205,91 @@ class DrawingSVG
           
         console.log  "@_heightSVG: ", @_heightSVG
 
+        
+        #Abscissa label
         @_svgD3.append("g")
             .attr("class", "x axis")
             .attr("transform", "translate(0," + @_heightSVG+ ")")
             .call(@_xAxis)
             #TEST
+            
         @_svgD3.append("text")
 #             .attr("transform", "rotate(-90)")
-            .attr("x", @_widthSVG)
-            .attr("y", @_heightSVG)
+            .attr("x", @_widthSVG/2)
+            .attr("y", @_heightSVG+26)
             .attr("dx", ".71em")
             .style("text-anchor", "end")
-            .text(@curvesList[0].abscissa_name.get())
-                
+            .text(@curvesList[0].abscissa_name.get()+" ("+@curvesList[0].abscissa_unity.get()+")")
+
+        #Ordinate Label
         @_svgD3.append("g")
             .attr("class", "y axis")
             .call(@_yAxis)
-
-        sessionItem = app_data.tree_items.detect ( x ) -> x instanceof SessionItem
-        graphti = sessionItem._children.detect ( x ) -> x instanceof TestSamirGraphItem 
+            
+            #TEST rot1
+#           #.attr("transform", "rotate(-90)")
+#             .attr("transform", "translate(0," + @_heightSVG+ ")")
+        
+        @_svgD3.append("text")          
+          #TEST x1
+          .attr("x", 25)
+          
+          #TEST x2
+          #.attr("x", 0)
+          
+          .attr("y", @_heightSVG/2)
+          .attr("dx", ".71em")
+          .attr("transform", "rotate(90)")
+          
+          #TEST 1
+          .style("text-anchor", "end")
+          
+          #TEST 2
+          #.style("text-anchor", "middle")
+          .text(@curvesList[0].curveTypeName.get()+" ("+@curvesList[0].ordinate_unity.get()+")")
+        
+        
+      # TITLE
+        #TEST insert1
+        @_title = d3.selectAll("svg#svg_id").insert("text", "Issim_chart")
+#         @_title.append("g")
+#             .attr("class", "title")
+#             #TEST rot1
+# #           #.attr("transform", "rotate(-90)")
+# #             .attr("transform", "translate(0," + @_heightSVG+ ")")
+        
+        #TEST insert2
+        #@_title.append("text")
+          .attr("x", @_widthSVG/2)
+          .attr("y", @_heightSVG)
+#           .attr("dx", "100em")
+          .style("font-size", "11px")
+          .style("font-weight","bold")
+          .style("text-anchor", "end")
+          
+          #TEST 2
+          #.style("text-anchor", "middle")
+          .text(@curvesList[0].curveTypeName+" as a function of "+@curvesList[0].abscissa_name)
+        
+        console.log "app_data.tree_items"
+        console.log app_data.tree_items
+        
+        console.log "app_data.selected_tree_items"
+        console.log app_data.selected_tree_items
+        
+        console.log "app_data.get_root_path_in_selected TestSamirGraphItem"
+        console.log app_data.get_root_path_in_selected TestSamirGraphItem
+        
+        console.log "app_data.get_selected_tree_items()"
+        console.log app_data.get_selected_tree_items()
+        
+        #TEST 1
+        graphti = app_data.get_selected_tree_items().detect ( x ) -> x instanceof TestSamirGraphItem
+        
+        #TEST 2
+#         sessionItem = app_data.tree_items.detect ( x ) -> x instanceof SessionItem
+#         graphti = sessionItem._children.detect ( x ) -> x instanceof TestSamirGraphItem 
+        
         @tic = graphti._children.detect ( x ) -> x instanceof TreeItem_Curves
         console.log "tic",@tic
         
@@ -181,27 +302,156 @@ class DrawingSVG
         .attr("class", "line")
         .attr("d", (d) -> 
                 line(d.values))
-        .style("stroke", (d)=>   
-                        colorD3JS = new ColorD3JS
-                        searchedColor = key+"" for own key, value of colorD3JS.colors when value == color(d.name)
-                        for own key, value of colorD3JS.colors when value == color(d.name)
-                                console.log "value"
-                                console.log value
-                                console.log "color(d.name)"
-                                console.log color(d.name)
+        .style("stroke", (d, i)=> 
+                        # "d" est la donnée d'index "i"
+#                         colorD3JS = new ColorD3JS
+# #                         searchedColor = key+"" for own key, value of colorD3JS.colors when (valueHex = "#"+value.toString(16) )== color(d.name).toString()                         
+#                         for own key, value of colorD3JS.colors
+#                             valueHex = "#"+value.toString(16) 
+# #                             if d3.rgb(valueHex) == color(d.name)
+#                             #TEST 1
+#                             if d3.rgb(valueHex) == d3.rgb(color(i))# d3.rgb(valueHex)=> <dt>( r=,g=...) et color(i)=> #8888 ou blue, ou "blue"...
+#                             
+#                             #TEST 2
+#                             # colorD3JS = set of fixed colors , color(i) could be a color comprise between 2 following colors of D3JS
+#                             
+#                             #TEST 3
+#                             # valueHex est mal calculé avec .toString(16)
+#                             
+#                             #TEST 4
+#                             #if d3.rgb(valueHex) == color(i)
+#                                 searchedColor = key+""
+#                                 console.log "searchedColor"
+#                                 console.log searchedColor
+#                             console.log "Difference color(d.name) et color(i)"
+#                             console.log "color(d.name)"
+#                             console.log color(d.name)
+#                             console.log "color(i)"
+#                             console.log color(i)
+#                             console.log "valueHex"
+#                             console.log valueHex
+
+#                         col = @hexToRgb(color(i).toString())
+#                         =>undefined
+                        col2 = d3.rgb(color(i)) #il n'est pas necessaire de mettre toString dans la fonction rgb() 
                         
-                        col = @hexToRgb(color(d.name).toString())
-                        for curv in @tic._curves_List when curv._name.equals d.name
-                            curve_color = new Color col.r, col.g, col.b
-                            curv.color.set curve_color
-                            curv.colorName.set searchedColor
+                        #TEST 1
+#                         col3 = color(i).rgb()
+#                         Uncaught TypeError: undefined is not a function 
+#                         console.log "col == col2"
+#                         console.log col == col2
+                        
+                        console.log "col2"
+                        console.log col2
+                        
+#                         console.log "col"
+#                         console.log col
+                        
+                        console.log "@tic._curves_List Avant"
+                        console.log @tic._curves_List
+                        
+                        # TEST 1
+#                         pour remplacer @curvesList par @curvesList
+#                         curve_color  = new Color col.r, col.g, col.b
+                        curve_color2 = new Color col2.r, col2.g, col2.b
+#                         curve_color3 = new Color col3.r, col3.g, col3.b
+                        
+#                         console.log "curve_color"
+#                         console.log curve_color
+                        
+                        console.log "curve_color2"
+                        console.log curve_color2
+                        
+                        @curvesList[i].color.set curve_color2
+                        
+                        #TEST 1 
+                        colorD3JS = new ColorD3JS
+                        #TEST 1.2
+                        for k, v of colorD3JS.colors 
+                            #TEST 1.2.1
+                            if @d3_rgbNumber(v).r == d3.rgb(color(i)).r
+                                if @d3_rgbNumber(v).g == d3.rgb(color(i)).g
+                                    if @d3_rgbNumber(v).b == d3.rgb(color(i)).b
+                                        colName = k+"" 
+                            
+                            #TEST 1.2.2
+                            #if @d3_rgbNumber(v) == d3.rgb(color(i))
+                            #colName = k+"" 
+                        
+                        #TEST 1.2
+#                         colName = k+"" for own k, v of colorD3JS.colors when @d3_rgbNumber(v) == d3.rgb(color(i))
+                            
+#                             console.log "@d3_rgbNumber(v)"
+#                             console.log @d3_rgbNumber(v)
+#                             console.log "d3.rgb(color(i))"
+#                             console.log d3.rgb(color(i))
+                            
+                        #                         colName = color(i)      for entry in  d3.entries(colorD3JS.colors)                           
+                        #TEST 2
+#                         colName = @Category20ColorNames[color(i).toString()]
+   
+                        console.log "colName"
+                        console.log colName
+                        
+#                         @curvesList[i].colorName.set colName
+#                         @curvesList[i].colorName.set searchedColor
+                        
+                        #TEST 2 
+                        #@tic._curves_List[i].color.set curve_color
+                        
+#                         #TEST 2.1
+#                         @curvesList[i].colorName.set colName
 
-                       
-                        for cs in @tic.curves.lst when cs.aggregate.name.equals d.name
-                            console.log "color.range():", color.range()
+                        #TEST 2.2
+                        curvli  = @curvesList[i]
+                        
+                        console.log "@curvesList[i]"
+                        console.log curvli
+                                               
+                        curvli.colorName.set colName
+                        
+                        @tic._curves_List[i].colorName.set colName
+                        
+                        #TEST 3 
+                        #mod_attr 
+                        #@curvesList[i].mod_attr colorName, colName
+                        #@tic._curves_List[i].mod_attr colorName, colName
+                        
+                        #TODO 3 a remettre
+#                         for curv in c when curv._name.equals d.name
+#                             curve_color = new Color col.r, col.g, col.b
+#                             console.log "curve_color"
+#                             console.log curve_color
+#                             console.log "curv"
+#                             console.log curv
+#                             console.log "curv.color AVANT"
+#                             console.log curv.color
+#                             
+#                             curv.color.set curve_color
+#                             console.log "curv.color APRES"
+#                             console.log curv.color
+#                             
+#                             curv.colorName.set searchedColor
 
-                        return color(d.name))#only this line is mandatory TODO faire une fonction pour le reste
+                        console.log "@tic._curves_List"
+                        console.log @tic._curves_List
+                        
+                        @tic.curves.set colName
+                        colNameIndex = @tic.curves.lst.indexOf colName
+                        @tic.curves.num.set colNameIndex
+                        
+                        #TODO a effacer ??
+#                         for cs in @tic.curves.lst when cs.aggregate.name.equals d.name
+#                             console.log "color.range():", color.range()
 
+                        #console.log "@tic.curves.lst Après"
+                        #console.log @tic.curves.lst    
+                        
+                        #TEST 1 
+                        return color(i))
+                      
+                        #TEST 2
+                        #return color(d.name))
      
 #         curve.selectAll(".curve").data((d)->d.values)
 #         .enter().append("circle")
@@ -322,6 +572,9 @@ class DrawingSVG
         console.log "At the end of Drawing, (should be false) allowToDraw.get():", allowToDraw.get()
         notfirstDrawing= true
     
+    d3_rgbNumber : (value)->
+        d3.rgb(value >> 16, value >> 8 & 255, value & 255)
+        
     makeCircle:(selection)=>
         selection
             .data((d)->d.values)

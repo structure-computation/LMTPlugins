@@ -4,36 +4,34 @@ class TestSamirGraphItem extends TreeItem_Computable
     constructor: (name = "Graph") ->
         super()
         @_name.set name
+        
+#         @_ico.set "img/SamirGraph.png"
 #         @_ico.set "../../LMTPlugins/TestSamirGraphPlugin/OnlinePlugin/TestSamirGraph/img/testGraphs_bouton.png"
 #         @_ico.set "img/testGraphs_bouton.png"
         @_viewable.set true
         
-        @firstDrawing = undefined  #ensures that only one single svg will be drawn at any mouse event occurring during the drawing, ie when _allowToDraw = true  
-        
+        @_NotfirstDrawing = undefined  #ensures that only one single svg will be drawn at any mouse event occurring during the drawing, ie when _allowToDraw = true  
+
         @add_attr
             _allowToDraw : false
-            
-#         @add_attr
-#             curves: new Choice 
-
-#         @add_attr
-#             graphSettings: new GraphSettings
-            
-#         @curve_courbe.lst.push    TODO   
-                             
+        console.log "At TestSamirGraphItem constructor @_allowToDraw.get():", @_allowToDraw.get()
         treeItem_x = new TreeItem_SingleData("abscissa")
         treeItem_y = new TreeItem_SingleData("ordinate")
-
-#         @add_attr
-#             _issimGraph   : new IssimGraph
-        
-        
-        
+   
         @add_child new TreeItem_GraphSettings
         @add_child new TreeItem_Curves
         @add_child treeItem_x#TEST
-        @add_child treeItem_y           
-          
+        @add_child treeItem_y      
+				#@add_child new ImgItem
+        
+						#img_n = new Img 
+			#	imgItem = new ImgItem
+				#imgItem.img.set img_n				
+				#@add_child imgItem
+
+#     display_suppl_context_actions: ( context_action )  ->
+#   context_action.push new TreeAppModule_Mesher
+#     context_action.push new TreeAppModule_Sketch    
     #TEST             
     cosDeg: (number, precision)->
         console.log number*(Math.PI/180)
@@ -100,60 +98,104 @@ class TestSamirGraphItem extends TreeItem_Computable
 #         [ @_issimGraph ]     
     
     display_suppl_context_actions: ( context_action )  ->
+#        context_action.push
+ #       new TreeAppModule_SaveGraph
         instance = this
         context_action.push
             txt: "Display your graphs"
-            ico: "img/TestSamirImg.png"
+            ico: "img/TestSamirImg.png" #
+#            /home/eikosimcomputer1/LMTLabsScetup/Javascript/plugins/TestSamirGraph/OnlinePlugin/TestSamirGraph/img/TestSamirImg.png
+#             vis: false #TEST false => not display on menu
             fun: ( evt, app) =>
-#                 curCanvasManager = app.selected_canvas_inst()?[ 0 ]?.cm TEST
-#                 graphCanvasManager = curCanvasManager TEST
-                all_canvas_inst = app.all_canvas_inst()                    
-                if not @firstDrawing?
+                all_canvas_inst = app.all_canvas_inst() 
+                console.log "graph action push: all_canvas_inst="
+                console.log all_canvas_inst
+                console.log "graph action push: @_NotfirstDrawing"
+                console.log @_NotfirstDrawing
+                
+      
+#                 if not @_firstDrawing?
+#                     newCanPanAdder = new NewCanvasPanelAdder()
+#                     idGraphCanvas = newCanPanAdder.addNewCanvasPanel(app)#TEST1 TEST 2
+#                     graphPanManagerInstIndex = all_canvas_inst.length-1
+#                     graphCanvasManagerPanelInstance = all_canvas_inst[graphPanManagerInstIndex]
+#                     graphCanvasManagerPanelInstance.title = "graphCanvasManagerPanelIns"                     
+#                 else
+#                     graphCanvasManagerPanelInstance = all_canvas_inst.detect ( x ) -> x.title.equals "graphCanvasManagerPanelIns"
+                
+                addGraphPanel=(app, all_canvas_inst)->
                     newCanPanAdder = new NewCanvasPanelAdder()
                     idGraphCanvas = newCanPanAdder.addNewCanvasPanel(app)#TEST1 TEST 2
                     graphPanManagerInstIndex = all_canvas_inst.length-1
                     graphCanvasManagerPanelInstance = all_canvas_inst[graphPanManagerInstIndex]
-                    graphCanvasManagerPanelInstance.title = "graphCanvasManagerPanelIns"                     
-                else
-                    graphCanvasManagerPanelInstance = all_canvas_inst.detect ( x ) -> x.title.equals "graphCanvasManagerPanelIns"
+#                     graphCanvasManagerPanelInstance.title = "graphCanvasManagerPanelIns" 
                 
-                console.log "app.all_canvas_inst() verifier si plusieurs et titre = graphCanvasManagerPanelIns:"
-                console.log app.all_canvas_inst()
-                console.log "graphCanvasManagerPanelInstance:"
+                
+                if @_NotfirstDrawing
+                    console.log "@_NotfirstDrawing == true"
+#                     graphCanvasManagerPanelInstance = all_canvas_inst.detect ( x ) -> x.title.equals "graphCanvasManagerPanelIns"
+                    display_settings = app.data.selected_display_settings()
+                    layout = display_settings._layout
+                    
+                    console.log "layout:"
+                    console.log layout
+                    console.log "layout._views"
+                    console.log layout._views
+                    
+                    
+                    lmArray = layout._views.filter ( x ) ->  x instanceof LayoutManager
+                    lm = lmArray[0]#TODO A améliorer
+#                      lm = layout._views.detect ( x ) ->  x instanceof LayoutManager 
+                    console.log "lm:"
+                    console.log lm
+                    console.log "lm._pan_vs_id"
+                    console.log lm._pan_vs_id
+                    
+                    
+                    if lm._pan_vs_id.Graph_id?
+                        graphCanvasManagerPanelInstance = lm._pan_vs_id.Graph_id
+                        console.log "graphCanvasManagerPanelInstance:"
+                        console.log graphCanvasManagerPanelInstance
+                    else 
+                        graphCanvasManagerPanelInstance = addGraphPanel(app, all_canvas_inst)#console.log "The chart has been removed"
+                else
+                    if not @_NotfirstDrawing?
+                        graphCanvasManagerPanelInstance = addGraphPanel(app, all_canvas_inst)
+#                         newCanPanAdder = new NewCanvasPanelAdder()
+#                         idGraphCanvas = newCanPanAdder.addNewCanvasPanel(app)#TEST1 TEST 2
+#                         graphPanManagerInstIndex = all_canvas_inst.length-1
+#                         graphCanvasManagerPanelInstance = all_canvas_inst[graphPanManagerInstIndex]
+#                         graphCanvasManagerPanelInstance.title = "graphCanvasManagerPanelIns"                     
+
+                        
+#                     all_canvas_inst = app.all_canvas_inst() 
+                console.log "graphCanvasManagerPanelInstance"
                 console.log graphCanvasManagerPanelInstance
+
+                
                 graphCanvasManager = graphCanvasManagerPanelInstance.cm# TODO auto_fit 
 #                 TODO graphCanvasManager.allow_gl.set false
                 @newInfo = graphCanvasManager.cam_info
-#                 @newInfo.w = @newInfo.w/ 2.0      
-#                 graphPanManagerInstIndex = all_canvas_inst.length-1
-#                 graphCanvasManager = all_canvas_inst[graphPanManagerInstIndex].cm
+                
+                console.log "for canvasManger, @newInfo:"
+                console.log @newInfo
                 #TODO LayoutManager._pan_vs_id(idGraphCanvas).cm
                 #TODO dans treeappdata panel_id_list(), rm_selected_panels()
                 if graphCanvasManager?
                     thislikeItem = graphCanvasManager.items.detect ( x ) -> x instanceof TestSamirGraphItem #TODO +modif le selected+faire == this 
-                    graphCanvasManager.items.clear()#TEST
-                    graphCanvasManager.items.push thislikeItem  #TEST TODO avec instance ou avec les "z" pour l'ordre        
-                    
-#                     if not thislikeItem?
-#                         graphCanvasManager.items.push @this
-#                         thislikeItem = graphCanvasManager.items.detect ( x ) -> x instanceof TestSamirGraphItem #TODO +modif le selected+faire == this 
-                    console.log "thislikeItem  (verifier si = TestSamirGraphItem):"
-                    console.log thislikeItem
-                    console.log "@newInfo:"
-                    console.log @newInfo
-                    
-#                     display_settings = app.data.selected_display_settings()
-#                     layout = display_settings._layout 
-                    
-#                     console.log " @graphSettings:"
-#                     console.log  @graphSettings
-#                     
-#                     console.log " layout:"
-#                     console.log  layout
-#                     @graphSettings.margin.top.set layout.getTop()
-#                     @graphSettings.margin.left.set layout.getLeft()
-                    
-                    thislikeItem._allowToDraw.set true                   
+                    console.log "graphCanvasManager.items before clearing(verifier qu'il y a au moins GraphViewItem):"
+                    console.log graphCanvasManager.items
+#                     graphCanvasManager.items.clear()#TEST
+#                     graphCanvasManager.items.push thislikeItem  #TEST TODO avec instance ou avec les "z" pour l'ordre                           
+                    thislikeItem._allowToDraw.set true
+                    console.log "At TestSamirGraphItem contextAction @_allowToDraw.get() (true):", @_allowToDraw.get()
+                    console.log "At TestSamirGraphItem contextAction thislikeItem._allowToDraw.get() (true):", thislikeItem._allowToDraw.get()     
+                   #TEST
+                    graphCanvasManager.cam.threeD.set false
+#                     graphCanvasManager.resize 700, 400
+                    #TEST
+                    graphCanvasManager.fit 0
+                    @pauseMouse(graphCanvasManager)
                     graphCanvasManager.draw(@newInfo)
                          
 #             ico: "../../LMTPlugins/TestSamirGraphPlugin/OnlinePlugin/TestSamirGraph/img/TestSamirImg.png"               
@@ -161,30 +203,39 @@ class TestSamirGraphItem extends TreeItem_Computable
 #             ico: "../../../../LMTPlugins/TestSamirGraphPlugin/OnlinePlugin/TestSamirGraph/img/TestSamirImg.png"
 #             ico: "~/LMTLabsScetup/software_library/LMTPlugins/TestSamirGraphPlugin/OnlinePlugin/TestSamirGraph/img/TestSamirImg.png"
 #             siz: 1
-#             vis:true
 #             TS_instance : this
-                
+    pauseMouse:(canvasManager)->
+        # events
+        canvasManager.onmousewheel = ( evt ) => #@_mouse_wheel evt
+        canvasManager.onmousedown  = ( evt ) => #@_mouse_down evt
+        canvasManager.onmousemove  = ( evt ) => #@_mouse_move evt
+        canvasManager.onmouseout   = ( evt ) => #@_mouse_out evt
+        canvasManager.ondblclick   = ( evt ) => #@_dbl_click evt
+        canvasManager.onmouseup    = ( evt ) => #@_mouse_up evt
+#         canvasManager.addEventListener? "DOMMouseScroll", @canvas.onmousewheel, false
+    
     draw: ( info ) -> 
 # cf GraphViewItem
         
     has_nothing_to_draw: ->
         true
-   
-#  used by GraphViewItem        
-#     detect_vector: (isAllowedMultiVectors = false)->
-#         res= []
-#         for child in @_children
-#             if child instanceof TreeItem_SingleData
-#                 if child._children[0] instanceof TreeItem_Vector 
-#                     detectedVec = child._children[0].vec
-#                     if not detectedVec?
-#                         detectedVec = new Vec [0]# return Vector zero, TODO put an alert
-#                     res.push detectedVec  #TODO verifier le type de children et try ca
-#         return res         
- 
-# used by GraphViewItem        
+
+#     update_min_max: ( x_min, x_max ) ->
+#         console.log "TestSamirGraphItem update_min_max"
+#         console.log "x_min:"
+#         console.log x_min
+#         console.log "x_max:"
+#         console.log x_max
+#         
+#         for d in [ 0 ... 3 ]
+#                 x_min[ d ] = Math.min x_min[ d ], 0
+#         x_max[ 0 ] = Math.max x_max[ 0 ], @data.#rgba.width
+#         x_max[ 1 ] = Math.max x_max[ 1 ], @data.#rgba.height
+#         x_max[ 2 ] = Math.max x_max[ 2 ], 0
+        
+        
+        
     detect_vector: ->
-#         res= []
         res= new Lst
         i = 0
         for child in @_children
@@ -193,24 +244,14 @@ class TestSamirGraphItem extends TreeItem_Computable
                     alert child._name+" is empty"
                     return res #TODO 
                 for ch_child in child._children   
-                    if ch_child instanceof TreeItem_Vector 
-                        #res.push ch_child.vec
-                        console.log "child instanceof TreeItem_Vector:"
-                        console.log child
                         if child._name.get() == "ordinate"               
                             ord_name = ch_child._name.get()
                             ord_vec = ch_child.vec.get()
                             num = ++i
-                            console.log "num for numero courbe:"
-                            console.log num
                             curve = new Curve(ord_name, ord_vec, abs_name, abs_vec, num)
-                            console.log "curve.number:"
-                            console.log curve.number.get()
-                            curve.name.set "curve "+curve.number.get()
-                            console.log "curve.name.get():"
-                            console.log curve.name.get()
+                            curve._name.set "curve "+curve.number.get()
+                            res.push curve
                             
-                            res.push curve 
                         if child._name.get() == "abscissa"
                             abs_vec = ch_child.vec
                             abs_name = ch_child._name
@@ -291,4 +332,4 @@ class TestSamirGraphItem extends TreeItem_Computable
 
 #     disp_only_in_model_editor: -> TODO A mettre ?
 #         @mesh    
-
+#####

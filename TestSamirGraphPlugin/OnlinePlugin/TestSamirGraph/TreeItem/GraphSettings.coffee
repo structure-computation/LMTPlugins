@@ -27,11 +27,13 @@ class GraphSettings extends Model
                 right: 30 #TODO à déduire ou identique en valeur absolue
                 bottom: 30
                 left: aleft# TODO remettre 40
-            interpolation: new Choice( 0, [ "basis", "monotone"]) 
-            Y_orient: new Choice( 0, [ "right", "left"]) 
+        @add_attr
+            interpolation: new Choice( 0, ["linear", "basis","monotone", "cardinal", "step-before", "step-after", "basis-open", "basis-closed", "cardinal-open",
+             "cardinal-closed" ]) #for extending the list cf http://bl.ocks.org/mbostock/4342190
+            Y_orient: new Choice( 0, [ "left", "right"]) 
             X_orient: new Choice( 0, [ "bottom", "top"])
             dyTextOffset: new Choice( 0, [ ".35em"]) #TODO change to dy Text offset relative to the font size
-            xTextPosition: 3
+            xTextPosition: -400 #3 auparavant, -200 pour etre visble à droite
             
 #                 interpolation: new Choice( 0, [ "basis", "monotone"]) 
 #             Y_orient: new Choice( 0, [ "right", "left"]) 
