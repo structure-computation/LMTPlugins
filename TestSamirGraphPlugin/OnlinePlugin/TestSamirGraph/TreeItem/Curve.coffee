@@ -4,9 +4,9 @@ class Curve extends Model
         # attributes
         @add_attr
             _name: ord_name
-            color: new Color
+#             color: new Color
             colorName: ""#new Str
-            marker: "circle"#"dot" #TEST
+            marker: "square" #"dot" 
             number: num
             curveTypeName: ord_name?.split(" ")[0]
             

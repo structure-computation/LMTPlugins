@@ -20,12 +20,32 @@ class DrawingSVG
     constructor: ->    
     #nothing for now
     
-    drawSVG_MultiVec:( app_data, info, @curvesList, notfirstDrawing, allowToDraw, graphSetting ) ->
-        console.log "In Drawing, au début allowToDraw.get():", allowToDraw.get()
+    
+    #TEST param1
+    drawSVG_MultiVec:( app_data, info, graphti, graphSetting ) ->
+        console.log "In Drawing, au début allowToDraw.get():", graphti._allowToDraw.get()
 #         if not firstDrawing? #TEST
-        @initDrawing_MultiVec(app_data, info, @curvesList, notfirstDrawing, allowToDraw, graphSetting )
-
-    initDrawing_MultiVec:(app_data, info, @curvesList, notfirstDrawing, allowToDraw, graphSetting )  ->    
+        @initDrawing_MultiVec(app_data, info, graphti, graphSetting )
+    
+    #TEST param2
+#     drawSVG_MultiVec:( app_data, info, @curvesList, notfirstDrawing, allowToDraw, graphSetting ) ->
+#         console.log "In Drawing, au début allowToDraw.get():", allowToDraw.get()
+# #         if not firstDrawing? #TEST
+#         @initDrawing_MultiVec(app_data, info, @curvesList, notfirstDrawing, allowToDraw, graphSetting )
+    
+    #TEST param1
+    initDrawing_MultiVec:(app_data, info, graphti, graphSetting )  ->   
+    
+    #TEST param2
+#     initDrawing_MultiVec:(app_data, info, @curvesList, notfirstDrawing, allowToDraw, graphSetting )  ->  
+        
+        @tic = graphti._children.detect ( x ) -> x instanceof TreeItem_Curves
+        console.log "tic",@tic
+        
+        @curvesList = graphti.curves_List
+        notfirstDrawing = graphti._NotfirstDrawing
+        allowToDraw = graphti._allowToDraw
+        
         console.log "@curvesList"
         console.log @curvesList
         
@@ -39,7 +59,7 @@ class DrawingSVG
         
         VecX = @curvesList[0]?.abscissa_vec.get()
         VecY_arr = [] 
-        VecY_arr.push c?.ordinate_vec.get() for c in curvesList             
+        VecY_arr.push c?.ordinate_vec.get() for c in @curvesList             
         @_data = matrixTransposeMulti VecX, VecY_arr
         console.log "@_data:", @_data
         console.log "info :", info
@@ -65,10 +85,20 @@ class DrawingSVG
         @_x = d3.scale.linear()
         .range([0, @_widthSVG])
         
+        #TEST 1_y   cf TEST m_y
         @_y = d3.scale.linear()
         .range([@_heightSVG, 0])
-
-
+                
+        #TEST m_y 
+        #Listing the number of curve Type
+        curveTypeNameList = new Lst
+        for curve in @curvesList
+            if not curveTypeNameList.contains curve.curveTypeName 
+                curveTypeNameList.push curve.curveTypeName
+        
+        console.log "curveTypeNameList"
+        console.log curveTypeNameList
+        
 #         TEST 1 # imitation de d3.scale.category20() avec des noms de couleurs reconnues par D3
         # une boucle infinie est constatée pour la mise à jour de l'attribut couleur de l'objetCurve 
         d3_Issim_category20 = [ "darkblue",  "blue", 
@@ -80,8 +110,22 @@ class DrawingSVG
                                 "pink", "salmon",
                                 "darkgrey", "darkslategray",    
                                 "yellowgreen", "yellow",
-                                "cyan", "indigo"]        
-        color = d3.scale.ordinal().range(d3_Issim_category20)
+                                "cyan", "indigo"]
+                     
+        #TEST colRange1 
+        console.log "@tic._colorRange.get()"
+        console.log @tic._colorRange.get()
+        
+        colorRangeTab= []
+        
+        colorRangeTab.push co for co in @tic._colorRange
+        color = d3.scale.ordinal().range(colorRangeTab)
+        
+        console.log "color (avant de renseigner domain)"
+        console.log color
+        
+        #TEST colRange2                        
+#         color = d3.scale.ordinal().range(d3_Issim_category20)
 #         
 #         #TEST 2
 #         #color = d3.scale.category20()
@@ -103,27 +147,22 @@ class DrawingSVG
 #         "#c5b0d5":"purple-",
 #         "#8c564b":"brown+",
 #         "#c49c94":"brown-",
-#         "#e377c2":"pink+",
+#         "#e377c2":"pink+",        @_title = d3.selectAll("svg#svg_id").insert("text", "Issim_chart")
 #         "#f7b6d2":"pink-",
 #         "#7f7f7f":"grey+",
 #         "#c7c7c7":"grey-",
 #        translate "en fonction de" "#bcbd22":"yellow+",
 #         "#dbdb8d":"yellow-",
 #         "#17becf":"skyblue+",
-#         "#9edae5":"skyblue-"}
-        
+#         "#9edae5":"skyblue-"}  
         
         @_xAxis = d3.svg.axis()
         .scale(@_x)
-        .orient(@GS.X_orient)# TEST should be "bottom"
-        
+        .orient(@GS.X_orient)# TEST should be "bottom"      
         
         @_yAxis = d3.svg.axis()
         .scale(@_y)
         .orient(@GS.Y_orient)# TEST should be "right"
-     
-        console.log "d3.svg.line() before !!!"
-        console.log d3.svg.line() 
         
         console.log "d3.svg.line() before !!!"
         console.log d3.svg.line()
@@ -157,6 +196,21 @@ class DrawingSVG
         .attr("id", "svg_id")
         .attr("width", @_widthSVG + @_margin.left + @_margin.right)
         .attr("height", @_heightSVG + @_margin.top + @_margin.bottom)
+         
+#          #TEST _title
+#         .append("text")
+#         .attr("class", "ChartTitle")
+#         .attr("x", @_widthSVG/2)
+#         .attr("y", @_heightSVG)
+#         .style("font-size", "11px")
+#         .style("font-weight","bold")
+#         .style("text-anchor", "end")        
+#         #TEST 2
+#         #.style("text-anchor", "middle")
+#         .text(@curvesList[0].curveTypeName+" as a function of "+@curvesList[0].abscissa_name)
+        #TEST END _title
+        
+        d3.select("svg") 
         .append("g")
         .attr("id", "Issim_chart")
         .attr("transform", "translate(#{@_margin.left},#{@_margin.top})")            
@@ -180,18 +234,19 @@ class DrawingSVG
                                     c = @curvesList[curvesIndex]
                                     vecIndexMax = c.ordinate_vec.length-1
                                     return res_c = 
-                                            name : c._name.get(), #TEST sinon curvesIndex only
+                                            name : c._name.get() #TEST TODO remettre une virgule
                                             values: @_data.map (d) =>  
                                                                     key_abs = c.abscissa_name.get()
                                                                     key_ord = c.ordinate_name.get()
                                                                     res = {}
                                                                     res[key_abs] = d[0]# equivalent to d.date
-                                                                    res[key_ord] = d[curvesIndex+1]                                                                       
+                                                                    res[key_ord] = d[curvesIndex+1]
+                                                                    res['curve_Index']=curvesIndex
                                                                     return res                                
-
+                                            number:c.number.get()
         console.log "curves"                                                          
         console.log curves
-        
+
         @_x.domain(d3.extent(@_data, (d) -> d[0]))
 
         @_y.domain([
@@ -214,7 +269,6 @@ class DrawingSVG
             #TEST
             
         @_svgD3.append("text")
-#             .attr("transform", "rotate(-90)")
             .attr("x", @_widthSVG/2)
             .attr("y", @_heightSVG+26)
             .attr("dx", ".71em")
@@ -239,7 +293,6 @@ class DrawingSVG
           
           .attr("y", @_heightSVG/2)
           .attr("dx", ".71em")
-          .attr("transform", "rotate(90)")
           
           #TEST 1
           .style("text-anchor", "end")
@@ -247,29 +300,36 @@ class DrawingSVG
           #TEST 2
           #.style("text-anchor", "middle")
           .text(@curvesList[0].curveTypeName.get()+" ("+@curvesList[0].ordinate_unity.get()+")")
+#           .attr("transform", "rotate(90)")
         
         
       # TITLE
         #TEST insert1
-        @_title = d3.selectAll("svg#svg_id").insert("text", "Issim_chart")
-#         @_title.append("g")
-#             .attr("class", "title")
-#             #TEST rot1
-# #           #.attr("transform", "rotate(-90)")
-# #             .attr("transform", "translate(0," + @_heightSVG+ ")")
+#         @_title = d3.selectAll("svg#svg_id").insert("text", "Issim_chart")
+#           .attr("x", @_widthSVG/2)
+#           .attr("y", @_heightSVG)
+# #           .attr("dx", "100em")
+#         @_svgD3.selectAll(".ChartTitle")  
+#           .style("font-size", "11px")
+#           .style("font-weight","bold")
+#           .style("text-anchor", "end")        
+#           #TEST 2
+#           #.style("text-anchor", "middle")
+#           .text(@curvesList[0].curveTypeName+" as a function of "+@curvesList[0].abscissa_name)
         
-        #TEST insert2
-        #@_title.append("text")
-          .attr("x", @_widthSVG/2)
-          .attr("y", @_heightSVG)
-#           .attr("dx", "100em")
-          .style("font-size", "11px")
-          .style("font-weight","bold")
-          .style("text-anchor", "end")
-          
-          #TEST 2
-          #.style("text-anchor", "middle")
-          .text(@curvesList[0].curveTypeName+" as a function of "+@curvesList[0].abscissa_name)
+        @_svgD3.append("text")
+        .attr("x", (@_widthSVG / 2))
+        #TEST title1
+        .attr("y", (@_margin.top / 2))
+        
+        #TEST title2
+#         .attr("y", 0 - (@_margin.top / 2))
+        .attr("text-anchor", "middle")  
+        .style("font-size", "16px") 
+        .style("text-decoration", "underline")
+        .style("font-weight", "underline")  
+        .text(@curvesList[0].curveTypeName+" as a function of "+@curvesList[0].abscissa_name)
+        
         
         console.log "app_data.tree_items"
         console.log app_data.tree_items
@@ -283,16 +343,13 @@ class DrawingSVG
         console.log "app_data.get_selected_tree_items()"
         console.log app_data.get_selected_tree_items()
         
-        #TEST 1
-        graphti = app_data.get_selected_tree_items().detect ( x ) -> x instanceof TestSamirGraphItem
+        #TEST param2
+#         graphti = app_data.get_selected_tree_items().detect ( x ) -> x instanceof TestSamirGraphItem
         
         #TEST 2
 #         sessionItem = app_data.tree_items.detect ( x ) -> x instanceof SessionItem
 #         graphti = sessionItem._children.detect ( x ) -> x instanceof TestSamirGraphItem 
-        
-        @tic = graphti._children.detect ( x ) -> x instanceof TreeItem_Curves
-        console.log "tic",@tic
-        
+
         curve = @_svgD3.selectAll(".curve")
         .data(curves)
         .enter().append("g")
@@ -333,6 +390,10 @@ class DrawingSVG
 
 #                         col = @hexToRgb(color(i).toString())
 #                         =>undefined
+
+                        console.log "color(i)"
+                        console.log color(i)
+
                         col2 = d3.rgb(color(i)) #il n'est pas necessaire de mettre toString dans la fonction rgb() 
                         
                         #TEST 1
@@ -362,7 +423,7 @@ class DrawingSVG
                         console.log "curve_color2"
                         console.log curve_color2
                         
-                        @curvesList[i].color.set curve_color2
+#                         @curvesList[i].color.set curve_color2
                         
                         #TEST 1 
                         colorD3JS = new ColorD3JS
@@ -407,10 +468,10 @@ class DrawingSVG
                         
                         console.log "@curvesList[i]"
                         console.log curvli
-                                               
-                        curvli.colorName.set colName
                         
-                        @tic._curves_List[i].colorName.set colName
+                        #TEST fillColor1 already done in TreeItem_Curves                      
+#                         curvli.colorName.set colName
+#                         @tic._curves_List[i].colorName.set colName
                         
                         #TEST 3 
                         #mod_attr 
@@ -436,9 +497,10 @@ class DrawingSVG
                         console.log "@tic._curves_List"
                         console.log @tic._curves_List
                         
-                        @tic.curves.set colName
-                        colNameIndex = @tic.curves.lst.indexOf colName
-                        @tic.curves.num.set colNameIndex
+                        #TEST colChoice2 cf CurveChoice
+#                         @tic.curves.set colName
+#                         colNameIndex = @tic.curves.lst.indexOf colName
+#                         @tic.curves.num.set colNameIndex
                         
                         #TODO a effacer ??
 #                         for cs in @tic.curves.lst when cs.aggregate.name.equals d.name
@@ -508,10 +570,152 @@ class DrawingSVG
 # #         .attr("transform", "rotate(-90)")
 #         .attr("width",3.5)
 #         .attr("height",3.5)
-        @markerWidth = 3.5  #TODO mettre dans graphSetting 
-        @markerHeight = 3.5
-                
-        curve.selectAll(".curve").call(@makeCircle)
+
+#         @markerWidth = 3.5  #TODO mettre dans graphSetting 
+#         @markerHeight = 3.5  
+        
+        #TEST marker1
+        #select is like filter preserving the index => probleme du "this" et de => 
+        
+#         dotCurve = curve.select (d,i)=>
+#                                           do()->
+#                                               #this is window
+#                                               DSThis = this.DrawingSVG
+#                                               console.log "DSThis:"
+#                                               console.log DSThis
+#                                                     
+#                                               res = if DSThis.curvesList[i].marker.get() =="dot" then this else null
+        console.log "curve"                
+        console.log curve
+        dotCurve = curve.filter (d, i)=> @curvesList[i].marker.get() =="dot"
+        squareCurve = curve.filter (d, i)=> @curvesList[i].marker.get() =="square"
+        
+        if not dotCurve.empty()
+            #TEST dval1
+            console.log "dotCurve.call ..."
+          
+          #TEST selA1
+#             dotCurve.selectAll(".DotMarker").call( @makeDot, @tic.curves)
+          
+          #TEST selA2
+            dotCurve.call( @makeDot, @tic.curves)
+            console.log "dotCurve.call ok"
+            
+            #TEST dval2
+#             dotCurve.selectAll(".curve").call( @makeDot, @tic.curves)
+        if not squareCurve.empty()
+            #TEST dval1
+            squareCurve.call( @makeSquare, @tic.curves)
+            
+            #TEST dval2
+#             squareCurve.selectAll(".curve").call( @makeSquare, @tic.curves)
+        
+        
+#         #TEST curvcir1         
+#         colNameIndex = @tic.curves.lst.indexOf colName
+#                         @tic.curves.num.set colNameIndex
+
+#TEST marker3
+#         curve.call( (d, i)=>
+# #                      if @curvesList[i].marker.get() =="square"
+#                     console.log "@curvesList[i]"
+#                     console.log @curvesList[i]
+#                     
+#                     console.log 
+#                     
+#                     console.log "@curvesList"
+#                     console.log @curvesList
+#                     
+#                     marker = @curvesList[i].marker.get()
+#                     console.log "hello1"
+#                     switch marker
+#                           #TEST selcurve1
+#                           when "dot" then @makeDot @tic.curves 
+#                           
+#                           #TEST selcurve2
+#                           #when "dot" then curve.selectAll(".curve").call(@makeDot)
+# 
+#                           when "square" then @makeSquare @tic.curves
+#                           when "cross" then go iceFishing
+#                           when "diamond" then go iceFishing
+#                           when "Fri", "Sat"
+#                             if day is bingoDay
+#                               go bingo
+#                               go dancing
+#                           when "Sun" then go church
+#                           else console.log "this marker does not exist")       
+
+        #TEST marker3
+
+
+#TEST marker2
+#         squareCurve = curve.select (d,i)->
+#                                           
+#                                           do()->
+#                                               #this is window
+#                                               DSThis = this.DrawingSVG
+#                                               console.log "DSThis:"
+#                                               console.log DSThis
+#                                               
+#                                               #TEST do()1
+#                                               console.log 'DSThis.curvesList[i].marker.get() =="square"' 
+#                                               console.log DSThis.curvesList[i].marker.get() =="square"
+#                                               res = if DSThis.curvesList[i].marker.get() =="square" then this else null
+#                                           
+#                                           #TEST do()2
+# #                                           console.log '@curvesList[i].marker.get() =="square"' 
+# #                                           console.log @curvesList[i].marker.get() =="square"
+# #                                           res = if @curvesList[i].marker.get() =="square" then this else null
+#         
+#         console.log "squareCurve"                
+#         console.log squareCurve
+#         
+#         #TEST switch1
+#         if not dotCurve.empty()
+#             dotCurve.call(@makeDot, @tic.curves)
+#         if not squareCurve.empty()
+#             squareCurve.call(@makeSquare, @tic.curves)
+           
+        #TEST switch2
+#         console.log "dotCurve.size()"
+#         console.log dotCurve.size()
+#         
+#         console.log "dotCurve.empty()"
+#         console.log dotCurve.empty()
+#         
+#         dotCurve.call(@makeDot, @tic.curves)
+#         squareCurve = curve.select (d,i)=>
+#                                                     console.log '@curvesList[i].marker.get() =="square"' 
+#                                                     console.log @curvesList[i].marker.get() =="square"
+#                                                     res = if @curvesList[i].marker.get() =="square" then this else null
+#                                                     
+#         console.log "squareCurve"                
+#         console.log squareCurve                                            
+#         squareCurve.call(@makeSquare, @tic.curves)
+        
+        #TEST curvcir2
+#         dotCurve.selectAll(".curve").call(@makeDot)
+        
+        #TEST marker2
+#         switch ??.marker.get()
+#           #TEST selcurve1
+#           when "dot" then curve.call(@makeDot)
+          
+          #TEST selcurve2
+#           when "dot" then curve.selectAll(".curve").call(@makeDot)
+
+#           when "square" then go relax
+#           when "cross" then go iceFishing
+#           when "diamond" then go iceFishing
+#           when "Fri", "Sat"
+#             if day is bingoDay
+#               go bingo
+#               go dancing
+#           when "Sun" then go church
+#           else console.log"this marker does not exist"        
+        
+        #TEST marker3
+#         curve.selectAll(".curve").call(@makeDot)
 
 #         curve.selectAll(".curve").call(@makeRectangle)
         
@@ -575,32 +779,93 @@ class DrawingSVG
     d3_rgbNumber : (value)->
         d3.rgb(value >> 16, value >> 8 & 255, value & 255)
         
-    makeCircle:(selection)=>
+    makeDot:(selection, curveChoices)=>
         selection
-            .data((d)->d.values)
-            .enter().append("circle")
+            .selectAll(".curve")
+            .data((d)-> d.values)
+            .enter()    
+            .append("circle")
             .style("stroke", "black")
-            .attr("fill", (d)-> "black")
+            .attr("fill", (d)=> 
+                              i = d.curve_Index
+                              curveChoices.lst[i].aggregate.markerColor.get())
             .attr("cx", (d)=>
+                           
                             keys = (k for own k of d)
                             return @_x(d[keys[0]]))
             .attr("cy",  (d)=>
+                           
                             keys = (k for own k of d)
                             return @_y(d[keys[1]]))
-            .attr("r",3.5)
+                            
+            .attr("r", (d)=> 
+                              i = d.curve_Index
+                              curveChoices.lst[i].aggregate.markerRadius.get())               
+#             .attr("r",3.5)
                 
-                
-    makeRectangle:(selection)=>
+    makeSquare:(selection, curveChoices)=>
         selection
-            .data((d)->d.values)
+            .selectAll(".curve")      
+            .data((d)-> d.values)
+            .enter() 
+            .append("rect")
+            .style("stroke", "black")
+            .attr("fill", (d)=> 
+                              i = d.curve_Index
+                              curveChoices.lst[i].aggregate.markerColor.get())
+            .attr("x", (d)=>
+                        keys = (k for own k of d)
+                        leftTopcornerXrec= @_x(d[keys[0]])
+                        return leftTopcornerXrec 
+                        )
+            .attr("y",  (d)=>
+                        keys = (k for own k of d)
+                        leftTopcornerYrec=  @_y(d[keys[1]])
+                        return leftTopcornerYrec
+                        )
+            .attr("width", (d)=> 
+                              i = d.curve_Index
+                              curveChoices.lst[i].aggregate.markerWidth.get()) 
+            .attr("height", (d)=> 
+                              i = d.curve_Index
+                              curveChoices.lst[i].aggregate.markerHeight.get()) 
+            
+    makeDiamond:(selection, curveChoices)=>
+        console.log "selection"
+        console.log selection
+        selection
+            .data((d, i)->
+                         console.log "d:"
+                         console.log d
+                         d.values)
             .enter()
             .append("g")
-            .attr("transform", "translate(-"+ (markerWidth)/2+",-"+ (markerHeight)/2+")")
+            .attr("transform", (d, i)=>
+
+                                      console.log "curveChoices"
+                                      console.log curveChoices
+                                      console.log "i"
+                                      console.log i
+#                                       console.log "d.number"
+#                                       console.log d.number
+                                      console.log "curveChoices.lst[i]"
+                                      console.log curveChoices.lst[i]
+#                                       console.log "curveChoices.lst[d.number]"
+#                                       console.log curveChoices.lst[d.number]
+                                      "translate(-"+ (curveChoices.lst[i].aggregate.markerWidth.get())/2+",-"+ (curveChoices.lst[i].aggregate.markerHeight.get())/2+")")
+                                                                                                  
     #         .attr("id", "rectangle")
     #         .attr("transform", "rotate(-90)")
             .append("rect")
             .style("stroke", "black")
-            .attr("fill", (d)-> "red")
+            .attr("fill", (d, i)=> 
+                                  console.log  "hello1"
+                                  console.log "curveChoices"
+                                  console.log curveChoices
+                                  console.log "curveChoices.lst[i]"
+                                  console.log curveChoices.lst[i]
+                                  
+                                  curveChoices.lst[i].aggregate.markerColor.get())
             .attr("x", (d)=>
                             keys = (k for own k of d)
                             leftTopcornerXrec= @_x(d[keys[0]])
@@ -617,10 +882,12 @@ class DrawingSVG
                             leftTopcornerYrec=  @_y(d[keys[1]])
                             return "rotate(-90, "+leftTopcornerXrec+","+ leftTopcornerYrec+")"
                             )
-            .attr("width",3.5)
-            .attr("height",3.5)
-    
-    
+            .attr("width",(d, i)=>
+                              console.log  "hello2"
+                              curveChoices.lst[i].aggregate.markerWidth.get())#3.5)
+            .attr("height",(d, i)=>
+                              console.log  "hello3"
+                              curveChoices.lst[i].aggregate.markerHeight.get())#3.5)
     
     wr: (d, message=d)-> 
         console.log if message? message+"" else d+""

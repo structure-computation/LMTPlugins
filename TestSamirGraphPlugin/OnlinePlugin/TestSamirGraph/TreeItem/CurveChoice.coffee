@@ -5,19 +5,41 @@ class CurveChoice extends Model
          
         @add_attr
             curve: curve
+            
         @add_attr
             _name: @curve._name
             aggregate:    
                 color: @curve.color #new Color #LineTheme#new Choice# new Color#(0, [curve.color])#new Choice
-#                 marker: new Choice(0, [ "dot", "square", "cross", "diamond", "bar" ]) 
                 colorName: new Choice
-                marker: new Choice(0, [ "circle", "square", "arrow", "stub" ]) 
+            
+            #TEST marker1
+                marker: new Choice(0, [ "dot", "square", "cross", "diamond", "bar" ]) 
+                markerWidth : new ConstrainedVal( 4, { min: 0, max: 40 } )  #TODO mettre dans graphSetting 
+                markerHeight : new ConstrainedVal( 4, { min: 0, max: 40 } )
+                markerRadius : new ConstrainedVal( 4, { min: 0, max: 40 } )
+                markerColor : new Choice
+                
+            #TEST marker2
+#                 marker: new Choice(0, [ "circle", "square", "arrow", "stub" ]) 
                 modify_curve: new Choice(0, ["no", "yes"]) 
-                name: @curve._name
-
+                name: @curve._name     
+   
         colorD3JS = new ColorD3JS
         
+        #TEST colChoice2 
         @aggregate.colorName.lst.push key+"" for key, value of colorD3JS.colors
+        
+        #position the colorNam
+        colNameIndex = @aggregate.colorName.lst.indexOf curve.colorName#.get()
+        @aggregate.colorName.num.set colNameIndex
+        
+        #markerColor
+        @aggregate.markerColor.lst.push key+"" for key, value of colorD3JS.colors
+        
+        #position the colorNam
+        colNameIndex = @aggregate.markerColor.lst.indexOf "red" #.get()
+        @aggregate.markerColor.num.set colNameIndex
+        
         
         #matching curve choice and curve object parameter
 #         bind @aggregate.modify_curve, =>
@@ -36,8 +58,7 @@ class CurveChoice extends Model
 #                 alert "color has changed"
 #                 console.log "color has changed"
 #                 console.log "@curve.color.get()"
-#                 console.log @curve.color.get()
-                
+#                 console.log @curve.color.get()           
                 
 #                 console.log "@curve.color._date_last_modification"
 #                 console.log @curve.color._date_last_modification
