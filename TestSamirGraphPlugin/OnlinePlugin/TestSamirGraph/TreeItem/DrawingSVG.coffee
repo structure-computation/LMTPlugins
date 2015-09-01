@@ -113,16 +113,14 @@ class DrawingSVG
                                 "cyan", "indigo"]
                      
         #TEST colRange1 
-        console.log "@tic._colorRange.get()"
-        console.log @tic._colorRange.get()
+#         console.log "@tic._colorRange.get()"
+#         console.log @tic._colorRange.get()
         
         colorRangeTab= []
         
         colorRangeTab.push co for co in @tic._colorRange
         color = d3.scale.ordinal().range(colorRangeTab)
-        
-        console.log "color (avant de renseigner domain)"
-        console.log color
+
         
         #TEST colRange2                        
 #         color = d3.scale.ordinal().range(d3_Issim_category20)
@@ -196,7 +194,8 @@ class DrawingSVG
         .attr("id", "svg_id")
         .attr("width", @_widthSVG + @_margin.left + @_margin.right)
         .attr("height", @_heightSVG + @_margin.top + @_margin.bottom)
-         
+        .append("g")
+        .attr("transform", "translate(#{@_margin.left},#{@_margin.top})")   
 #          #TEST _title
 #         .append("text")
 #         .attr("class", "ChartTitle")
@@ -210,10 +209,10 @@ class DrawingSVG
 #         .text(@curvesList[0].curveTypeName+" as a function of "+@curvesList[0].abscissa_name)
         #TEST END _title
         
-        d3.select("svg") 
-        .append("g")
-        .attr("id", "Issim_chart")
-        .attr("transform", "translate(#{@_margin.left},#{@_margin.top})")            
+#         d3.select("svg") 
+#         .append("g")
+#         .attr("id", "Issim_chart")
+        ###.attr("transform", "translate(#{@_margin.left},#{@_margin.top})")  ###          
 
         console.log "@_svgD3 after appending svg"
         console.log @_svgD3
@@ -232,7 +231,7 @@ class DrawingSVG
         
         curves = color.domain().map (curvesIndex)=>
                                     c = @curvesList[curvesIndex]
-                                    vecIndexMax = c.ordinate_vec.length-1
+#                                     vecIndexMax = c.ordinate_vec.length-1
                                     return res_c = 
                                             name : c._name.get() #TEST TODO remettre une virgule
                                             values: @_data.map (d) =>  
@@ -242,8 +241,24 @@ class DrawingSVG
                                                                     res[key_abs] = d[0]# equivalent to d.date
                                                                     res[key_ord] = d[curvesIndex+1]
                                                                     res['curve_Index']=curvesIndex
-                                                                    return res                                
+                                                                    return res   
                                             number:c.number.get()
+                                            
+                                            #TEST leg1
+#                                             legendValuesFunc: (d)=> 
+#                                                                 console.log "d in legendValues"
+#                                                                 console.log d
+#                                                                 legY = (d)=> @_heightSVG-30*d.number
+#                                                                 console.log "legY"
+#                                                                 console.log legY
+#                                                                 
+#                                                                 res = {}
+#     #                                                             res['curve_Index']=curvesIndex
+#                                                                 for i in [1..3]    
+#                                                                     res['x'] = 30 *i
+#                                                                     res['y'] = legY(d)
+#                                                                 return res 
+#                                             legendValues: @legendValuesFunc(this)
         console.log "curves"                                                          
         console.log curves
 
@@ -259,7 +274,10 @@ class DrawingSVG
           ])
           
         console.log  "@_heightSVG: ", @_heightSVG
-
+        
+        #Legend
+        @_ChartLegend = @_svgD3.append("g")
+            .attr("class", "ChartLegend")
         
         #Abscissa label
         @_svgD3.append("g")
@@ -286,12 +304,21 @@ class DrawingSVG
         
         @_svgD3.append("text")          
           #TEST x1
-          .attr("x", 25)
           
+          #TEST forRotate1
+          .attr("x", @_heightSVG/2)
+          
+          #TEST forRotate2
+#           .attr("x", 25)
           #TEST x2
           #.attr("x", 0)
           
-          .attr("y", @_heightSVG/2)
+          #TEST forRotate1
+          .attr("y", 25)
+          
+          #TEST forRotate2
+#           .attr("y", @_heightSVG/2)
+          
           .attr("dx", ".71em")
           
           #TEST 1
@@ -300,7 +327,7 @@ class DrawingSVG
           #TEST 2
           #.style("text-anchor", "middle")
           .text(@curvesList[0].curveTypeName.get()+" ("+@curvesList[0].ordinate_unity.get()+")")
-#           .attr("transform", "rotate(90)")
+          .attr("transform", "rotate(90)")
         
         
       # TITLE
@@ -320,10 +347,10 @@ class DrawingSVG
         @_svgD3.append("text")
         .attr("x", (@_widthSVG / 2))
         #TEST title1
-        .attr("y", (@_margin.top / 2))
+#         .attr("y", (@_margin.top / 2))
         
         #TEST title2
-#         .attr("y", 0 - (@_margin.top / 2))
+        .attr("y", 0 - (@_margin.top / 2)+4)
         .attr("text-anchor", "middle")  
         .style("font-size", "16px") 
         .style("text-decoration", "underline")
@@ -349,7 +376,36 @@ class DrawingSVG
         #TEST 2
 #         sessionItem = app_data.tree_items.detect ( x ) -> x instanceof SessionItem
 #         graphti = sessionItem._children.detect ( x ) -> x instanceof TestSamirGraphItem 
+        legendLine = d3.svg.line()
+        .interpolate("basis")
+        .x((d)=>
+              console.log "d in legendLine"
+              console.log d
+              return d.x)
+        .y((d)=>d.y)
+        
+        legendCurve = @_ChartLegend.selectAll(".legendCurve")
+        .data(curves)
+        .enter().append("g")
+        .attr("class", "legendCurve")
+        
+        #TEST shape1
+#         legendCurve.append("path")
+#         .attr("class", "line")
+#         .attr("d", (d) -> 
+#                       console.log "d.legendValues"
+#                       console.log d.legendValues
+#                       legendLine(d.legendValues))
 
+        legendCurve.append("line")
+        .attr("x1", 30)
+        .attr("y1", (d)=> 30*d.number)
+        .attr("x2", 60)
+        .attr("y2", (d)=> 30*d.number)
+        
+        #"(d)" est le parametre courbe
+        .style("stroke", (d, i)=> return color(i))
+        
         curve = @_svgD3.selectAll(".curve")
         .data(curves)
         .enter().append("g")
@@ -756,22 +812,36 @@ class DrawingSVG
 #         .attr("transform", "rotate(" + Math.PI * 90 + ")")
         
 #       ********************** TEXT
-        curve
+        
+        #TEST curveName1
+#         curve
+        
+        #TEST curveName2
+        legendCurve
         .datum((d)-> 
                     console.log "d final:", d
-                    {name: d.name, value: d.values[d.values.length - 1]})
+                    {name: d.name, value: d.values[d.values.length - 1], dnumber: d.number})
         .append("text")
-        .attr("transform",(d)=> 
-                        dvalue = d.value
-                        keys = (k for own k of dvalue)
-                        return "translate(" + @_x(dvalue[keys[0]]) + "," + @_y(dvalue[keys[1]])+ ")")
-        .attr("x",  @GS.xTextPosition)
-        .attr("y",  20)
+        #TEST curveName1
+#         .attr("transform",(d)=> 
+#                         dvalue = d.value
+#                         keys = (k for own k of dvalue)
+#                         return "translate(" + @_x(dvalue[keys[0]]) + "," + @_y(dvalue[keys[1]])+ ")")
+#         
+        #TEST curveName1
+#         .attr("x",  @GS.xTextPosition)
+#         .attr("y",  20)
+        
+        #TEST curveName2
+        .attr("x",  65)
+        .attr("y",  (d)=> 30*d.dnumber)
+        
         .attr("dy", @GS.dyTextOffset)
         .text((d) -> 
                 keys = (k for own k of d.value)
                 keys[1]+":"+d.name)  
 
+        #AllowToDraw        
         allowToDraw.set false #TEST
         console.log "At the end of Drawing, (should be false) allowToDraw.get():", allowToDraw.get()
         notfirstDrawing= true
@@ -779,10 +849,12 @@ class DrawingSVG
     d3_rgbNumber : (value)->
         d3.rgb(value >> 16, value >> 8 & 255, value & 255)
         
-    makeDot:(selection, curveChoices)=>
+    makeDot:(selection, curveChoices, isLegend = false)=>
         selection
             .selectAll(".curve")
-            .data((d)-> d.values)
+            .data((d)-> 
+                       if not isLegend
+                          return d.values
             .enter()    
             .append("circle")
             .style("stroke", "black")
@@ -829,8 +901,36 @@ class DrawingSVG
             .attr("height", (d)=> 
                               i = d.curve_Index
                               curveChoices.lst[i].aggregate.markerHeight.get()) 
-            
     makeDiamond:(selection, curveChoices)=>
+        console.log "selection"
+        console.log selection
+        selection
+            .data((d, i)->
+                         console.log "d:"
+                         console.log d
+                         d.values)
+            .enter()
+            #TEST d3Symb1
+#             .append("g")
+
+            .append("path")
+            .attr("transform", (d)=> 
+                                  keys = (k for own k of d)
+                                  "translate(" + @_x(d[keys[0]]) + "," + @_y(d[keys[1]]) + ")")
+            .attr("d", d3.svg.symbol())
+            .size( (d)=> 15*15)# max 64 TODO in GSettings
+            .type( (d)=> 
+                        console.log "d3.svg.symbolTypes"
+                        console.log d3.svg.symbolTypes
+                        #TODO
+#                         return d3.svg.symbolTypes[1?]
+                        "diamond")
+            .style("fill",(d)=> 
+                              i = d.curve_Index
+                              curveChoices.lst[i].aggregate.markerColor.get())
+                              
+                              
+    makeDiamond2:(selection, curveChoices)=>
         console.log "selection"
         console.log selection
         selection
@@ -1148,3 +1248,4 @@ class DrawingSVG
 # tdata = d3.transpose(data);
 # gives you
 # [ [2.92, 2.69], [4.22, 4.24], [3.69, 3.77]]      
+
