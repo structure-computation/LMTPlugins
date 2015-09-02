@@ -6,7 +6,7 @@ class Curve extends Model
             _name: ord_name
 #             color: new Color
             colorName: ""#new Str
-            marker: "square" #"dot" 
+            marker: "diamond"#"square" #"dot" 
             number: num
             curveTypeName: ord_name?.split(" ")[0]
             

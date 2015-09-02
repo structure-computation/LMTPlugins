@@ -212,7 +212,7 @@ class DrawingSVG
 #         d3.select("svg") 
 #         .append("g")
 #         .attr("id", "Issim_chart")
-        ###.attr("transform", "translate(#{@_margin.left},#{@_margin.top})")  ###          
+        #.attr("transform", "translate(#{@_margin.left},#{@_margin.top})")           
 
         console.log "@_svgD3 after appending svg"
         console.log @_svgD3
@@ -643,34 +643,45 @@ class DrawingSVG
 #                                               res = if DSThis.curvesList[i].marker.get() =="dot" then this else null
         console.log "curve"                
         console.log curve
-        dotCurve = curve.filter (d, i)=> @curvesList[i].marker.get() =="dot"
-        squareCurve = curve.filter (d, i)=> @curvesList[i].marker.get() =="square"
         
-        if not dotCurve.empty()
-            #TEST dval1
-            console.log "dotCurve.call ..."
-          
-          #TEST selA1
-#             dotCurve.selectAll(".DotMarker").call( @makeDot, @tic.curves)
-          
-          #TEST selA2
-            dotCurve.call( @makeDot, @tic.curves)
-            console.log "dotCurve.call ok"
+        #TEST makeMarker2
+#         dotCurve = curve.filter (d, i)=> @curvesList[i].marker.get() =="dot"
+#         squareCurve = curve.filter (d, i)=> @curvesList[i].marker.get() =="square"
+#         diamondCurve = curve.filter (d, i)=> @curvesList[i].marker.get() =="diamond"
+        
+#         console.log "dotCurve"
+#         console.log dotCurve
+#         console.log "squareCurve"
+#         console.log squareCurve
+#         console.log "diamondCurve"
+#         console.log diamondCurve
+        
+        #TEST makeMarker1
+        #TEST cMarker1
+        curve.call( @makeMarker, @tic.curves, (d, i)=> @curvesList[i].marker.get())
+      
+        #TEST cMarker2
+#         curve.call( @makeMarker, @tic.curves)
+      
+        #TEST makeMarker2
+#         if not dotCurve.empty()
+#             console.log "not dotCurve.empty"
+#             dotCurve.call( @makeDot, @tic.curves)
+# 
+#         if not squareCurve.empty()
+#             console.log "not squareCurve.empty"
+#             squareCurve.call( @makeSquare, @tic.curves)
+#         
+#         if not diamondCurve.empty()
+#             console.log "not diamondCurve.empty"
+#             diamondCurve.call( @makeDiamond, @tic.curves)
+        
+        
+        
+        
+        #TEST TODO
+#             diamondCurve.call( @makeDiamond2, @tic.curves)  #old version without d3.symbol
             
-            #TEST dval2
-#             dotCurve.selectAll(".curve").call( @makeDot, @tic.curves)
-        if not squareCurve.empty()
-            #TEST dval1
-            squareCurve.call( @makeSquare, @tic.curves)
-            
-            #TEST dval2
-#             squareCurve.selectAll(".curve").call( @makeSquare, @tic.curves)
-        
-        
-#         #TEST curvcir1         
-#         colNameIndex = @tic.curves.lst.indexOf colName
-#                         @tic.curves.num.set colNameIndex
-
 #TEST marker3
 #         curve.call( (d, i)=>
 # #                      if @curvesList[i].marker.get() =="square"
@@ -854,25 +865,23 @@ class DrawingSVG
             .selectAll(".curve")
             .data((d)-> 
                        if not isLegend
-                          return d.values
+                          return d.values)
             .enter()    
             .append("circle")
             .style("stroke", "black")
             .attr("fill", (d)=> 
                               i = d.curve_Index
                               curveChoices.lst[i].aggregate.markerColor.get())
-            .attr("cx", (d)=>
-                           
+            .attr("cx", (d)=>  
                             keys = (k for own k of d)
                             return @_x(d[keys[0]]))
-            .attr("cy",  (d)=>
-                           
+            .attr("cy",  (d)=>       
                             keys = (k for own k of d)
                             return @_y(d[keys[1]]))
                             
             .attr("r", (d)=> 
-                              i = d.curve_Index
-                              curveChoices.lst[i].aggregate.markerRadius.get())               
+                            i = d.curve_Index
+                            curveChoices.lst[i].aggregate.markerRadius.get())               
 #             .attr("r",3.5)
                 
     makeSquare:(selection, curveChoices)=>
@@ -901,10 +910,14 @@ class DrawingSVG
             .attr("height", (d)=> 
                               i = d.curve_Index
                               curveChoices.lst[i].aggregate.markerHeight.get()) 
-    makeDiamond:(selection, curveChoices)=>
+    
+    
+    
+    makeMarker:(selection, curveChoices, marker)=>
         console.log "selection"
         console.log selection
         selection
+            .selectAll(".curve")   
             .data((d, i)->
                          console.log "d:"
                          console.log d
@@ -912,22 +925,59 @@ class DrawingSVG
             .enter()
             #TEST d3Symb1
 #             .append("g")
-
             .append("path")
             .attr("transform", (d)=> 
+                                  console.log "diamond transform"
                                   keys = (k for own k of d)
-                                  "translate(" + @_x(d[keys[0]]) + "," + @_y(d[keys[1]]) + ")")
-            .attr("d", d3.svg.symbol())
-            .size( (d)=> 15*15)# max 64 TODO in GSettings
-            .type( (d)=> 
-                        console.log "d3.svg.symbolTypes"
-                        console.log d3.svg.symbolTypes
-                        #TODO
-#                         return d3.svg.symbolTypes[1?]
-                        "diamond")
+                                  return "translate(" + @_x(d[keys[0]]) + "," + @_y(d[keys[1]]) + ")")
+            .attr("d",d3.svg.symbol().size((d)=>
+                                              console.log "d in size:"
+                                              console.log d
+                                              i = d.curve_Index  
+                                              console.log curveChoices.lst[i].aggregate.markerSize.get()
+                                              curveChoices.lst[i].aggregate.markerSize.get())
+                                     .type((d)=>
+                                              console.log "d in type:"
+                                              console.log d
+                                              i = d.curve_Index
+                                              console.log curveChoices.lst[i].aggregate.marker.get()
+                                              
+                                              #TEST cmarker1
+                                              ))
+                                              #TEST cmarker2 TODO 
+#                                               curveChoices.lst[i].aggregate.marker.get()))   
             .style("fill",(d)=> 
                               i = d.curve_Index
-                              curveChoices.lst[i].aggregate.markerColor.get())
+                              res = curveChoices.lst[i].aggregate.markerColor.get()
+                              console.log "curveChoices.lst[i].aggregate.markerColor.get():"
+                              console.log res
+                              return res)
+    
+    
+    makeDiamond:(selection, curveChoices)=>
+        console.log "selection"
+        console.log selection
+        selection
+            .selectAll(".curve")   
+            .data((d, i)->
+                         console.log "d:"
+                         console.log d
+                         d.values)
+            .enter()
+            #TEST d3Symb1
+#             .append("g")
+            .append("path")
+            .attr("transform", (d)=> 
+                                  console.log "diamond transform"
+                                  keys = (k for own k of d)
+                                  return "translate(" + @_x(d[keys[0]]) + "," + @_y(d[keys[1]]) + ")")
+            .attr("d",d3.svg.symbol().size((d)=>curveChoices.lst[i].aggregate.markerSize.get()).type((d)=>"diamond"))   
+            .style("fill",(d)=> 
+                              i = d.curve_Index
+                              res = curveChoices.lst[i].aggregate.markerColor.get()
+                              console.log "curveChoices.lst[i].aggregate.markerColor.get():"
+                              console.log res
+                              return res)
                               
                               
     makeDiamond2:(selection, curveChoices)=>

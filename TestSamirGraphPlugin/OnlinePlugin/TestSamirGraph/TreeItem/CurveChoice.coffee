@@ -13,11 +13,18 @@ class CurveChoice extends Model
                 colorName: new Choice
             
             #TEST marker1
-                marker: new Choice(0, [ "dot", "square", "cross", "diamond", "bar" ]) 
+                
+                #TEST marker1
+                marker: new Choice(0, [ "dot", "cross", "diamond", "square", "triangle-down", "triangle-up"])
+                
+                #TEST marker2
+#                 marker: new Choice(0, [ "dot", "square", "cross", "diamond", "bar" ]) 
+                
                 markerWidth : new ConstrainedVal( 4, { min: 0, max: 40 } )  #TODO mettre dans graphSetting 
                 markerHeight : new ConstrainedVal( 4, { min: 0, max: 40 } )
                 markerRadius : new ConstrainedVal( 4, { min: 0, max: 40 } )
                 markerColor : new Choice
+                markerSize : new ConstrainedVal( 100, { min: 0, max: 150 } )
                 
             #TEST marker2
 #                 marker: new Choice(0, [ "circle", "square", "arrow", "stub" ]) 
