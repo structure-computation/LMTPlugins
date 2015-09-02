@@ -74,6 +74,10 @@ class Launcher : public QObject {
               commande = "../FieldExportPlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " + temp_str ;
               output = std::system(commande.c_str());
           }   
+          else if(mp.type() == "FieldsComparatorItem" ){
+              commande = "../FieldsComparatorPlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " + temp_str ;
+              output = std::system(commande.c_str());
+          }
           else if(mp.type() == "VirtualGaugeItem"  ){
               commande = "../VirtualGaugePlugin/ServerPlugin/src/compilations/ServerPlugin_src_main_cpp.exe " + temp_str ;
               output = std::system(commande.c_str());
