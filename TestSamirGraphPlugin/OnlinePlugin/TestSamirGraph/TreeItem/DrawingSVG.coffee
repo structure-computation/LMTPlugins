@@ -398,6 +398,7 @@ class DrawingSVG
 #                       legendLine(d.legendValues))
 
         legendCurve.append("line")
+        .attr("class", "legendLine")
         .attr("x1", 30)
         .attr("y1", (d)=> 30*d.number)
         .attr("x2", 60)
@@ -658,8 +659,9 @@ class DrawingSVG
         
         #TEST makeMarker1
         #TEST cMarker1
-        curve.call( @makeMarker, @tic.curves, (d, i)=> @curvesList[i].marker.get())
-      
+        curve.call( @makeMarker, @tic.curves)
+        legendCurve.call( @makeLegendMarker, @tic.curves)
+        
         #TEST cMarker2
 #         curve.call( @makeMarker, @tic.curves)
       
@@ -912,8 +914,56 @@ class DrawingSVG
                               curveChoices.lst[i].aggregate.markerHeight.get()) 
     
     
-    
-    makeMarker:(selection, curveChoices, marker)=>
+    makeLegendMarker:(selection, curveChoices)->
+        console.log "selection"
+        console.log selection
+        
+        console.log "selection.size()"
+        console.log selection.size()
+        
+        selection
+#             .selectAll(".legendCurve")
+            .append("path")
+            .attr("transform", (d)->
+                                console.log "d in transform:"
+                                console.log d
+                                #TODO mettre noms de variable pour 30 et 60
+                                return "translate(" +(30+60)/2 + "," + 30*d.number + ")")
+            .attr("d",d3.svg.symbol().size((d)=>                     
+                                              console.log "d in size:"
+                                              console.log d
+                                              i = d.number-1
+                                              console.log "index in size"
+                                              console.log i
+#                                               i = d.curve_Index  
+                                              console.log curveChoices.lst[i].aggregate.markerSize.get()
+                                              curveChoices.lst[i].aggregate.markerSize.get())
+                                     .type((d)=>
+                                              console.log "d in type:"
+                                              console.log d
+                                              i = d.number-1
+                                              console.log "index in type"
+                                              console.log i
+#                                               i = d.curve_Index
+                                              #TEST cmarker2 TODO 
+                                              console.log "curveChoices.lst[i].aggregate.marker.get()"
+                                              console.log curveChoices.lst[i].aggregate.marker.get()
+                                              curveChoices.lst[i].aggregate.marker.get()))  
+            .style("fill",(d)=> 
+                              console.log "d in fill:"
+                              console.log d
+                              i = d.number-1
+                              console.log "index in fill"
+                              console.log i
+                              res = curveChoices.lst[i].aggregate.markerColor.get()
+                              console.log "curveChoices.lst[i].aggregate.markerColor.get():"
+                              console.log res
+                              return res)                                  
+                                                                            
+#             .attr("transform", (d)=>
+#                                   return "translate(" + @_x(d[keys[0]]) + "," + @_y(d[keys[1]]) + ")")
+   
+    makeMarker:(selection, curveChoices)=>
         console.log "selection"
         console.log selection
         selection
@@ -927,7 +977,6 @@ class DrawingSVG
 #             .append("g")
             .append("path")
             .attr("transform", (d)=> 
-                                  console.log "diamond transform"
                                   keys = (k for own k of d)
                                   return "translate(" + @_x(d[keys[0]]) + "," + @_y(d[keys[1]]) + ")")
             .attr("d",d3.svg.symbol().size((d)=>
@@ -940,12 +989,10 @@ class DrawingSVG
                                               console.log "d in type:"
                                               console.log d
                                               i = d.curve_Index
-                                              console.log curveChoices.lst[i].aggregate.marker.get()
-                                              
-                                              #TEST cmarker1
-                                              ))
                                               #TEST cmarker2 TODO 
-#                                               curveChoices.lst[i].aggregate.marker.get()))   
+                                              console.log "curveChoices.lst[i].aggregate.marker.get()"
+                                              console.log curveChoices.lst[i].aggregate.marker.get()
+                                              curveChoices.lst[i].aggregate.marker.get()))   
             .style("fill",(d)=> 
                               i = d.curve_Index
                               res = curveChoices.lst[i].aggregate.markerColor.get()
