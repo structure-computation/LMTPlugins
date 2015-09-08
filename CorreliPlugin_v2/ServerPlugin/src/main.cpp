@@ -24,10 +24,10 @@ int main( int argc, char **argv ) {
         MP mp = event.mp();
         if ( mp.type() == "CorrelationItem" ){ //and mp.get_server_id() == model_id ) {
             quint64 model_stop_state = mp[ "_stop_state" ];  
-            if( model_stop_state == true ){
-                qDebug() << "###############   finish CorrelationItem ###############" ;
-                break;
-            }else{
+//             if( model_stop_state == true ){
+//                 qDebug() << "###############   finish CorrelationItem ###############" ;
+//                 break;
+//             }else{
                 qDebug() << "###############   launch CorrelationItem ###############" ;
                 CorreliUpdater updater;
                 updater.sc = &sc;
@@ -38,7 +38,7 @@ int main( int argc, char **argv ) {
 //                     qDebug() << "###############   finish normal CorrelationItem ###############" ;
 //                     break;
 //                 }
-            }
+//             }
         }
     }
     

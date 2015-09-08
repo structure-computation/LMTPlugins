@@ -127,7 +127,6 @@ MP soda_mesh_from_lmtpp_mesh( const TM &m ) {
 
 inline MP load_file_correli(CorreliUpdater *updater, MP data_file){
 //chargement du fichier contenant les données d'output
-//     MP data_file = output[ "_file_field_set_data" ];
     quint64 ptr = data_file[ "_ptr" ];
     QString name = data_file[ "name" ];
     MP output_field = updater->sc->load_ptr( ptr );
