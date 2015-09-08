@@ -3,55 +3,35 @@
 class TestSamirGraphItem extends TreeItem_Computable
     constructor: (name = "Graph") ->
         super()
-        
         @_name.set name
+        
+#         @_ico.set "img/SamirGraph.png"
 #         @_ico.set "../../LMTPlugins/TestSamirGraphPlugin/OnlinePlugin/TestSamirGraph/img/testGraphs_bouton.png"
-        @_ico.set "img/testGraphs_bouton.png"
+#         @_ico.set "img/testGraphs_bouton.png"
         @_viewable.set true
         
-        @firstDrawing = undefined
-        
+        @_NotfirstDrawing = undefined  #ensures that only one single svg will be drawn at any mouse event occurring during the drawing, ie when _allowToDraw = true  
+
         @add_attr
             _allowToDraw : false
-        
-        @add_attr
-            vecteur_abscisse           : new Vec
-            vecteur_ordonnee           : new Vec
-        
-#         @fill_v1_v2()    
-#         @_nb_values    = 361         #To see until 360
-    
-        # default values
-
-        
-
-#         @add_attr
-#             _vec_x        : new Vec [1, 2, 3, 4, 5]
-#             _vec_y        : new Vec [45, 23, 3, 0, 7]
-            
-        @_vec_x        = new Vec [10, 1, 2, 3, 4, 5]
-        @_vec_y        = new Vec [15, 0, 23, 3, 0, 7]
-
-        # attributes
-        
-#         @fill_x_y()                 # TEST  A remettre si onload non necessaire
-        
-#         treeItem_x = new TreeItem_Vector(@_vec_x, "EssaiAbscissa")
-#         treeItem_y = new TreeItem_Vector(@_vec_y, "EssaiOrdinate")
-
-        treeItem_x = new TreeItem_Vector(@_vec_x, "abscisse")
-        treeItem_y = new TreeItem_Vector(@_vec_y, "ordonnee ")
-
-# #         @mod_attr @_children, [treeItem_x, treeItem_y]
-        @add_attr
-            _issimGraph   : new IssimGraph
-            constrVal: new ConstrainedVal( 7, { min: 0, max: 15 } )
-# 
+        console.log "At TestSamirGraphItem constructor @_allowToDraw.get():", @_allowToDraw.get()
+        treeItem_x = new TreeItem_SingleData("abscissa")
+        treeItem_y = new TreeItem_SingleData("ordinate")
+   
+        @add_child new TreeItem_GraphSettings
+        @add_child new TreeItem_Curves
         @add_child treeItem_x#TEST
-        @add_child treeItem_y        
+        @add_child treeItem_y      
+				#@add_child new ImgItem
         
-            
-                
+						#img_n = new Img 
+			#	imgItem = new ImgItem
+				#imgItem.img.set img_n				
+				#@add_child imgItem
+
+#     display_suppl_context_actions: ( context_action )  ->
+#   context_action.push new TreeAppModule_Mesher
+#     context_action.push new TreeAppModule_Sketch    
     #TEST             
     cosDeg: (number, precision)->
         console.log number*(Math.PI/180)
@@ -118,64 +98,191 @@ class TestSamirGraphItem extends TreeItem_Computable
 #         [ @_issimGraph ]     
     
     display_suppl_context_actions: ( context_action )  ->
+#        context_action.push
+ #       new TreeAppModule_SaveGraph
         instance = this
         context_action.push
             txt: "Display your graphs"
-            ico: "img/TestSamirImg.png"
-            fun: ( evt, app ) =>
-#                 instance._allowToDraw.set true
-                CurCanvasManager = app.selected_canvas_inst()?[ 0 ]?.cm
-                if CurCanvasManager?
-                    thislikeItem = CurCanvasManager.items.detect ( x ) -> x instanceof TestSamirGraphItem #TODO +modif le selected+faire == this 
-                    thislikeItem._allowToDraw.set true
-                    CurCanvasManager.draw()
-#                 vec_arr = detect_vector()
-#                 new NewCanvasPanelAdder         
+            ico: "img/TestSamirImg.png" #
+#            /home/eikosimcomputer1/LMTLabsScetup/Javascript/plugins/TestSamirGraph/OnlinePlugin/TestSamirGraph/img/TestSamirImg.png
+#             vis: false #TEST false => not display on menu
+            fun: ( evt, app) =>
+                all_canvas_inst = app.all_canvas_inst() 
+                console.log "graph action push: all_canvas_inst="
+                console.log all_canvas_inst
+                console.log "graph action push: @_NotfirstDrawing"
+                console.log @_NotfirstDrawing
                 
+      
+#                 if not @_firstDrawing?
+#                     newCanPanAdder = new NewCanvasPanelAdder()
+#                     idGraphCanvas = newCanPanAdder.addNewCanvasPanel(app)#TEST1 TEST 2
+#                     graphPanManagerInstIndex = all_canvas_inst.length-1
+#                     graphCanvasManagerPanelInstance = all_canvas_inst[graphPanManagerInstIndex]
+#                     graphCanvasManagerPanelInstance.title = "graphCanvasManagerPanelIns"                     
+#                 else
+#                     graphCanvasManagerPanelInstance = all_canvas_inst.detect ( x ) -> x.title.equals "graphCanvasManagerPanelIns"
+                
+                addGraphPanel=(app, all_canvas_inst)->
+                    newCanPanAdder = new NewCanvasPanelAdder()
+                    idGraphCanvas = newCanPanAdder.addNewCanvasPanel(app)#TEST1 TEST 2
+                    graphPanManagerInstIndex = all_canvas_inst.length-1
+                    graphCanvasManagerPanelInstance = all_canvas_inst[graphPanManagerInstIndex]
+#                     graphCanvasManagerPanelInstance.title = "graphCanvasManagerPanelIns" 
+                
+                
+                if @_NotfirstDrawing
+                    console.log "@_NotfirstDrawing == true"
+#                     graphCanvasManagerPanelInstance = all_canvas_inst.detect ( x ) -> x.title.equals "graphCanvasManagerPanelIns"
+                    display_settings = app.data.selected_display_settings()
+                    layout = display_settings._layout
+                    
+                    console.log "layout:"
+                    console.log layout
+                    console.log "layout._views"
+                    console.log layout._views
+                    
+                    
+                    lmArray = layout._views.filter ( x ) ->  x instanceof LayoutManager
+                    lm = lmArray[0]#TODO A améliorer
+#                      lm = layout._views.detect ( x ) ->  x instanceof LayoutManager 
+                    console.log "lm:"
+                    console.log lm
+                    console.log "lm._pan_vs_id"
+                    console.log lm._pan_vs_id
+                    
+                    
+                    if lm._pan_vs_id.Graph_id?
+                        graphCanvasManagerPanelInstance = lm._pan_vs_id.Graph_id
+                        console.log "graphCanvasManagerPanelInstance:"
+                        console.log graphCanvasManagerPanelInstance
+                    else 
+                        graphCanvasManagerPanelInstance = addGraphPanel(app, all_canvas_inst)#console.log "The chart has been removed"
+                else
+                    if not @_NotfirstDrawing?
+                        graphCanvasManagerPanelInstance = addGraphPanel(app, all_canvas_inst)
+#                         newCanPanAdder = new NewCanvasPanelAdder()
+#                         idGraphCanvas = newCanPanAdder.addNewCanvasPanel(app)#TEST1 TEST 2
+#                         graphPanManagerInstIndex = all_canvas_inst.length-1
+#                         graphCanvasManagerPanelInstance = all_canvas_inst[graphPanManagerInstIndex]
+#                         graphCanvasManagerPanelInstance.title = "graphCanvasManagerPanelIns"                     
+
+                        
+#                     all_canvas_inst = app.all_canvas_inst() 
+                console.log "graphCanvasManagerPanelInstance"
+                console.log graphCanvasManagerPanelInstance
+
+                
+                graphCanvasManager = graphCanvasManagerPanelInstance.cm# TODO auto_fit 
+#                 TODO graphCanvasManager.allow_gl.set false
+                @newInfo = graphCanvasManager.cam_info
+                
+                console.log "for canvasManger, @newInfo:"
+                console.log @newInfo
+                #TODO LayoutManager._pan_vs_id(idGraphCanvas).cm
+                #TODO dans treeappdata panel_id_list(), rm_selected_panels()
+                if graphCanvasManager?
+                    thislikeItem = graphCanvasManager.items.detect ( x ) -> x instanceof TestSamirGraphItem #TODO +modif le selected+faire == this 
+                    console.log "graphCanvasManager.items before clearing(verifier qu'il y a au moins GraphViewItem):"
+                    console.log graphCanvasManager.items
+#                     graphCanvasManager.items.clear()#TEST
+#                     graphCanvasManager.items.push thislikeItem  #TEST TODO avec instance ou avec les "z" pour l'ordre                           
+                    thislikeItem._allowToDraw.set true
+                    console.log "At TestSamirGraphItem contextAction @_allowToDraw.get() (true):", @_allowToDraw.get()
+                    console.log "At TestSamirGraphItem contextAction thislikeItem._allowToDraw.get() (true):", thislikeItem._allowToDraw.get()     
+                   #TEST
+                    graphCanvasManager.cam.threeD.set false
+#                     graphCanvasManager.resize 700, 400
+                    #TEST
+                    graphCanvasManager.fit 0
+                    @pauseMouse(graphCanvasManager)
+                    graphCanvasManager.draw(@newInfo)
+                         
 #             ico: "../../LMTPlugins/TestSamirGraphPlugin/OnlinePlugin/TestSamirGraph/img/TestSamirImg.png"               
 #             ico: "img/TestSamirImg.png"
 #             ico: "../../../../LMTPlugins/TestSamirGraphPlugin/OnlinePlugin/TestSamirGraph/img/TestSamirImg.png"
 #             ico: "~/LMTLabsScetup/software_library/LMTPlugins/TestSamirGraphPlugin/OnlinePlugin/TestSamirGraph/img/TestSamirImg.png"
 #             siz: 1
-#             vis:true
 #             TS_instance : this
+    pauseMouse:(canvasManager)->
+        # events
+        canvasManager.onmousewheel = ( evt ) => #@_mouse_wheel evt
+        canvasManager.onmousedown  = ( evt ) => #@_mouse_down evt
+        canvasManager.onmousemove  = ( evt ) => #@_mouse_move evt
+        canvasManager.onmouseout   = ( evt ) => #@_mouse_out evt
+        canvasManager.ondblclick   = ( evt ) => #@_dbl_click evt
+        canvasManager.onmouseup    = ( evt ) => #@_mouse_up evt
+#         canvasManager.addEventListener? "DOMMouseScroll", @canvas.onmousewheel, false
+    
+    draw: ( info ) -> 
+# cf GraphViewItem
+        
+    has_nothing_to_draw: ->
+        true
 
-                
-    draw: ( info ) ->        
-        if @_allowToDraw.get() == true
-            SingSVG = SingletonSVG.getInstance()
-            Vec_List = []            
-    #         console.log @_vec_x+" "+@_vec_y
-            if not @firstDrawing?
-                Vec_List = @_detect_vector()                
-            else
-                Vec_List.push @_vec_x#TODO TEST A retirer 
-                Vec_List.push @_vec_y#TODO TEST A retirer
-    #         alert "detected vec: "+Vec_List.join "\n"     
-            @vecteur_abscisse =  Vec_List[0]   
-            @vecteur_ordonnee =  Vec_List[1]
-              
-            SingSVG.drawing_SVG.drawSVG(info, @vecteur_abscisse, @vecteur_ordonnee, @firstDrawing )
-            
-            if not @firstDrawing? 
-                @firstDrawing = false
-        return true
-
-    _detect_vector: ->
-        res= []
+#     update_min_max: ( x_min, x_max ) ->
+#         console.log "TestSamirGraphItem update_min_max"
+#         console.log "x_min:"
+#         console.log x_min
+#         console.log "x_max:"
+#         console.log x_max
+#         
+#         for d in [ 0 ... 3 ]
+#                 x_min[ d ] = Math.min x_min[ d ], 0
+#         x_max[ 0 ] = Math.max x_max[ 0 ], @data.#rgba.width
+#         x_max[ 1 ] = Math.max x_max[ 1 ], @data.#rgba.height
+#         x_max[ 2 ] = Math.max x_max[ 2 ], 0
+        
+        
+        
+    detect_vector: ->
+        res= new Lst
+        i = 0
         for child in @_children
-            if child instanceof TreeItem_Vector
-                res.push child.vec
-#                 alert "Vector detect"+
-        return res         
+            if child instanceof TreeItem_SingleData
+                if child._children.length == 0
+                    alert child._name+" is empty"
+                    return res #TODO 
+                for ch_child in child._children   
+                        if child._name.get() == "ordinate"               
+                            ord_name = ch_child._name.get()
+                            ord_vec = ch_child.vec.get()
+                            num = ++i
+                            curve = new Curve(ord_name, ord_vec, abs_name, abs_vec, num)
+                            curve._name.set "curve "+curve.number.get()
+                            res.push curve
+                            
+                        if child._name.get() == "abscissa"
+                            abs_vec = ch_child.vec
+                            abs_name = ch_child._name
+                            break # The first abscissa is only read                           
+        for c in res 
+            c.abscissa_name.set abs_name
+            c.abscissa_vec.set abs_vec
+        return res  
 
+# used by GraphViewItem        
+    detect_vector_Simple: ->#TODO TEST 
+#         res= []
+        res= new Lst
+        for child in @_children
+            if child instanceof TreeItem_SingleData
+                if child._children.length == 0
+                    alert child._name+" is empty"
+                    return res #TODO 
+                for ch_child in child._children   
+                    if ch_child instanceof TreeItem_Vector 
+                        res.push ch_child.vec
+                        if child._name == "abscissa"
+                            break
+        return res         
+        
         ##TODO
     VecToList:(vec)->
         LstRes = new Lst
         LstRes[i] = vec[i] for i in [0..vec.length]
         LstRes
           
-    
         #copied from ModelEditor:
     attr_Veclist: ( model)->
 #         console.log "model.get_state()"+model.get_state()
@@ -186,422 +293,15 @@ class TestSamirGraphItem extends TreeItem_Computable
              res[ name ] = model[ name ]
         res
 
-        
-#*********        
-        # #         info.cm._init_ctx()
-# #         Canvas_div = info.cm.canvas
-#         
-#         v1 = new Vec [1, 72, 3, 24]
-#         v2 = new Vec [45, 2, 3, 0]
-#         Vec_List.push v1
-#         Vec_List = [] #TEST 
-#         Vec_List.push v2
-#         
-#         width = info.w  #Canvas_div.offsetWidth
-#         height = info.h #Canvas_div.offsetHeight        
-# 
-#         @_vec_x = Vec_List[0] 
-#         @_vec_y = Vec_List[1]        
-#         
-#                 
-#         @_data= MatrixInversion(@_vec_x, @_vec_y)
-# #         @vec_Y_tab = Vec_List[1..]
-# #         @_data= MatrixInversionMulti(@_vec_x, @vec_Y_tab)
-# #         Vec_List = @attr_Veclist this
-# #         @_data = MatrixVecListInversion Vec_List       
-#         
-#     #       @_margin = {top: @_top, right: 30, bottom: 30, left: @_left},     
-#         @_margin = {top: 20, right: 30, bottom: 30, left: 40}
-#         @_width = width - @_margin.left - @_margin.right
-#         @_height = height - @_margin.top - @_margin.bottom
-#     
-# #         [minVecY, maxVecY] = min_max_Vec @vec_Y_tab
-#         [minVecY, maxVecY] = min_max_Vec [@_vec_y] 
-#         [minVecX, maxVecX] = min_max_Vec [@_vec_x]
-#         
-#         @_x = d3.scale.linear()
-#             .domain([minVecX, maxVecX])
-#             .range([0, @_width])
-#             @_y = d3.scale.linear()@_svg = d3.select info.ctx_svg()
-#             @_svg.style "background-color", "white"
-#             .domain([minVecY, maxVecY])
-#             .range([@_height, 0])
-#             
-#         @_xAxis = d3.svg.axis()
-#             .scale(@_x)
-#             .orient("bottom")
-# 
-#         @_yAxis = d3.svg.axis()
-#             .scale(@_y)
-#             .orient("left")
-#         
-#         line = d3.svg.line()
-#             .interpolate("monotone")
-# #             .interpolate("basis")
-#             .x( (d)=> @_x(d[0]))
-#             .y( (d)=> @_y(d[1]))
-#         
-# #         @_svg = d3.select(ctx).append("svgGraph")
-#         
-#         @_svg = d3.select info.ctx_svg()
-#         @_svg.style "background-color", "white"
-#         @_svg.append("svg")
-#             .datum(@_data)
-#             .attr("width", @_width + @_margin.left + @_margin.right)
-#             .attr("height", @_height + @_margin.top + @_margin.bottom)
-#             .append("g")
-#             .attr("transform", "translate(" + @_margin.left + "," + @_margin.top + ")")    
-#         
-# #         @_svg.append("rect")
-# #             .attr("width", "100%")
-# #             .attr("height", "100%")
-# #             .attr("fill", "white");
-#             
-# #         @_svg.append("g")
-# #             .attr("class", "x axis")
-# #             .attr("transform", "translate(0," + @_height + ")")
-# #             .call(@_xAxis)
-# # 
-# #         @_svg.append("g")
-# #             .attr("class", "y axis")
-# #             .call(@_yAxis)
-# # 
-# #         @_svg.append("path")
-# #             .attr("class", "line")
-# #             .attr("d", line)
-# # 
-# # #         newFormat = d3.format(",.4") #TEST
-# #             
-# #         @_svg.selectAll(".dot")
-# #             .data(@_data)
-# #             .enter().append("circle")
-# #             .attr("class", "dot")
-# # #             .attr("cx", newFormat line.x())#TEST
-# # #             .attr("cy", newFormat line.y())
-# #             .attr("cx", line.x())
-# #             .attr("cy", line.y())
-# #             .attr("r", 3.5)
-#         return true
- 
-          
-#         @_svg = d3.select("."+@el.className).append("svg")
-          
-#           @_svg = d3.select("."+divCanvas.className).append("canvas")
-#           @_svg = d3.selectNode("canvas")
-#         @_svg = d3.selectNode("CANVAS")
-#         range = document.createRange()
-#         add_class info.cm.canvas, "Graph_div"#TODO
-#         @_svg = d3.select("Graph_div")
-#         @_svg = d3.select("."+Canvas_div.className).append("Graph_div")
-
-#         d3.select("div.SelectedCanvas")#TODO TODO
-#         @_svg = d3.select("canvas.Graph_div").append("svg")
-#         @_svg = d3.select("div.SelectedCanvas").append("svg")#TODO 
-
-#         Canvas_div = new_dom_element
-#             parentNode: info.cm.canvas
-#             nodeName  : 'div'
-#         
-#         add_class Canvas_div, "Graph_div"
-        
-#         @_svg = d3.select("div.Graph_div").append("svg")
-        
-#         d3.select("div").insert("svg", "canvas")
-        
-            
-        #background for svg
-            
-            
-         
-            
-            
-            
-#         SVG_selection = d3.select(".Graph_div")
-#         @_svg = SVG_selection   
-          
-#         @_svg = d3.select("."+Canvas_div.className).append("Graph_div")
-#                     .attr("width", @_width + @_margin.left + @_margin.right)
-#                     .attr("height", @_height + @_margin.top + @_margin.bottom)
-#                     .append("g")
-#                     .attr("transform", "translate(" + @_margin.left + "," + @_margin.top + ")") 
-# **********************
-#         width = ctx.w  #Canvas_div.offsetWidth
-#         height = ctx.h #Canvas_div.offsetHeight        
-#         
-#         
-# #         Vec_List = @_detect_vector()
-#         v1 = new Vec [1, 72, 3, 24]
-#         v2 = new Vec [45, 2, 3, 0]
-#         Vec_List = [] #TEST
-#         Vec_List.push v1
-#         Vec_List.push v2
-#         
-#         @_vec_x = Vec_List[0] 
-#         @_vec_y = Vec_List[1]        
-#         
-#         @_data= MatrixInversion(@_vec_x, @_vec_y)
-# #         @vec_Y_tab = Vec_List[1..]
-# #         @_data= MatrixInversionMulti(@_vec_x, @vec_Y_tab)
-# #         Vec_List = @attr_Veclist this
-# #         @_data = MatrixVecListInversion Vec_List       
-#         
-#         @_margin = {top: 20, right: 30, bottom: 30, left: 40}
-#     #       @_margin = {top: @_top, right: 30, bottom: 30, left: @_left},     
-#         @_width = width - @_margin.left - @_margin.right
-#         @_height = height - @_margin.top - @_margin.bottom
-#                    
-# 
-# #         [minVecY, maxVecY] = min_max_Vec @vec_Y_tab
-#         [minVecY, maxVecY] = min_max_Vec [@_vec_y] 
-#         [minVecX, maxVecX] = min_max_Vec [@_vec_x]
-#         
-#         @_x = d3.scale.linear()
-#             .domain([minVecX, maxVecX])
-#             .range([0, @_width])
-# #         a = d3     
-# 
-#         @_y = d3.scale.linear()
-#             .domain([minVecY, maxVecY])
-#             .range([@_height, 0])
-# 
-#         @_xAxis = d3.svg.axis()
-#             .scale(@_x)
-#             .orient("bottom")
-# 
-#         @_yAxis = d3.svg.axis()
-#             .scale(@_y)
-#             .orient("left")
-# 
-#         line = d3.svg.line()
-#             .interpolate("monotone")
-# #             .interpolate("basis")
-#             .x( (d)=> @_x(d[0]))
-#             .y( (d)=> @_y(d[1]))
-#                 
-#           
-# #         @_svg = d3.select("."+@el.className).append("svg")
-#           
-# #           @_svg = d3.select("."+divCanvas.className).append("canvas")
-# #           @_svg = d3.selectNode("canvas")
-# #         @_svg = d3.selectNode("CANVAS")
-# #         range = document.createRange()
-# #         add_class info.cm.canvas, "Graph_div"#TODO
-# #         @_svg = d3.select("Graph_div")
-# #         @_svg = d3.select("."+Canvas_div.className).append("Graph_div")
-# 
-# #         d3.select("div.SelectedCanvas")#TODO TODO
-# #         @_svg = d3.select("canvas.Graph_div").append("svg")
-# #         @_svg = d3.select("div.SelectedCanvas").append("svg")#TODO 
-# 
-# #         Canvas_div = new_dom_element
-# #             parentNode: info.cm.canvas
-# #             nodeName  : 'div'
-# #         
-# #         add_class Canvas_div, "Graph_div"
-#         
-# #         @_svg = d3.select("div.Graph_div").append("svg")
-#         
-# #         d3.select("div").insert("svg", "canvas")
-#         
-#         @_svg = d3.select(ctx).append("svgGraph")
-#             .datum(@_data)
-#             .attr("width", @_width + @_margin.left + @_margin.right)
-#             .attr("height", @_height + @_margin.top + @_margin.bottom)
-#             .append("g")
-#             .attr("transform", "translate(" + @_margin.left + "," + @_margin.top + ")")    
-#             
-#         #background for svg
-#         @_svg.append("rect")
-#             .attr("width", "100%")
-#             .attr("height", "100%")
-#             .attr("fill", "white");
-#             
-#         @_svg.append("g")
-#             .attr("class", "x axis")
-#             .attr("transform", "translate(0," + @_height + ")")
-#             .call(@_xAxis)
-# 
-#         @_svg.append("g")
-#             .attr("class", "y axis")
-#             .call(@_yAxis)
-# 
-#         @_svg.append("path")
-#             .attr("class", "line")
-#             .attr("d", line)
-# 
-# #         newFormat = d3.format(",.4") #TEST
-#             
-#         @_svg.selectAll(".dot")
-#             .data(@_data)
-#             .enter().append("circle")
-#             .attr("class", "dot")
-# #             .attr("cx", newFormat line.x())#TEST
-# #             .attr("cy", newFormat line.y())
-#             .attr("cx", line.x())
-#             .attr("cy", line.y())
-#             .attr("r", 3.5)    
-#             
-#          
-#             
-#             
-#             
-# #         SVG_selection = d3.select(".Graph_div")
-# #         @_svg = SVG_selection   
-#           
-# #         @_svg = d3.select("."+Canvas_div.className).append("Graph_div")
-# #                     .attr("width", @_width + @_margin.left + @_margin.right)
-# #                     .attr("height", @_height + @_margin.top + @_margin.bottom)
-# #                     .append("g")
-# #                     .attr("transform", "translate(" + @_margin.left + "," + @_margin.top + ")") 
-# **********************
-#*********        
-#     VecToArray = (VectX)->
-#         VectXlength = VectX.length-1         
-#         x=[]
-#         for i in [0..VectXlength]
-#   #             elem_i = VectX.slice(i, i+1)
-#             elem_i = VectX[i]
-#             data_i_n = elem_i
-#             data_i = data_i_n.valueOf()
-#             x.push data_i
-#         return x 
-    
-    
-    
-        # vec_tab is an array of Vec
-    # outputs: min and max values from vec_tab  
-#     min_max_Vec = ( vec_tab  = [])->
-#         resMin =[]
-#         resMax =[]
-#         vec_tabLength = vec_tab.length - 1
-#         for i in [0..vec_tabLength]
-#             vec=[]
-#             vec[i] = VecToArray(vec_tab[i])
-#             veciLength = vec[i].length - 1
-#             vec[i].sort( (a,b) -> a - b)
-#             resMin[i] = vec[i][0]
-#             resMax[i] = vec[i][veciLength]
-#         resMin.sort((a,b) -> a - b)     
-#         resMax.sort((a,b) -> a - b)
-#         resMaxLength = resMax.length - 1
-#         min = resMin[0]
-#         max = resMax[resMaxLength]
-#         [min, max]    
-#         min_max_Vec Test
-#           y1 = [ 53, 66, 0, 38]    
-#           y2 = [ 87, 11, 4, 1, 12]
-#           y3 = [ 5, 6, 666]
-
-#           tt = min_max_Vec [y1, y2, y3]
-#           console.log "min= "+tt[0] 
-#           console.log "max= "+tt[1]     
-#       Outputs:
-#         min= 0
-#         max= 666
-#         [minVecX, maxVecX] = min_max_Vec [@_vec_x1, @_vec_x2, @_vec_x3]
-#         [minVecY, maxVecY] = min_max_Vec [@_vec_y1, @_vec_y2, @_vec_y3]
-    
-    
-    MatrixVecListInversion = (Vec_List)->     
-        VecListSize = 0 
-        for key, vector of Vec_List
-            VecListSize++
-            Vecmax = vector.length-1# TODO A Ameliorer car repetition
-              
-        res = new Array(Vecmax+1)
-        for i in [0..Vecmax]
-            res[i]= new Array(VecListSize)
-            j=0
-            for key, vector of Vec_List
-                res[i][j] = vector[i]
-                j++
-        res  
-    
-# Test: myVecY_List = { 
-#                 y1: [5, 56, 17, 9],
-#                 y2: [25, 46, 7, 4],
-#                 y3: [500, 60.2, 7111, 22] 
-#               }
-#              
-# m = MatrixVecListInversion(myVecY_List)
-# console.log m
-# console.log m[1]
-# console.log m[0]
-# console.log m[2]
-# Output 
-# 
-# [ [ 5, 25, 500 ],
-#   [ 56, 46, 60.2 ],
-#   [ 17, 7, 7111 ],
-#   [ 9, 4, 22 ] ]
-    
-    MatrixInversionMulti = (VecX, VecY_arr)->
-#         MatrixInversionMulti = (x, VecY_arr)->
-        # VecY or VecX empty # TODO
-        # VecY or VecX Not same size # TODO      
-        x = VecToArray(VecX) 
-        xmax = x.length-1
-        iVecYmax = VecY_arr.length-1
-        res = new Array(x.length)          
-        for i in [0..xmax]
-            res[i]= new Array(VecY_arr.length)
-            res[i][0] = x[i]
-            for j in [0..iVecYmax]
-                y = VecToArray(VecY_arr[j]) 
-                res[i][j+1] = y[i]  # We assume that x and yi have the same size
-    #                 res[i][j+1] = VecY_arr[j][i] # TODO A retirer
-        return res
-            
-        
- #TEST
-#       myVecY_arr = [ [5, 56, 17, 9], [25, 46, 7, 4], [500, 60.2, 7111, 22] ]
-#       m = MatrixInversionMulti([ 1, 2, 3], myVecY_arr)
-#       console.log m
-#       console.log m[1]
-#       console.log m[0]
-#       console.log m[2]
-#         Output:
-# [ [ 1, 5, 25, 500 ],
-#   [ 2, 56, 46, 60.2 ],
-#   [ 3, 17, 7, 7111 ],
-#   [ 5, 9, 4, 22 ] ]
-# [ 2, 56, 46, 60.2 ]
-# [ 1, 5, 25, 500 ]
-# [ 3, 17, 7, 7111 ]
-    
-    
-    
-    
-#     MatrixInversion = (VecX, VecY)->
-#         # VecY or VecX empty # TODO
-#         # VecY or VecX Not same size # TODO
-#         x = VecToArray(VecX)
-#         y = VecToArray(VecY)    
-#         xmax = x.length-1
-#         res = []
-#         res[i] = [x[i], y[i]] for i in [0..xmax]
-#         return res           
-    #TEST
-    # m = MatrixInversion([ 1, 2, 3], [5, 6, 7])
-    # console.log m
-    # console.log m[1]
-    # console.log m[0]
-    # console.log m[2]
-    # Test Output 
-    # [ [ 1, 5 ], [ 2, 6 ], [ 3, 7 ] ]
-    # [ 2, 6 ]
-    # [ 1, 5 ]
-    # [ 3, 7 ] 
       
-      
-    # obtenir la position réelle dans le canvas
+#     obtenir la position réelle dans le canvas
     getLeft: ( l ) ->
         if l.offsetParent?
             return l.offsetLeft + @getLeft( l.offsetParent )
         else
             return l.offsetLeft
 
-    # obtenir la position réelle dans le canvas
+#     obtenir la position réelle dans le canvas
     getTop: ( l ) ->
         if l.offsetParent?
             return l.offsetTop + @getTop( l.offsetParent )
@@ -612,7 +312,7 @@ class TestSamirGraphItem extends TreeItem_Computable
         document.onkeydown = undefined
         app.active_key.set true
         
-        #TODO A completer
+#         TODO A completer
     accept_child: ( ch ) ->
         ch instanceof TreeItem_Vector
     
@@ -632,4 +332,4 @@ class TestSamirGraphItem extends TreeItem_Computable
 
 #     disp_only_in_model_editor: -> TODO A mettre ?
 #         @mesh    
-
+#####

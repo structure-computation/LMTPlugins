@@ -11,11 +11,12 @@ int main( int argc, char **argv ) {
 
     // type d'item observé
     sc.reg_type( "AbaqusComputationItem" ); 
-     sc.reg_type( "Code_Aster_ComputationItem" ); 
+    sc.reg_type( "Code_Aster_ComputationItem" ); 
     sc.reg_type( "IdentificationWithAbaqusItem" );
     sc.reg_type( "IdentificationWithCode_AsterItem" );
     sc.reg_type( "CorrelationItem" );
     sc.reg_type( "DicUncertaintyItem" );
+    sc.reg_type( "FieldsComparatorItem" );
     sc.reg_type( "FieldExportItem" );
     sc.reg_type( "VirtualGaugeItem" );
     sc.reg_type( "ReaderINPItem" );

@@ -20,7 +20,10 @@
 /*.graph-svg-component {TODO
     background-color: AliceBlue;
 /*        background-color: White; */
-}*/
+
+body {
+  font: 10px sans-serif;
+}
 
 .axis path, .axis line {
   fill: none;
@@ -28,16 +31,24 @@
   shape-rendering: crispEdges;
 }
 
+.x.axis path {
+/*   display: none; */
+}
+
 .line {
-  fill: none;
+   fill: none; 
   stroke: steelblue;
   stroke-width: 1.5px;
 }
 
 .dot {
-  fill: white;
+/*   fill: white; */
   stroke: steelblue;
   stroke-width: 1.5px;
 }
 
-
+/*.cmarker {
+  fill: white;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}*/

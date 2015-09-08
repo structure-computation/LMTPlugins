@@ -22,6 +22,11 @@
 using namespace std;
 using namespace LMT;
 
+#define iDimp 0
+#define iUncX 1
+#define iUncY 2
+#define iErrX 3
+#define iErrY 4
 
 bool DicUncertaintyUpdater::run( MP mp ) {
     
@@ -41,8 +46,6 @@ bool DicUncertaintyUpdater::run( MP mp ) {
     Vec<int,dim> xmax (-1e6,-1e6);
     // output
     //MP output_field = mp[ "_output[ 0 ]" ];
-    
-    
     
     for( int i = 0; i < ch.size(); ++i ) {
         MP c = ch[ i ];
@@ -224,46 +227,158 @@ bool DicUncertaintyUpdater::run( MP mp ) {
     PRINT(UncY);
     PRINT(ErrY);  
     
-    MP DimpMPVec = MP::new_lst( "Vec" );
-    MP UncXMPVec = MP::new_lst( "Vec" );
-    MP UncYMPVec = MP::new_lst( "Vec" );
-    MP ErrXMPVec = MP::new_lst( "Vec" );
-    MP ErrYMPVec = MP::new_lst( "Vec" );    
+//     MP DimpMPVec = MP::new_lst( "Vec" );
+//     MP UncXMPVec = MP::new_lst( "Vec" );
+//     MP UncYMPVec = MP::new_lst( "Vec" );
+//     MP ErrXMPVec = MP::new_lst( "Vec" );
+//     MP ErrYMPVec = MP::new_lst( "Vec" );    
     
     MP msg = MP::new_obj( "Model" );
     QString res = "OK";
     
-    MP mpDimpTreeItem_Vec = MP::new_obj( "TreeItem_Vector" );//TEST
-    MP mpUncXTreeItem_Vec = MP::new_obj( "TreeItem_Vector" );//TEST
-    MP mpUncYTreeItem_Vec = MP::new_obj( "TreeItem_Vector" );//TEST
-    MP mpErrXTreeItem_Vec = MP::new_obj( "TreeItem_Vector" );//TEST
-    MP mpErrYTreeItem_Vec = MP::new_obj( "TreeItem_Vector" );//TEST
 
    // msg[ "Writing TreeItem_Vector: " ] = res ;//TEST TODO A corriger car produit erreur et bloque chargement lab.html 
     //mp[ "_messages" ] << msg;
     
-    mp[ "_output" ][0].clear();
-    mp[ "_output" ][1].clear();
-    mp[ "_output" ][2].clear();
-    mp[ "_output" ][3].clear();
-    mp[ "_output" ][4].clear();
+//     mp[ "_output" ][0].clear();
+//     mp[ "_output" ][1].clear();
+//     mp[ "_output" ][2].clear();
+//     mp[ "_output" ][3].clear();
+//     mp[ "_output" ][4].clear();
     
-    set_vecToTreeItemVec(Dimp, DimpMPVec, mp[ "_output" ][0], "Imposed Displacement");
-    set_vecToTreeItemVec(UncX, UncXMPVec, mp[ "_output" ][1], "Uncertainty of X");
-    set_vecToTreeItemVec(UncY, UncYMPVec, mp[ "_output" ][2], "Uncertainty of Y");
-    set_vecToTreeItemVec(ErrX, ErrXMPVec, mp[ "_output" ][3], "Error of X");
-    set_vecToTreeItemVec(ErrY, ErrYMPVec, mp[ "_output" ][4], "Error of Y");    
+//     set_vecToTreeItemVec(Dimp, DimpMPVec, "_ConstT1", mp[ "_output" ][0], "Imposed Displacement");
+//     set_vecToTreeItemVec(UncX, UncXMPVec, "_ConstT2", mp[ "_output" ][1], "Uncertainty of X");
+//     set_vecToTreeItemVec(UncY, UncYMPVec, "_ConstT3", mp[ "_output" ][2], "Uncertainty of Y");
+//     set_vecToTreeItemVec(ErrX, ErrXMPVec, "_ConstT4", mp[ "_output" ][3], "Error of X");
+//     set_vecToTreeItemVec(ErrY, ErrYMPVec, "_ConstT5", mp[ "_output" ][4], "Error of Y");    
     
-    qDebug()  << mp[ "_output" ][0];
-    qDebug(" ");
-    qDebug()  << mp[ "_output" ][1];
-    qDebug(" ");
-    qDebug()  << mp[ "_output" ][2];
-    qDebug(" ");
-    qDebug()  << mp[ "_output" ][3];
-    qDebug(" ");
-    qDebug()  << mp[ "_output" ][4];
-    qDebug(" ");
+    set_vecToTreeItemVec(Dimp, mp, iDimp, "Imposed Displacement");
+    set_vecToTreeItemVec(UncX, mp, iUncX, "Uncertainty of X");
+    set_vecToTreeItemVec(UncY, mp, iUncY, "Uncertainty of Y");
+    set_vecToTreeItemVec(ErrX, mp, iErrX, "Error of X");
+    set_vecToTreeItemVec(ErrY, mp, iErrY, "Error of Y");    
+    
+    
+    // Calculate difference between results and imposed displacement or strain
+
+    // Plot graphs
+    mp.flush();
+    return true;
+}
+
+//TEST
+void DicUncertaintyUpdater::set_vecToTreeItemVec(const Vec<double> &vec, MP mpp, const int index, QString attrName){ 
+    mpp["_output"][index].clear();  
+    MP mpvec = MP::new_lst( "Vec" );
+    MP mpvec_temp = MP::new_lst( "Vec" );
+    mpp["_output"][index]["_name"]= attrName; 
+//     mpp["_output"][index]["vec"]["bool"]= false; // for making the vector constant
+//     mpp["_output"][index]["vec"]["model"]= MP::new_lst( "Vec" );    
+//     mpp["_output"][index]["vec"]["check_disabled"]= true;
+    int i;
+//     Vec<double> vec_test;
+//     vec_test.push_back(vec[i]);
+//     vec_test.set(i, roundedValue_i);
+    
+    //TEST
+//     qDebug("vec_temp[i]: ");
+//     for (int k=0; k<vec_temp.size(); k++)
+//         qDebug() << vec_temp[k];
+    //TEST fin
+    
+    for(i=0; i<vec.size(); i++){
+//         MP mpVal = MP::new_obj( "Val" );
+//         mpVal[ "_data" ] =  vec[i]; 
+//         mpVal[ "_data" ].exp = 
+//         mpVal[ "_data" ].man =
+
+// TEST debut
+        double value_i = vec.get(i);
+        qDebug("vec.get(i): ");
+        qDebug() << vec.get(i);
+        qDebug("vec[i]: ");
+        qDebug() << vec[i];
+        
+        qDebug("value_i: ");
+        qDebug() << value_i;
+        
+        double roundedValue_i;
+        roundedValue_i =round_to_digits(value_i, 6);// 6 significant digits
+        Vec<double> vec_temp;
+        //vec_temp.push_back(value_i);// = vec[i];
+        
+        qDebug("roundedValue_i: ");
+        qDebug() << roundedValue_i;
+        
+//         qDebug("vec_temp: ");
+//         qDebug() << vec_temp;
+        vec_temp.push_back(vec[i]);
+//         qDebug("vec_temp: ");
+//         qDebug() << vec_temp;
+        
+        vec_temp.set(i, roundedValue_i);
+//         qDebug("vec_temp: ");
+//         qDebug() << vec_temp;
+        
+        qDebug("vec_temp[i]: ");
+        qDebug() << vec_temp[i];
+        
+//         mpvec_temp << vec_temp[i];//mpConstVal;
+//         MP mpConstVal = MP::new_obj( "ConstOrNotModel" );
+//         mpConstVal["bool"]= true;
+//         mpConstVal["model"]= mpvec_temp;//vec[i];
+        mpvec << vec_temp[i];
+// old correct
+//      int i;
+//     for(i=0; i<vec.size(); i++){
+//         MPvec << vec[i];
+//         mpTreeItem_Vec["vec"]<<MPvec[i]; 
+        
+// TEST fin
+        
+//         Change just after:
+//         mpvec << vec[i];
+        
+        qDebug("mpvec[i]: ");
+        qDebug() << mpvec[i];
+//         mpp["_output"][index]["vec"]["model"]<<mpvec[i];  TEST TODO      
+        mpp[ "_output" ][index]["vec"]<<mpvec[i];     
+    }
+//     qDebug()  <<  "mpp[_output][index]:" << mpp["_output"][index];
+//     qDebug(" ");
+
+}
+
+double DicUncertaintyUpdater::round_to_digits(const double value, const int digits)
+{
+    double temp = value;
+    temp  = value * pow(10.0, digits);
+    temp = round(temp);
+    temp = temp / pow(10.0, digits);
+    return temp;
+}
+
+
+// void DicUncertaintyUpdater::set_vecToTreeItemVec(const Vec<double> &vec, MP mpvec, MP mpTreeItem_Vec, QString attrName){ 
+//     mpTreeItem_Vec[ "_name" ]= attrName;
+//     
+//     int i;
+//     for(i=0; i<vec.size(); i++){
+//         mpvec << vec[i];
+//         mpTreeItem_Vec["vec"]<<mpvec[i];     
+//     }
+// }
+
+//     qDebug()  << mp[ "_output" ][0];
+//     qDebug(" ");
+//     qDebug()  << mp[ "_output" ][1];
+//     qDebug(" ");
+//     qDebug()  << mp[ "_output" ][2];
+//     qDebug(" ");
+//     qDebug()  << mp[ "_output" ][3];
+//     qDebug(" ");
+//     qDebug()  << mp[ "_output" ][4];
+//     qDebug(" ");
     
 //     mp[ "_output[0]"].clear();
 //     mp[ "_output[1]"].clear();
@@ -287,39 +402,37 @@ bool DicUncertaintyUpdater::run( MP mp ) {
 //     qDebug(" ");
 //     qDebug()  << mp[ "_output[4]"];
 //     qDebug(" ");
-    
-    // Calculate difference between results and imposed displacement or strain
 
-    // Plot graphs
-    mp.flush();
-    return true;
-}
 
-//TEST
-
-void DicUncertaintyUpdater::set_vecToTreeItemVec(const Vec<double> &vec, MP MPvec, MP mpTreeItem_Vec, QString attrName){ 
-    mpTreeItem_Vec[ "_name" ]= attrName;
-    
-    int i;
-    for(i=0; i<vec.size(); i++){
-        MPvec << vec[i];
-        mpTreeItem_Vec["vec"]<<MPvec[i];     
-    }
-//     mpTreeItem_Vec["vec"]<<MPvec;
-
-}
-//set a vector into an MP attribute  
-// void DicUncertaintyUpdater::set_vector(Vec<double> vec, const MP &MPvec, const MP &pMP, QString attrName){ 
+// //TEST
+// void DicUncertaintyUpdater::set_vecToTreeItemVec(const Vec<double> &vec, MP mpp, const int index, QString attrName){ 
+//     mpp["_output"][index].clear();  
+//     MP MPvec = MP::new_lst( "Vec" );
+//     MP constVal = MP::new_lst( "ConstOrNotModel" ); 
+//     mpp["_output"][index]["_name"]= attrName; 
 //     int i;
-//     for(i = 0; i < vec.size(); ++i ){
-//        MPvec[""+i] << vec[ i ];
+//     for(i=0; i<vec.size(); i++){
+// //         MP mpVal = MP::new_obj( "Val" );
+// //         mpVal[ "_data" ] =  vec[i]; 
+// //         mpVal[ "_data" ].exp = 
+// //         mpVal[ "_data" ].man =
+// 
+// // TEST debut
+//         vec[i] = round_to_digits(vec[i], 6);
+//         mpConstVal = MP::new_obj( "ConstOrNotModel" );
+//         mpConstVal["bool"]= true
+//         mpConstVal["model"]= vec[i]
+//         mpConstVal["model"]= vec[i]
+//         MPvec << mpConstVal
+// 
+// // TEST fin
+//         
+// //         Change just after:
+// //         MPvec << vec[i];
+//         mpp["_output"][index]["vec"]<<MPvec[i];    
+// //         mpp["_output"][index]["model"]["vec"]<<MPvec[i];        
+// //         mpp[ "_output" ][index]["vec"]<<MPvec[i];     
 //     }
-//     ++i;
-//     MPvec[""+i] <<0;
-//     pMP["vec"]= MPvec;
+//     qDebug()  <<  "mpp[_output][index]:" << mpp["_output"][index];
+//     qDebug(" ");
 // }
-
-// void DicUncertaintyUpdater::set_TreeItemVector(const &MP mpTreeItem_Vec, const MP &pMP, QString attrName){ 
-//   
-//   
-// }  

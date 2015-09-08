@@ -21,42 +21,32 @@ class DicUncertaintyItem extends TreeItem_Computable
            min_value : 0
            max_value : 1
            step : 0.5
-#            _DimpTreeItemVec     : new TreeItem_Vector(@Dimp, "Deplacement impose" )
-#            _UncXTreeItemVec     : new TreeItem_Vector(@UncX, "Incertitude sur X" )
-#            _UncYTreeItemVec     : new TreeItem_Vector(@UncY, "Incertitude sur Y")
-#            _ErrXTreeItemVec     : new TreeItem_Vector(@ErrX, "Erreur sur X" )
-#            _ErrYTreeItemVec     : new TreeItem_Vector(@ErrY, "Erreur sur Y")
-
-#            Dimp     : new Vec
-#            UncX     : new Vec
-#            UncY     : new Vec
-#            ErrX     : new Vec
-#            ErrY     : new Vec
+        
+        t0= new TreeItem_Vector
+        t1= new TreeItem_Vector
+        t2= new TreeItem_Vector
+        t3= new TreeItem_Vector
+        t4= new TreeItem_Vector
+        
+#         TEST
+#         @add_attr
+#             _ConstT0: new ConstOrNotModel true, t0
+#             _ConstT1: new ConstOrNotModel true, t1
+#             _ConstT2: new ConstOrNotModel true, t2
+#             _ConstT3: new ConstOrNotModel true, t3
+#             _ConstT4: new ConstOrNotModel true, t4
+#                 
+#         @add_output @_ConstT0
+#         @add_output @_ConstT1
+#         @add_output @_ConstT2
+#         @add_output @_ConstT3
+#         @add_output @_ConstT4
            
-#            vec_Dimp     : new Vec [1, 72, 3, 24]
-#            vec_UncX     : new Vec [45, 2, 3, 0]
-#            vec_UncY     : new Vec [1, 21, 30, 2]
-#            vec_ErrX     : new Vec [12, 2, 3, 4]
-#            vec_ErrY     : new Vec [01, 2, 367, 1]
-                      
-
-#         t1= new TreeItem_Vector(@Dimp, "Deplacement impose" )
-#         t2= new TreeItem_Vector(@UncX, "Incertitude sur X" )
-#         t3= new TreeItem_Vector(@UncY, "Incertitude sur Y")
-#         t4= new TreeItem_Vector(@ErrX, "Erreur sur X" )
-#         t5= new TreeItem_Vector(@ErrY, "Erreur sur Y")
-        
-        t1= new TreeItem_Vector#(new Vec, "Imposed Displacement" )
-        t2= new TreeItem_Vector#(new Vec, "Uncertainty of X" )
-        t3= new TreeItem_Vector#(new Vec, "Uncertainty of Y")
-        t4= new TreeItem_Vector#(new Vec, "Error of X" )
-        t5= new TreeItem_Vector#(#new Vec, "Error of Y")
-        
+        @add_output t0
         @add_output t1
         @add_output t2
         @add_output t3
         @add_output t4
-        @add_output t5
            
 #            _graph : new Graph 
 #                 marker: 'dot',
@@ -70,7 +60,6 @@ class DicUncertaintyItem extends TreeItem_Computable
 #                 x_axis: 'D (pix)',
 #                 y_axis: 'Uncertainty'
     
-#    display_suppl_context_actions: ( context_action )  ->
     display_suppl_context_actions: ( context_action )  ->
         context_action.push new TreeAppModule_Mesher
         context_action.push new TreeAppModule_Sketch
