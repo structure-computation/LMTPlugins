@@ -1,51 +1,48 @@
-# Copyright 2012 Structure Computation  www.structure-computation.com
-# Copyright 2012 Hugo Leclerc
-#
-# This file is part of Soda.
-#
-# Soda is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# Soda is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Lesser General Public License for more details.
-# You should have received a copy of the GNU General Public License
-# along with Soda. If not, see <http://www.gnu.org/licenses/>.
-
 
 class DrawingSVG
     constructor: ->    
     #nothing for now
-    
+        @_NotfirstDrawing = undefined
     
     #TEST param1
     drawSVG_MultiVec:( app_data, info, graphti, graphSetting ) ->
-        console.log "In Drawing, au début allowToDraw.get():", graphti._allowToDraw.get()
-#         if not firstDrawing? #TEST
+#         console.log "In Drawing, au début allowToDraw.get():", graphti._allowToDraw.get()
+#         graphti = info.cm.items.detect ( x ) -> x instanceof TestSamirGraphItem
+#         notfirstDrawing = graphti._NotfirstDrawing
+#         if notfirstDrawing? #TEST
+        
+            #TEST m_y
+#             @temp_initDrawing_MultiVec(app_data, info, graphti, graphSetting )
+        
+            #TEST 1_y
         @initDrawing_MultiVec(app_data, info, graphti, graphSetting )
-    
-    #TEST param2
-#     drawSVG_MultiVec:( app_data, info, @curvesList, notfirstDrawing, allowToDraw, graphSetting ) ->
-#         console.log "In Drawing, au début allowToDraw.get():", allowToDraw.get()
-# #         if not firstDrawing? #TEST
-#         @initDrawing_MultiVec(app_data, info, @curvesList, notfirstDrawing, allowToDraw, graphSetting )
-    
+
     #TEST param1
-    initDrawing_MultiVec:(app_data, info, graphti, graphSetting )  ->   
-    
+    initDrawing_MultiVec:(app_data, info, graphti, graphSetting )  ->               
+            
     #TEST param2
 #     initDrawing_MultiVec:(app_data, info, @curvesList, notfirstDrawing, allowToDraw, graphSetting )  ->  
         
-        @tic = graphti._children.detect ( x ) -> x instanceof TreeItem_Curves
-        console.log "tic",@tic
+        #TEST @tic1
+#         for child in graphti._children when child instanceof TreeItem_Curves
+#                 @tic = child#.graphSettings.get()               
         
-        @curvesList = graphti.curves_List
-        notfirstDrawing = graphti._NotfirstDrawing
-        allowToDraw = graphti._allowToDraw
+        #TEST @curvesList1
+        #TEST @tic1
+#         @curvesList = @tic._curves_List.get()
         
+        #TEST @tic1
+        
+        graphti = info.cm.items.detect ( x ) -> x instanceof TestSamirGraphItem
+        @tic = graphti.curves_child
+        @curvesList = graphti.curves_child._curves_List
+        
+        #TEST @curvesList2
+#         @curvesList = graphti.curves_List
+
+        console.log "graphti in Drawing"
+        console.log graphti
+
         console.log "@curvesList"
         console.log @curvesList
         
@@ -53,13 +50,13 @@ class DrawingSVG
 #         console.log "@GS:", @GS           
                     
         vec_Lst = new Lst
-        vec_Lst.push @curvesList[0]?.abscissa_vec.get()
+        vec_Lst.push @curvesList[0]?._abscissa_vec.get()
         for c in @curvesList
-            vec_Lst.push c.ordinate_vec.get()
+            vec_Lst.push c._ordinate_vec.get()
         
-        VecX = @curvesList[0]?.abscissa_vec.get()
+        VecX = @curvesList[0]?._abscissa_vec.get()
         VecY_arr = [] 
-        VecY_arr.push c?.ordinate_vec.get() for c in @curvesList             
+        VecY_arr.push c?._ordinate_vec.get() for c in @curvesList             
         @_data = matrixTransposeMulti VecX, VecY_arr
         console.log "@_data:", @_data
         console.log "info :", info
@@ -85,43 +82,55 @@ class DrawingSVG
         @_x = d3.scale.linear()
         .range([0, @_widthSVG])
         
-        #TEST 1_y   cf TEST m_y
         @_y = d3.scale.linear()
         .range([@_heightSVG, 0])
-                
-        #TEST m_y 
-        #Listing the number of curve Type
-        curveTypeNameList = new Lst
-        for curve in @curvesList
-            if not curveTypeNameList.contains curve.curveTypeName 
-                curveTypeNameList.push curve.curveTypeName
-        
-        console.log "curveTypeNameList"
-        console.log curveTypeNameList
-        
+
+
 #         TEST 1 # imitation de d3.scale.category20() avec des noms de couleurs reconnues par D3
         # une boucle infinie est constatée pour la mise à jour de l'attribut couleur de l'objetCurve 
-        d3_Issim_category20 = [ "darkblue",  "blue", 
-                                "darkorange", "orange",
-                                "green", "springgreen",
-                                "red", "antiquewhite",
-                                "purple", "violet",
-                                "maroon", "sandybrown",
-                                "pink", "salmon",
-                                "darkgrey", "darkslategray",    
-                                "yellowgreen", "yellow",
-                                "cyan", "indigo"]
-                     
+
+        
         #TEST colRange1 
 #         console.log "@tic._colorRange.get()"
 #         console.log @tic._colorRange.get()
-        
-        colorRangeTab= []
-        
-        colorRangeTab.push co for co in @tic._colorRange
-        color = d3.scale.ordinal().range(colorRangeTab)
 
+        #TEST colorRange3
+#         colorRangeTab= []
+#         
+#         #TEST @tic1
+#         #TEST colorRange1
+#         for curveChoice in @tic.curves.lst
+#             console.log "curveChoice.curve.number.get()-1"
+#             console.log curveChoice.curve.number.get()-1
+#  
+#             i = curveChoice.curve.number.get()-1
+#             
+#             #TEST modifSync1
+# #             isCurveModified = curveChoice.aggregate.modify_curve.get()
+# #             if isCurveModified
+#             
+#             if curveChoice.aggregate.colorName.has_been_modified
+#             #curve has been modified
+#                 oneColor = curveChoice.aggregate.colorName.get()
+#             else
+#                 #curve has not been modified
+#                 oneColor = @tic._colorRange[i].get()
+#             console.log "oneColor"   
+#             console.log oneColor
+#             colorRangeTab.push oneColor
+# 
+#                 
+#                 
+#         #TEST colorRange2
+# #         colorRangeTab.push co for co in @tic._colorRange.get()
+#         #TEST @tic1
+# #         colorRangeTab.push co for co in @tic._colorRange
+#         color = d3.scale.ordinal().range(colorRangeTab)
         
+        console.log "@tic._colorRange"
+        console.log @tic._colorRange#.get()
+        
+        color = d3.scale.ordinal().range(@tic._colorRange)#.get())
         #TEST colRange2                        
 #         color = d3.scale.ordinal().range(d3_Issim_category20)
 #         
@@ -145,7 +154,7 @@ class DrawingSVG
 #         "#c5b0d5":"purple-",
 #         "#8c564b":"brown+",
 #         "#c49c94":"brown-",
-#         "#e377c2":"pink+",        @_title = d3.selectAll("svg#svg_id").insert("text", "Issim_chart")
+#         "#e377c2":"pink+",
 #         "#f7b6d2":"pink-",
 #         "#7f7f7f":"grey+",
 #         "#c7c7c7":"grey-",
@@ -156,18 +165,13 @@ class DrawingSVG
         
         @_xAxis = d3.svg.axis()
         .scale(@_x)
-        .orient(@GS.X_orient)# TEST should be "bottom"      
+        .orient(@GS.X_orient)# TEST should be "bottom"
+        
         
         @_yAxis = d3.svg.axis()
         .scale(@_y)
         .orient(@GS.Y_orient)# TEST should be "right"
-        
-        console.log "d3.svg.line() before !!!"
-        console.log d3.svg.line()
-        
-        console.log "graphSettings.interpolation"
-        console.log @GS.interpolation
-        
+
         
         line = d3.svg.line()
         .interpolate(@GS.interpolation)                # TEST should be "monotone"
@@ -178,17 +182,19 @@ class DrawingSVG
                   return @_x(d[keys[0]]))
         .y( (d)=>
                 keys = (k for own k of d)
-                return @_y(d[keys[1]]))            
+                return @_y(d[keys[1]]))             
                 
-        console.log "d3.svg.line() after !!!"
-        console.log d3.svg.line()         
-                
-        console.log "notfirstDrawing in drawing before appending svg"
-        console.log notfirstDrawing
+        console.log "@_NotfirstDrawing in drawing before appending svg"
+        console.log @_NotfirstDrawing
     
-        if notfirstDrawing
+        #TEST notfirst1
+#         if notfirstDrawing
+        
+        #TEST notfirst2
+        console.log "in Drawing @_NotfirstDrawing"+@_NotfirstDrawing
+        if @_NotfirstDrawing
             d3.selectAll("svg#svg_id").remove()
-
+        
         @_svgD3 = d3.select( info.ctx_svg()).style("background","white")           
         .append("svg")
         .attr("id", "svg_id")
@@ -223,15 +229,29 @@ class DrawingSVG
 #         .attr("height", "100%")
 #         .attr("fill", "white")
 # TEST à remettre final
-
-        curvesListIndexMax = @curvesList.length-1
-        color.domain( [0..curvesListIndexMax])    
+        
+        console.log "@curvesList.length"
+        console.log @curvesList.length
+        #TEST Length2
+        color.domain( [0...@curvesList.length]) 
+        
         console.log "color:"                                                          
         console.log color
         
         curves = color.domain().map (curvesIndex)=>
+                                    
+                                    #TEST curvL1
+#                                     c = @curvesList[curvesIndex].get()
+#                                     
+#                                     console.log "@curvesList[curvesIndex].get()"
+#                                     console.log @curvesList[curvesIndex].get()
+#                                     
+#                                     console.log "@curvesList[curvesIndex]"
+#                                     console.log @curvesList[curvesIndex]
+                                    
+                                    #TEST curvL1
                                     c = @curvesList[curvesIndex]
-#                                     vecIndexMax = c.ordinate_vec.length-1
+                                    
                                     return res_c = 
                                             name : c._name.get() #TEST TODO remettre une virgule
                                             values: @_data.map (d) =>  
@@ -243,22 +263,6 @@ class DrawingSVG
                                                                     res['curve_Index']=curvesIndex
                                                                     return res   
                                             number:c.number.get()
-                                            
-                                            #TEST leg1
-#                                             legendValuesFunc: (d)=> 
-#                                                                 console.log "d in legendValues"
-#                                                                 console.log d
-#                                                                 legY = (d)=> @_heightSVG-30*d.number
-#                                                                 console.log "legY"
-#                                                                 console.log legY
-#                                                                 
-#                                                                 res = {}
-#     #                                                             res['curve_Index']=curvesIndex
-#                                                                 for i in [1..3]    
-#                                                                     res['x'] = 30 *i
-#                                                                     res['y'] = legY(d)
-#                                                                 return res 
-#                                             legendValues: @legendValuesFunc(this)
         console.log "curves"                                                          
         console.log curves
 
@@ -290,9 +294,18 @@ class DrawingSVG
             .attr("x", @_widthSVG/2)
             .attr("y", @_heightSVG+26)
             .attr("dx", ".71em")
-            .style("text-anchor", "end")
-            .text(@curvesList[0].abscissa_name.get()+" ("+@curvesList[0].abscissa_unity.get()+")")
+            .style("text-anchor", "end")            
+            #TEST parenth2
+#             .text(@curvesList[0].abscissa_name.get()+" ("+@curvesList[0].abscissa_unity.get()+")")
 
+            #TEST parenth1
+            .text(()=>
+                  unity = @curvesList[0].abscissa_unity.get()
+                  if unity != "" or unity != " "
+                      @curvesList[0].abscissa_name.get()+" ("+unity+")"
+                  else 
+                      @curvesList[0].abscissa_name.get())
+        
         #Ordinate Label
         @_svgD3.append("g")
             .attr("class", "y axis")
@@ -326,7 +339,17 @@ class DrawingSVG
           
           #TEST 2
           #.style("text-anchor", "middle")
-          .text(@curvesList[0].curveTypeName.get()+" ("+@curvesList[0].ordinate_unity.get()+")")
+          
+          #TEST parenth1
+            .text(()=>
+                    unity = @curvesList[0].ordinate_unity.get()
+                    if unity != "" or unity != " "
+                        @curvesList[0].curveTypeName.get()+" ("+unity+")"
+                    else
+                        @curvesList[0].curveTypeName.get())
+                        
+          #TEST parenth2
+#           .text(@curvesList[0].curveTypeName.get()+" ("+@curvesList[0].ordinate_unity.get()+")")
           .attr("transform", "rotate(90)")
         
         
@@ -465,8 +488,12 @@ class DrawingSVG
 #                         console.log "col"
 #                         console.log col
                         
+                        #TEST @tic1
                         console.log "@tic._curves_List Avant"
-                        console.log @tic._curves_List
+                        console.log @tic._curves_List.get()
+                        
+                        #TEST @tic2
+          #                console.log "@tic._curves_List Avant"
                         
                         # TEST 1
 #                         pour remplacer @curvesList par @curvesList
@@ -511,6 +538,11 @@ class DrawingSVG
                         console.log "colName"
                         console.log colName
                         
+                        console.log "color(i).get()"
+                        console.log color(i).get() 
+                        
+                        console.log "color(i).data"
+                        console.log color(i).data 
 #                         @curvesList[i].colorName.set colName
 #                         @curvesList[i].colorName.set searchedColor
                         
@@ -551,13 +583,17 @@ class DrawingSVG
 #                             
 #                             curv.colorName.set searchedColor
 
-                        console.log "@tic._curves_List"
-                        console.log @tic._curves_List
+                        #TEST @tic1
+                        console.log "@tic._curves_List.get()"
+                        console.log @tic._curves_List.get()
+                        
+                          #TEST @tic2
+          #                console.log "@tic._curves_List"
                         
                         #TEST colChoice2 cf CurveChoice
-#                         @tic.curves.set colName
-#                         colNameIndex = @tic.curves.lst.indexOf colName
-#                         @tic.curves.num.set colNameIndex
+#                         #@tic.curves.set colName
+#                         #colNameIndex = @tic.curves.lst.indexOf colName
+#                         #@tic.curves.num.set colNameIndex
                         
                         #TODO a effacer ??
 #                         for cs in @tic.curves.lst when cs.aggregate.name.equals d.name
@@ -567,7 +603,7 @@ class DrawingSVG
                         #console.log @tic.curves.lst    
                         
                         #TEST 1 
-                        return color(i))
+                        return color(i).get())
                       
                         #TEST 2
                         #return color(d.name))
@@ -852,16 +888,22 @@ class DrawingSVG
         .attr("dy", @GS.dyTextOffset)
         .text((d) -> 
                 keys = (k for own k of d.value)
-                keys[1]+":"+d.name)  
+                #TEST dn1
+#                 keys[1]+":"+d.name)
 
-        #AllowToDraw        
-        allowToDraw.set false #TEST
-        console.log "At the end of Drawing, (should be false) allowToDraw.get():", allowToDraw.get()
-        notfirstDrawing= true
+                #TEST dn2
+                keys[1])
+                
+        #TEST alloToDraw2      
+#         allowToDraw.set false 
+        
+#         console.log "At the end of Drawing, (should be false) allowToDraw.get():", allowToDraw.get()
+        @_NotfirstDrawing = true
     
     d3_rgbNumber : (value)->
         d3.rgb(value >> 16, value >> 8 & 255, value & 255)
         
+    #TEST 1_y
     makeDot:(selection, curveChoices, isLegend = false)=>
         selection
             .selectAll(".curve")
@@ -885,7 +927,7 @@ class DrawingSVG
                             i = d.curve_Index
                             curveChoices.lst[i].aggregate.markerRadius.get())               
 #             .attr("r",3.5)
-                
+    #TEST 1_y            
     makeSquare:(selection, curveChoices)=>
         selection
             .selectAll(".curve")      
@@ -930,24 +972,24 @@ class DrawingSVG
                                 #TODO mettre noms de variable pour 30 et 60
                                 return "translate(" +(30+60)/2 + "," + 30*d.number + ")")
             .attr("d",d3.svg.symbol().size((d)=>                     
-                                              console.log "d in size:"
-                                              console.log d
+#                                               console.log "d in size:"
+#                                               console.log d
                                               i = d.number-1
-                                              console.log "index in size"
-                                              console.log i
+#                                               console.log "index in size"
+#                                               console.log i
 #                                               i = d.curve_Index  
-                                              console.log curveChoices.lst[i].aggregate.markerSize.get()
+#                                               console.log curveChoices.lst[i].aggregate.markerSize.get()
                                               curveChoices.lst[i].aggregate.markerSize.get())
                                      .type((d)=>
-                                              console.log "d in type:"
-                                              console.log d
+#                                               console.log "d in type:"
+#                                               console.log d
                                               i = d.number-1
-                                              console.log "index in type"
-                                              console.log i
+#                                               console.log "index in type"
+#                                               console.log i
 #                                               i = d.curve_Index
                                               #TEST cmarker2 TODO 
-                                              console.log "curveChoices.lst[i].aggregate.marker.get()"
-                                              console.log curveChoices.lst[i].aggregate.marker.get()
+                                              ###console.log "curveChoices.lst[i].aggregate.marker.get()"
+                                              console.log ###curveChoices.lst[i].aggregate.marker.get()
                                               curveChoices.lst[i].aggregate.marker.get()))  
             .style("fill",(d)=> 
                               console.log "d in fill:"
@@ -978,7 +1020,14 @@ class DrawingSVG
             .append("path")
             .attr("transform", (d)=> 
                                   keys = (k for own k of d)
+                                  
+                                  #TEST 1_y
                                   return "translate(" + @_x(d[keys[0]]) + "," + @_y(d[keys[1]]) + ")")
+                                  
+                                  #TEST m_y
+#                                   for i in [0...curvesByTypeList.size()]
+#                                       return "translate(" + @_x(d[keys[0]]) + "," + @_YordinateScalesList[i](d[keys[1]]) + ")")
+            
             .attr("d",d3.svg.symbol().size((d)=>
                                               console.log "d in size:"
                                               console.log d
@@ -1056,7 +1105,6 @@ class DrawingSVG
             .append("rect")
             .style("stroke", "black")
             .attr("fill", (d, i)=> 
-                                  console.log  "hello1"
                                   console.log "curveChoices"
                                   console.log curveChoices
                                   console.log "curveChoices.lst[i]"
@@ -1080,10 +1128,8 @@ class DrawingSVG
                             return "rotate(-90, "+leftTopcornerXrec+","+ leftTopcornerYrec+")"
                             )
             .attr("width",(d, i)=>
-                              console.log  "hello2"
                               curveChoices.lst[i].aggregate.markerWidth.get())#3.5)
             .attr("height",(d, i)=>
-                              console.log  "hello3"
                               curveChoices.lst[i].aggregate.markerHeight.get())#3.5)
     
     wr: (d, message=d)-> 
@@ -1345,4 +1391,10 @@ class DrawingSVG
 # tdata = d3.transpose(data);
 # gives you
 # [ [2.92, 2.69], [4.22, 4.24], [3.69, 3.77]]      
-
+#TEST param2
+#     drawSVG_MultiVec:( app_data, info, @curvesList, notfirstDrawing, allowToDraw, graphSetting ) ->
+#         console.log "In Drawing, au début allowToDraw.get():", allowToDraw.get()
+# #         if not firstDrawing? #TEST
+#         @initDrawing_MultiVec(app_data, info, @curvesList, notfirstDrawing, allowToDraw, graphSetting )
+    
+    

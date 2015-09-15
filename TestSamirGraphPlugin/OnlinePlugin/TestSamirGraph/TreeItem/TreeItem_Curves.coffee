@@ -19,43 +19,114 @@
 class TreeItem_Curves extends TreeItem
     constructor: (sDName = "Curves") ->
         super()
+        console.log  "TreeItem_Curves is built"
+        
         @add_attr
             _curves_List: new Lst     
         @add_attr
-            curves: new Choice  
+            curves: new Choice 
+        @add_attr    
+            _colorRange: new Lst
+      
         @_viewable.set false
         @visible = false
 
         if sDName?
             @_name.set sDName 
-      
+            
+    #TEST colorRange3
+#         bind @curves, =>
+#             for curveChoice in @curves.lst
+#                 if curveChoice.aggregate.colorName.has_been_modified?()
+# 
+#                     i = curveChoice.curve.number.get()-1
+# #                     console.log  "i"
+# #                     console.log  i
+#                     oneColor = new Str curveChoice.aggregate.colorName.get()
+
+#                     @_colorRange.set_or_push(i, oneColor)
+
+    
     fill_curves: (graphTreeItem)->
         graphti = graphTreeItem
-#         if not graphti._NotfirstDrawing?
-#         console.log "graphti._allowToDraw"
-#         console.log graphti._allowToDraw
-        
         
         console.log "At TreeItem_Curves graphti._allowToDraw.get():", graphti._allowToDraw.get()
-        if graphti._allowToDraw.get()
-            @_curves_List.clear()    
-            @_curves_List.set graphti.detect_vector()
+        
+        #TEST 
+#         if graphti._allowToDraw.get()
+        
+        #@_curves_List
+        #
+        
+        @_curves_List.clear()    
+        @_curves_List.set graphti.detect_vector()
+        
+        #TEST fillColor1
+        d3_Issim_category20 = [ "darkblue",  "blue", 
+                            "darkorange", "orange",
+                            "green", "springgreen",
+                            "red", "antiquewhite",
+                            "purple", "violet",
+                            "maroon", "sandybrown",
+                            "pink", "salmon",
+                            "darkgrey", "darkslategray",    
+                            "yellowgreen", "yellow",
+                            "cyan", "indigo"]
+                            
+#         d3_Issim_category20 = new Lst [ "darkblue",  "blue", 
+#                             "darkorange", "orange",
+#                             "green", "springgreen",
+#                             "red", "antiquewhite",
+#                             "purple", "violet",
+#                             "maroon", "sandybrown",
+#                             "pink", "salmon",
+#                             "darkgrey", "darkslategray",    
+#                             "yellowgreen", "yellow",
+#                             "cyan", "indigo"]
+        
+        i=0
+        for curve in @_curves_List
             
-            #setting the curves
+            console.log "curve.colorName"
+            console.log curve.colorName
+            curve.colorName.set d3_Issim_category20[i++] 
+            console.log "i:", i
             
-            @curves.lst.clear()
-            for objCurve in @_curves_List.get()#TEST
-                curveChoice = new CurveChoice(objCurve)
-                @curves.lst.push curveChoice
+        console.log "d3_Issim_category20[0...i]"
+        console.log d3_Issim_category20[0...i]
+        
+        console.log "d3_Issim_category20"
+        console.log d3_Issim_category20
+        
+        #@_colorRange
+        #TEST colorR1
+#         @_colorRange.push co for co in d3_Issim_category20[0...i]
+        
+        #TEST colorR2
+        @_colorRange.clear()
+        @_colorRange.push curve.colorName.get() for curve in @_curves_List
+        
+        console.log "@_colorRange" 
+        console.log @_colorRange 
+        
+        console.log "curve.colorName" 
+        console.log curve.colorName
+        
+        #setting the curves
+        
+        @curves.lst.clear()
+        for objCurve in @_curves_List.get()#TEST
+            console.log "objCurve"
+            console.log objCurve
             
-#             for child in graphti._children
-#                 if child instanceof TreeItem_Curves
-#                     ch_curves = child.curves.lst.get()
-#                     if ch_curves.length == 0
-#                         ch_curves =  _curves_List
-#                     else
-#                         _curves_List = ch_curves.get()                           
+            curveChoice = new CurveChoice(objCurve)
+            @curves.lst.push curveChoice
+            
+        #TEST allowTo
+        graphti._allowToDraw.set not graphti._allowToDraw.get()                
+        
         return @_curves_List
+        
 #         elastic_isotrop_mat = new ElasticIsotropMaterial
 #         ramberg_osgood_mat = new RambergOsgoodMaterial
 #         dp_hardening_mat = new DPHardeningMaterial
@@ -65,8 +136,8 @@ class TreeItem_Curves extends TreeItem
 #         @type.lst.push ramberg_osgood_mat
 #         @type.lst.push dp_hardening_mat
 #         @type.lst.push creep_time_hardening_mat
-  
-    
+        
+
     has_nothing_to_draw: ->
             true
     

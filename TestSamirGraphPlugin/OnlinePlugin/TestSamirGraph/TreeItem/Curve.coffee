@@ -5,16 +5,16 @@ class Curve extends Model
         @add_attr
             _name: ord_name
 #             color: new Color
-            colorName: ""#new Str
+            colorName: new Str
 #             marker: "diamond"#"square" #"dot" 
             number: num
             curveTypeName: ord_name?.split(" ")[0]
             
             ordinate_name: ord_name
-            ordinate_vec: ord_vec
+            _ordinate_vec: ord_vec
             ordinate_unity:"pixel"
             
             abscissa_name: abs_name
-            abscissa_vec: abs_vec
+            _abscissa_vec: abs_vec
             abscissa_unity:"pixel"
 # #             cf d3_rgb_names

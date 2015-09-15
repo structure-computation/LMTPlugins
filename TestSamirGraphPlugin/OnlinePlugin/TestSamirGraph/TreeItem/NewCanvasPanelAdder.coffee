@@ -50,13 +50,16 @@ class NewCanvasPanelAdder
         return idGraphCanvas
         
         
+#   TODO to erase      
+#     _new_LayoutManager: ( session ) ->
+#         display_settings = session._children.detect ( x ) -> x instanceof DisplaySettingsItem
+#         res = new LayoutManager @el, display_settings._layout
+#         #res.disp_top = @icobar.disp_top + @icobar.height
+#         res.new_panel_instance = ( data ) => @_new_panel_instance display_settings, data
+#         return res
         
-    _new_LayoutManager: ( session ) ->
-        display_settings = session._children.detect ( x ) -> x instanceof DisplaySettingsItem
-        res = new LayoutManager @el, display_settings._layout
-        #res.disp_top = @icobar.disp_top + @icobar.height
-        res.new_panel_instance = ( data ) => @_new_panel_instance display_settings, data
-        return res
+        
+        
 # #     getCurrentDisplaySettingsItem:->
 #         display_settings = app.data.selected_display_settings()
 # #         session = @data.selected_session()

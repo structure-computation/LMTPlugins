@@ -4,7 +4,7 @@ class TestSamirGraphItem extends TreeItem_Computable
     constructor: (name = "Graph") ->
         super()
         @_name.set name
-        
+        console.log  "TestSamirGraphItem is built"
 #         @_ico.set "img/SamirGraph.png"
 #         @_ico.set "../../LMTPlugins/TestSamirGraphPlugin/OnlinePlugin/TestSamirGraph/img/testGraphs_bouton.png"
 #         @_ico.set "img/testGraphs_bouton.png"
@@ -14,24 +14,81 @@ class TestSamirGraphItem extends TreeItem_Computable
 
         @add_attr
             _allowToDraw : false
-        console.log "At TestSamirGraphItem constructor @_allowToDraw.get():", @_allowToDraw.get()
         treeItem_x = new TreeItem_SingleData("abscissa")
         treeItem_y = new TreeItem_SingleData("ordinate")
-   
-        @add_child new TreeItem_GraphSettings
-        @add_child new TreeItem_Curves
+        treeItem_GS= new TreeItem_GraphSettings
+        treeItem_curves = new TreeItem_Curves
+        @add_child treeItem_GS
+        @add_child treeItem_curves
         @add_child treeItem_x#TEST
         @add_child treeItem_y      
-				#@add_child new ImgItem
         
-						#img_n = new Img 
-			#	imgItem = new ImgItem
-				#imgItem.img.set img_n				
-				#@add_child imgItem
+        #TEST bindA1
+      
+        @abscissa_child = @detect_child (c)=> c == treeItem_x
+        @ordinate_child = @detect_child (c)=> c == treeItem_y
+        @GS_child = @detect_child (c)=> c == treeItem_GS
+        @curves_child = @detect_child (c)=> c == treeItem_curves                         
+        console.log "hello5"
+        
+        bind @abscissa_child, =>
+             alert "bind @abscissa_child"
+             alert "@_NotfirstDrawing "+@_NotfirstDrawing
+             if @_NotfirstDrawing?
+                console.log "@_NotfirstDrawing exists"
+                if @abscissa_child.has_been_modified()
+                    console.log "@abscissa_child.has_been_modified()"
+                    @curves_child.fill_curves this
+        
+        bind @ordinate_child, =>
+             alert "bind @ordinate_child"
+             alert "@_NotfirstDrawing "+@_NotfirstDrawing
+             if @_NotfirstDrawing?
+                console.log "@_NotfirstDrawing exists"
+                if @ordinate_child.has_been_modified()
+                    console.log "@ordinate_child.has_been_modified()"
+                    @curves_child.fill_curves this
 
-#     display_suppl_context_actions: ( context_action )  ->
-#   context_action.push new TreeAppModule_Mesher
-#     context_action.push new TreeAppModule_Sketch    
+            
+        #TEST bind1
+        bind @curves_child,@ti_curves_change,false           
+                    
+        #TEST bind2
+#         bind @curves_child,ti_curves_change
+        
+        #TEST bind3
+#         bind this,ti_curves_change,false
+    ti_curves_change:()=>
+          console.log "ti_curves_change"
+          if @_NotfirstDrawing?
+              for curveChoice in @curves_child.curves.lst
+                  if curveChoice.aggregate.colorName.has_been_modified()
+                      
+                      #colorName
+                      console.log "curveChoice.aggregate.colorName.has_been_modified():"
+                      console.log curveChoice
+                      curveChoice.curve.colorName.set curveChoice.aggregate.colorName.get()
+                      
+                      #index
+                      index_curveChoice = curveChoice.curve.number.get()-1
+                      console.log "index_curveChoice < @curves_child._colorRange.length"
+                      console.log index_curveChoice < @curves_child._colorRange.length
+
+                      #colorRange
+                      @curves_child._colorRange.set_or_push(index_curveChoice, curveChoice.curve.colorName.get())
+                      
+                      console.log "@curves_child._colorRange after set_or_push...colorName"
+                      console.log @curves_child._colorRange.get()
+              
+              #TEST allowTo
+                      console.log "after ti_curves_change check whether" 
+                      console.log "@curves_child._curves_List[index_curveChoice].colorName.has_been_modified():"
+                      console.log @curves_child._curves_List[index_curveChoice].colorName.has_been_modified()
+                      console.log "@curves_child._curves_List[index_curveChoice].colorName.get():"
+                      console.log @curves_child._curves_List[index_curveChoice].colorName.get()   
+              @_allowToDraw.set not @_allowToDraw.get()
+                  
+          
     #TEST             
     cosDeg: (number, precision)->
         console.log number*(Math.PI/180)
@@ -94,7 +151,7 @@ class TestSamirGraphItem extends TreeItem_Computable
                 return false      
         return true
         
-#     sub_canvas_items: ->
+# #     sub_canvas_items: ->
 #         [ @_issimGraph ]     
     
     display_suppl_context_actions: ( context_action )  ->
@@ -111,8 +168,7 @@ class TestSamirGraphItem extends TreeItem_Computable
                 console.log "graph action push: all_canvas_inst="
                 console.log all_canvas_inst
                 console.log "graph action push: @_NotfirstDrawing"
-                console.log @_NotfirstDrawing
-                
+                console.log @_NotfirstDrawing       
       
 #                 if not @_firstDrawing?
 #                     newCanPanAdder = new NewCanvasPanelAdder()
@@ -128,8 +184,7 @@ class TestSamirGraphItem extends TreeItem_Computable
                     idGraphCanvas = newCanPanAdder.addNewCanvasPanel(app)#TEST1 TEST 2
                     graphPanManagerInstIndex = all_canvas_inst.length-1
                     graphCanvasManagerPanelInstance = all_canvas_inst[graphPanManagerInstIndex]
-#                     graphCanvasManagerPanelInstance.title = "graphCanvasManagerPanelIns" 
-                
+#                     graphCanvasManagerPanelInstance.title = "graphCanvasManagerPanelIns"          
                 
                 if @_NotfirstDrawing
                     console.log "@_NotfirstDrawing == true"
@@ -141,16 +196,16 @@ class TestSamirGraphItem extends TreeItem_Computable
                     console.log layout
                     console.log "layout._views"
                     console.log layout._views
-                    
-                    
+                         
                     lmArray = layout._views.filter ( x ) ->  x instanceof LayoutManager
                     lm = lmArray[0]#TODO A améliorer
 #                      lm = layout._views.detect ( x ) ->  x instanceof LayoutManager 
                     console.log "lm:"
                     console.log lm
+                    
+                    alert "layout Manager writen"
                     console.log "lm._pan_vs_id"
                     console.log lm._pan_vs_id
-                    
                     
                     if lm._pan_vs_id.Graph_id?
                         graphCanvasManagerPanelInstance = lm._pan_vs_id.Graph_id
@@ -160,43 +215,65 @@ class TestSamirGraphItem extends TreeItem_Computable
                         graphCanvasManagerPanelInstance = addGraphPanel(app, all_canvas_inst)#console.log "The chart has been removed"
                 else
                     if not @_NotfirstDrawing?
+                        console.log "not @_NotfirstDrawing?"
                         graphCanvasManagerPanelInstance = addGraphPanel(app, all_canvas_inst)
 #                         newCanPanAdder = new NewCanvasPanelAdder()
 #                         idGraphCanvas = newCanPanAdder.addNewCanvasPanel(app)#TEST1 TEST 2
 #                         graphPanManagerInstIndex = all_canvas_inst.length-1
 #                         graphCanvasManagerPanelInstance = all_canvas_inst[graphPanManagerInstIndex]
-#                         graphCanvasManagerPanelInstance.title = "graphCanvasManagerPanelIns"                     
-
-                        
+#                         graphCanvasManagerPanelInstance.title = "graphCanvasManagerPanelIns"                                      
 #                     all_canvas_inst = app.all_canvas_inst() 
                 console.log "graphCanvasManagerPanelInstance"
                 console.log graphCanvasManagerPanelInstance
 
+                #TEST alloToDraw2
+#                 console.log "@_children"
+#                 console.log @_children
+#                 
+#                 console.log "this"
+#                 console.log this
+#                 ti_curves = @_children.detect ( x ) -> x instanceof TreeItem_Curves
+#                 ti_curves.fill_curves(this)
+                @curves_child.fill_curves(this)
+#                 if not @_NotfirstDrawing?
+                @_NotfirstDrawing = true
+                @_allowToDraw.set not @_allowToDraw.get()
                 
-                graphCanvasManager = graphCanvasManagerPanelInstance.cm# TODO auto_fit 
-#                 TODO graphCanvasManager.allow_gl.set false
-                @newInfo = graphCanvasManager.cam_info
                 
-                console.log "for canvasManger, @newInfo:"
-                console.log @newInfo
-                #TODO LayoutManager._pan_vs_id(idGraphCanvas).cm
-                #TODO dans treeappdata panel_id_list(), rm_selected_panels()
-                if graphCanvasManager?
-                    thislikeItem = graphCanvasManager.items.detect ( x ) -> x instanceof TestSamirGraphItem #TODO +modif le selected+faire == this 
-                    console.log "graphCanvasManager.items before clearing(verifier qu'il y a au moins GraphViewItem):"
-                    console.log graphCanvasManager.items
-#                     graphCanvasManager.items.clear()#TEST
-#                     graphCanvasManager.items.push thislikeItem  #TEST TODO avec instance ou avec les "z" pour l'ordre                           
-                    thislikeItem._allowToDraw.set true
-                    console.log "At TestSamirGraphItem contextAction @_allowToDraw.get() (true):", @_allowToDraw.get()
-                    console.log "At TestSamirGraphItem contextAction thislikeItem._allowToDraw.get() (true):", thislikeItem._allowToDraw.get()     
-                   #TEST
-                    graphCanvasManager.cam.threeD.set false
-#                     graphCanvasManager.resize 700, 400
-                    #TEST
-                    graphCanvasManager.fit 0
-                    @pauseMouse(graphCanvasManager)
-                    graphCanvasManager.draw(@newInfo)
+                
+               #TEST alloToDraw1 
+#                 graphCanvasManager = graphCanvasManagerPanelInstance.cm# TODO auto_fit 
+# #                 TODO graphCanvasManager.allow_gl.set false
+#                 @newInfo = graphCanvasManager.cam_info
+#                 
+#                 console.log "for canvasManger, @newInfo:"
+#                 console.log @newInfo
+#                 #TODO LayoutManager._pan_vs_id(idGraphCanvas).cm
+#                 #TODO dans treeappdata panel_id_list(), rm_selected_panels()
+#                 
+#                 console.log "graphCanvasManager in TestSamirGraph button activated"
+#                 console.log graphCanvasManager
+#                 
+#                 if graphCanvasManager?
+#                     thislikeItem = graphCanvasManager.items.detect ( x ) -> x instanceof TestSamirGraphItem #TODO +modif le selected+faire == this 
+#                     console.log "graphCanvasManager.items before clearing(verifier qu'il y a au moins GraphViewItem):"
+#                     console.log graphCanvasManager.items
+# #                     graphCanvasManager.items.clear()#TEST
+# #                     graphCanvasManager.items.push thislikeItem  #TEST TODO avec instance ou avec les "z" pour l'ordre                           
+#                     thislikeItem._allowToDraw.set true
+#                     console.log "At TestSamirGraphItem contextAction @_allowToDraw.get() (true):", @_allowToDraw.get()
+#                     console.log "At TestSamirGraphItem contextAction thislikeItem._allowToDraw.get() (true):", thislikeItem._allowToDraw.get()     
+#                    #TEST
+#                     graphCanvasManager.cam.threeD.set false
+# #                     graphCanvasManager.resize 700, 400
+#                     #TEST
+#                     graphCanvasManager.fit 0
+#                     @pauseMouse(graphCanvasManager)
+#                     
+# #                     ti_curves = instance._children.detect ( x ) -> x instanceof TreeItem_Curves
+# #                     @curves_List = ti_curves.fill_curves(instance)# automatically updated as far as draw is called 
+#                     
+#                     graphCanvasManager.draw(@newInfo)
                          
 #             ico: "../../LMTPlugins/TestSamirGraphPlugin/OnlinePlugin/TestSamirGraph/img/TestSamirImg.png"               
 #             ico: "img/TestSamirImg.png"
@@ -258,7 +335,7 @@ class TestSamirGraphItem extends TreeItem_Computable
                             break # The first abscissa is only read                           
         for c in res 
             c.abscissa_name.set abs_name
-            c.abscissa_vec.set abs_vec
+            c._abscissa_vec.set abs_vec
         return res  
 
 # used by GraphViewItem        

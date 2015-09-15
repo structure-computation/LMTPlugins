@@ -2,14 +2,14 @@
 class CurveChoice extends Model
     constructor: (curve = new Curve) ->
         super()        
-         
+        console.log  "CurveChoice is built"
         @add_attr
             curve: curve
             
         @add_attr
             _name: @curve._name
             aggregate:    
-                color: @curve.color #new Color #LineTheme#new Choice# new Color#(0, [curve.color])#new Choice
+                #color: @curve.color #new Color #LineTheme#new Choice# new Color#(0, [curve.color])#new Choice
                 colorName: new Choice
             
             #TEST marker1
@@ -24,20 +24,28 @@ class CurveChoice extends Model
                 markerHeight : new ConstrainedVal( 4, { min: 0, max: 40 } )
                 markerRadius : new ConstrainedVal( 4, { min: 0, max: 40 } )
                 markerColor : new Choice
-                markerSize : new ConstrainedVal( 100, { min: 0, max: 150 } )
+                markerSize : new ConstrainedVal( 75, { min: 0, max: 150 } )
                 
             #TEST marker2
 #                 marker: new Choice(0, [ "circle", "square", "arrow", "stub" ]) 
-                modify_curve: new Choice(0, ["no", "yes"]) 
+#                 modify_curve: new Choice(0, ["no", "yes"]) 
+#                 modify_curve: new Button
                 name: @curve._name     
    
         colorD3JS = new ColorD3JS
+        
+        console.log "colorD3JS.colors"
+        console.log colorD3JS.colors
         
         #TEST colChoice2 
         @aggregate.colorName.lst.push key+"" for key, value of colorD3JS.colors
         
         #position the colorNam
-        colNameIndex = @aggregate.colorName.lst.indexOf curve.colorName#.get()
+        #TEST colNam1
+#         colNameIndex = @aggregate.colorName.lst.indexOf curve.colorName#.get()
+        
+        #TEST colNam2
+        colNameIndex = @aggregate.colorName.lst.indexOf @curve.colorName.get()
         @aggregate.colorName.num.set colNameIndex
         
         #markerColor
@@ -46,8 +54,7 @@ class CurveChoice extends Model
         #position the colorNam
         colNameIndex = @aggregate.markerColor.lst.indexOf "red" #.get()
         @aggregate.markerColor.num.set colNameIndex
-        
-        
+                
         #matching curve choice and curve object parameter
 #         bind @aggregate.modify_curve, =>
 #             if @aggregate.modify_curve.get() == "yes" and @aggregate.modify_curve.has_been_modified()
@@ -105,7 +112,7 @@ class CurveChoice extends Model
     get_model_editor_parameters: ( res ) ->
         res.model_editor[ "colorName" ] = ModelEditorItem_ChoiceWithEditableItems 
         res.model_editor[ "marker" ] = ModelEditorItem_ChoiceWithEditableItems #TEST TODO "curves"
-        res.model_editor[ "modify_curve" ] = ModelEditorItem_ChoiceWithEditableItems #TEST TODO "curves"
+#         res.model_editor[ "modify_curve" ] = ModelEditorItem_ChoiceWithEditableItems #TEST TODO "curves"
 #         res.model_editor[ "color" ] = ModelEditorItem_ChoiceWithEditableItems #TEST TODO "curves"
     
     #cosmetic_attribute: ( name ) ->
