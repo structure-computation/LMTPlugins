@@ -21,4 +21,6 @@ class TreeAppApplication_Correlation extends TreeAppApplication
             if object._children[3]?
                 object._children[3].time = app_data.time
                 object._children[3]._app_data = app_data
+            if object._output[0]?
+                object._output[0].time = app_data.time
         

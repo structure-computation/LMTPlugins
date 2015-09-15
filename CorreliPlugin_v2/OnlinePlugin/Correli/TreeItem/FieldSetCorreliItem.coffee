@@ -1,6 +1,6 @@
 #
-class FieldSetCorreliItem extends TreeItem
-    constructor: ( name = "Field", id_c = 0 ) ->
+class FieldSetCorreliItem extends TreeItem_Automatic
+    constructor: ( name = "Field_V2", id_c = 0 ) ->
         super()
         
         # default values
@@ -17,6 +17,13 @@ class FieldSetCorreliItem extends TreeItem
             
             # data results
             _file_field_set_data   : new  File (@_name.get() + "_field_data"), field_set_data
+            
+            #visualisation attributes
+            _has_result : false
+            _old_visualisation_field : ""
+            _old_time_step : -1
+            time : -1
+            
             # results
             _norm_i_history       : []
             _norm_2_history       : []
